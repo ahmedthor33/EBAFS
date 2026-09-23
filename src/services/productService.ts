@@ -22,19 +22,27 @@ export interface ProductFilters {
   limit?: number;
 }
 
+// Permanently blacklist initial testing items so they never show up in the storefront or admin
+const INITIAL_TESTING_PRODUCT_IDS = [
+  '16b99f34-632a-452c-83d6-eff675a4a847', // Test item: Ethnic Elegance Redefined
+  'a702a789-3eac-40ca-9a01-85dd57be4a42', // Test item: Ethnic Elegance Redefined
+  '01bb803b-0ccc-4d35-8b84-4fb758a2e4f6', // Test item: Aneela’s Premium Airjet Dhanak
+];
+
 // Helpers for persistent deletion, local products, and status overrides across refreshes
 const getDeletedProductIds = (): Set<string> => {
-  if (typeof window === 'undefined') return new Set();
+  const set = new Set<string>(INITIAL_TESTING_PRODUCT_IDS);
+  if (typeof window === 'undefined') return set;
   try {
     const raw = localStorage.getItem('eba_deleted_product_ids');
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) return new Set(arr);
+      if (Array.isArray(arr)) arr.forEach(id => set.add(id));
     }
   } catch (e) {
     // ignore
   }
-  return new Set();
+  return set;
 };
 
 const addDeletedProductIds = (ids: string[]) => {
