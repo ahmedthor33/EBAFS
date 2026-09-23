@@ -11,17 +11,6 @@ import './HomePage.css';
 const defaultHeroSlides = [
   {
     id: 1,
-    eyebrow: 'THE ART OF PAKISTANI FASHION',
-    title: 'EBA Fashion Studio',
-    subtitle: 'Discover refined Pakistani fashion from leading brands, curated for modern wardrobes.',
-    btnMen: 'SHOP MEN',
-    btnWomen: 'SHOP WOMEN',
-    linkMen: '/men',
-    linkWomen: '/women',
-    bgImage: '/assets/banners/hero-1.png',
-  },
-  {
-    id: 2,
     eyebrow: 'COUTURE FORMALS & LAWN',
     title: 'Women’s Luxury Festive',
     subtitle: 'Intricate resham embroideries, pure silk dupattas, and handcrafted embellishments.',
@@ -29,12 +18,12 @@ const defaultHeroSlides = [
     btnWomen: 'SHOP WOMEN',
     linkMen: '/shop?sale=true',
     linkWomen: '/women',
-    bgImage: '/assets/products/women/maria-b-1.jpg',
+    bgImage: 'https://pybegueviocyeptgaxyk.supabase.co/storage/v1/object/public/product-images/banners/1790158251618_f0h8c7_change_dimenssion_2k_20260922225213.jpeg',
   },
   {
-    id: 3,
+    id: 2,
     eyebrow: 'ARISTOCRATIC HERITAGE',
-    title: 'Men’s Unstitched & Shawls',
+    title: 'Men’s Premium Quality Winter Shawls',
     subtitle: 'Superfine Egyptian cotton, royal latha, and 100% Australian Merino wool shawls.',
     btnMen: 'EXPLORE MEN',
     btnWomen: 'VIEW ALL BRANDS',
