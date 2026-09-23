@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
 import { ProductCard } from '../components/product/ProductCard';
 import { productService } from '../services/productService';
-import { brandService } from '../services/brandService';
 import { adminService } from '../services/adminService';
-import { Product, Brand } from '../types';
+import { Product } from '../types';
 import './HomePage.css';
 
 const defaultHeroSlides = [
@@ -46,7 +45,6 @@ export const HomePage: React.FC = () => {
   const [heroSlide, setHeroSlide] = useState(0);
   const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
   const [promoBanner, setPromoBanner] = useState(defaultPromoBanner);
-  const [featuredBrands, setFeaturedBrands] = useState<Brand[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [menProducts, setMenProducts] = useState<Product[]>([]);
   const [womenProducts, setWomenProducts] = useState<Product[]>([]);
@@ -94,8 +92,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     const loadHomeData = async () => {
       try {
-        const [brands, arrivals, men, women, best, sale] = await Promise.all([
-          brandService.getFeaturedBrands(),
+        const [arrivals, men, women, best, sale] = await Promise.all([
           productService.getNewArrivals(4),
           productService.getProducts({ gender: 'MEN', limit: 4 }),
           productService.getProducts({ gender: 'WOMEN', limit: 4 }),
@@ -103,7 +100,6 @@ export const HomePage: React.FC = () => {
           productService.getSaleProducts(4),
         ]);
 
-        setFeaturedBrands(brands);
         setNewArrivals(arrivals);
         setMenProducts(men.products);
         setWomenProducts(women.products);
@@ -238,34 +234,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. FEATURED DESIGNER BRANDS */}
-      <section className="featured-brands-section">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-eyebrow">PAKISTANI DESIGNER HOUSES</span>
-            <h2 className="section-title">Featured Brands</h2>
-            <p className="section-subtitle">
-              Authentic original collections curated from Pakistan's most celebrated couturiers.
-            </p>
-          </div>
-
-          <div className="brands-showcase-grid">
-            {featuredBrands.map((brand) => (
-              <Link to={`/brand/${brand.slug}`} key={brand.id} className="brand-card">
-                <div className="brand-card-inner">
-                  <span className="brand-card-name">{brand.name}</span>
-                  <p className="brand-card-desc">{brand.description}</p>
-                  <span className="brand-card-cta">
-                    View Brand <ArrowRight size={13} />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. NEW ARRIVALS */}
+      {/* 3. NEW ARRIVALS */}
       <section className="product-showcase-section">
         <div className="container">
           <div className="section-header">
