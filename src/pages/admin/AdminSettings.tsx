@@ -147,7 +147,11 @@ export const AdminSettings: React.FC = () => {
         setTiktokUrl(s.tiktok_url || '');
         setCurrency(s.currency);
         if (s.hero_banners && Array.isArray(s.hero_banners) && s.hero_banners.length > 0) {
-          setHeroBanners(s.hero_banners);
+          const cleanBanners = s.hero_banners.filter((b: any) =>
+            !b.bgImage?.includes('hero-1.png') &&
+            !b.title?.toLowerCase().includes('eba fashion studio')
+          );
+          setHeroBanners(cleanBanners.length >= 2 ? cleanBanners : defaultHeroSlides);
         }
         if (s.promo_banner) {
           setPromoBanner((prev) => ({ ...prev, ...s.promo_banner }));

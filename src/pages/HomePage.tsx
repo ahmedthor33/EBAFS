@@ -58,7 +58,13 @@ export const HomePage: React.FC = () => {
       try {
         const s = await adminService.getSiteSettings();
         if (s?.hero_banners && Array.isArray(s.hero_banners) && s.hero_banners.length > 0) {
-          setHeroSlides(s.hero_banners as any);
+          const cleanBanners = s.hero_banners.filter((b: any) =>
+            !b.bgImage?.includes('hero-1.png') &&
+            !b.title?.toLowerCase().includes('eba fashion studio')
+          );
+          setHeroSlides(cleanBanners.length >= 2 ? (cleanBanners as any) : defaultHeroSlides);
+        } else {
+          setHeroSlides(defaultHeroSlides);
         }
         if (s?.promo_banner) {
           setPromoBanner({ ...defaultPromoBanner, ...s.promo_banner });
@@ -71,7 +77,11 @@ export const HomePage: React.FC = () => {
 
     const handleUpdate = (e: any) => {
       if (e.detail?.hero_banners && Array.isArray(e.detail.hero_banners) && e.detail.hero_banners.length > 0) {
-        setHeroSlides(e.detail.hero_banners);
+        const cleanBanners = e.detail.hero_banners.filter((b: any) =>
+          !b.bgImage?.includes('hero-1.png') &&
+          !b.title?.toLowerCase().includes('eba fashion studio')
+        );
+        setHeroSlides(cleanBanners.length >= 2 ? cleanBanners : defaultHeroSlides);
       }
       if (e.detail?.promo_banner) {
         setPromoBanner({ ...defaultPromoBanner, ...e.detail.promo_banner });

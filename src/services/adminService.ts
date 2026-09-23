@@ -16,6 +16,40 @@ export interface DashboardMetrics {
   activeBrands: number;
 }
 
+export const defaultHeroSlides = [
+  {
+    id: 1,
+    eyebrow: 'COUTURE FORMALS & LAWN',
+    title: 'Women’s Luxury Festive',
+    subtitle: 'Intricate resham embroideries, pure silk dupattas, and handcrafted embellishments.',
+    btnMen: 'VIEW SALE',
+    btnWomen: 'SHOP WOMEN',
+    linkMen: '/shop?sale=true',
+    linkWomen: '/women',
+    bgImage: 'https://pybegueviocyeptgaxyk.supabase.co/storage/v1/object/public/product-images/banners/1790158251618_f0h8c7_change_dimenssion_2k_20260922225213.jpeg',
+  },
+  {
+    id: 2,
+    eyebrow: 'ARISTOCRATIC HERITAGE',
+    title: 'Men’s Premium Quality Winter Shawls',
+    subtitle: 'Superfine Egyptian cotton, royal latha, and 100% Australian Merino wool shawls.',
+    btnMen: 'EXPLORE MEN',
+    btnWomen: 'VIEW ALL BRANDS',
+    linkMen: '/men',
+    linkWomen: '/brands',
+    bgImage: '/assets/products/men/j-shawl-1.jpg',
+  },
+];
+
+export const filterHeroBanners = (banners: any[]): any[] => {
+  if (!Array.isArray(banners)) return [];
+  return banners.filter((b: any) =>
+    b &&
+    !b.bgImage?.includes('hero-1.png') &&
+    !b.title?.toLowerCase().includes('eba fashion studio')
+  );
+};
+
 export const adminService = {
   // Compute live dashboard metrics
   async getDashboardMetrics(): Promise<DashboardMetrics> {
@@ -119,6 +153,7 @@ export const adminService = {
       facebook_url: 'https://facebook.com/ebafashionstudio',
       tiktok_url: 'https://tiktok.com/@ebafashionstudio',
       announcement_text: 'Complimentary Nationwide Delivery on Orders Above PKR 5,000 | Luxury Unstitched Collections',
+      hero_banners: defaultHeroSlides,
       promo_banner: {
         eyebrow: 'ARTISANAL HERITAGE',
         title: 'The Essence of Pakistani Craftsmanship',
@@ -160,7 +195,11 @@ export const adminService = {
     const local = localStorage.getItem('eba_site_settings');
     if (local) {
       try {
-        result = { ...result, ...JSON.parse(local) };
+        const parsed = JSON.parse(local);
+        if (parsed.hero_banners && Array.isArray(parsed.hero_banners)) {
+          parsed.hero_banners = filterHeroBanners(parsed.hero_banners);
+        }
+        result = { ...result, ...parsed };
       } catch (e) {
         // ignore
       }
@@ -185,12 +224,18 @@ export const adminService = {
               ...(generalRow.announcement_text ? { announcement_text: generalRow.announcement_text } : {}),
               ...(generalRow.currency ? { currency: generalRow.currency } : {}),
             };
+
+            if (generalRow.hero_banners && Array.isArray(generalRow.hero_banners)) {
+              const clean = filterHeroBanners(generalRow.hero_banners);
+              if (clean.length > 0) result.hero_banners = clean;
+            }
           }
 
           // Check for key-value rows
           const heroBannersRow = data.find((r: any) => r.key === 'hero_banners');
           if (heroBannersRow?.value && Array.isArray(heroBannersRow.value)) {
-            result.hero_banners = heroBannersRow.value;
+            const clean = filterHeroBanners(heroBannersRow.value);
+            if (clean.length > 0) result.hero_banners = clean;
           }
 
           const promoBannerRow = data.find((r: any) => r.key === 'promo_banner');
@@ -232,6 +277,13 @@ export const adminService = {
       } catch (err) {
         console.warn('getSiteSettings fallback:', err);
       }
+    }
+
+    if (!result.hero_banners || !Array.isArray(result.hero_banners) || result.hero_banners.length < 2) {
+      result.hero_banners = defaultHeroSlides;
+    } else {
+      const clean = filterHeroBanners(result.hero_banners);
+      result.hero_banners = clean.length >= 2 ? clean : defaultHeroSlides;
     }
 
     return result;
