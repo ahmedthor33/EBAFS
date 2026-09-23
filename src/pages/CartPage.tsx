@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, Minus, Trash2, Heart, ArrowRight, ShieldCheck, Truck, Check } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, Trash2, Heart, ArrowRight, ShieldCheck, Truck, Check, X, Tag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { adminService } from '../services/adminService';
+import { couponService } from '../services/couponService';
+import { orderService } from '../services/orderService';
+import { Coupon } from '../types';
 import { formatPKR } from '../lib/supabase';
 import './CartPage.css';
 
@@ -10,32 +15,139 @@ export const CartPage: React.FC = () => {
   const navigate = useNavigate();
   const { items, subtotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
 
+  // Dynamic Site Settings for Delivery
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(5000);
+  const [defaultShippingFee, setDefaultShippingFee] = useState<number>(250);
+  const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string>('2 - 4 Working Days');
+
+  // Dynamic Promo / Coupon State
   const [promoCode, setPromoCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoMsg, setPromoMsg] = useState('');
   const [promoError, setPromoError] = useState('');
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
-  const freeShippingThreshold = 5000;
-  const isFreeShipping = subtotal >= freeShippingThreshold;
-  const shippingEstimate = isFreeShipping ? 0 : 250;
+  // Load live store delivery parameters
+  useEffect(() => {
+    const loadDeliverySettings = async () => {
+      try {
+        const s = await adminService.getSiteSettings();
+        if (s.free_delivery_threshold !== undefined) {
+          setFreeShippingThreshold(Number(s.free_delivery_threshold));
+        }
+        if (s.default_shipping_fee !== undefined) {
+          setDefaultShippingFee(Number(s.default_shipping_fee));
+        }
+        if (s.estimated_delivery_days) {
+          setEstimatedDeliveryDays(s.estimated_delivery_days);
+        }
+      } catch (e) {
+        // fallback to defaults
+      }
+    };
+
+    loadDeliverySettings();
+
+    const handleSettingsUpdated = (e: any) => {
+      if (e.detail?.free_delivery_threshold !== undefined) {
+        setFreeShippingThreshold(Number(e.detail.free_delivery_threshold));
+      }
+      if (e.detail?.default_shipping_fee !== undefined) {
+        setDefaultShippingFee(Number(e.detail.default_shipping_fee));
+      }
+      if (e.detail?.estimated_delivery_days) {
+        setEstimatedDeliveryDays(e.detail.estimated_delivery_days);
+      }
+    };
+
+    window.addEventListener('eba_settings_updated', handleSettingsUpdated);
+    return () => window.removeEventListener('eba_settings_updated', handleSettingsUpdated);
+  }, []);
+
+  // Restore existing session coupon if present
+  useEffect(() => {
+    const checkSavedCoupon = async () => {
+      try {
+        const raw = sessionStorage.getItem('eba_applied_coupon');
+        if (raw && subtotal > 0) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.code) {
+            setPromoCode(parsed.code);
+            await validateAndApply(parsed.code, false);
+          }
+        }
+      } catch (e) {}
+    };
+    if (subtotal > 0) {
+      checkSavedCoupon();
+    }
+  }, [subtotal]);
+
+  const isFreeShipping = freeShippingThreshold === 0 || subtotal >= freeShippingThreshold;
+  const shippingEstimate = isFreeShipping ? 0 : defaultShippingFee;
   const grandTotal = Math.max(0, subtotal + shippingEstimate - discountAmount);
+
+  const validateAndApply = async (codeToTest: string, showAlerts = true) => {
+    if (!codeToTest.trim()) return;
+    setIsValidatingPromo(true);
+    if (showAlerts) setPromoError('');
+
+    try {
+      // Check customer order history for new-customer eligibility
+      let isNewCustomer = true;
+      if (user?.id) {
+        const pastOrders = await orderService.getCustomerOrders(user.id);
+        if (pastOrders && pastOrders.length > 0) {
+          isNewCustomer = false;
+        }
+      }
+
+      const result = await couponService.validateCoupon(codeToTest, subtotal, {
+        isNewCustomer,
+        customerEmail: user?.email,
+      });
+
+      if (result.valid && result.coupon) {
+        setAppliedCoupon(result.coupon);
+        setDiscountAmount(result.discountAmount);
+        setPromoApplied(true);
+        setPromoMsg(result.message || `✓ Voucher "${result.coupon.code}" applied!`);
+        sessionStorage.setItem('eba_applied_coupon', JSON.stringify({
+          code: result.coupon.code,
+          discountAmount: result.discountAmount,
+          description: result.coupon.description,
+        }));
+      } else {
+        if (showAlerts) {
+          setPromoError(result.error || 'Invalid promotional voucher.');
+        }
+        handleRemovePromo(false);
+      }
+    } catch (err: any) {
+      if (showAlerts) {
+        setPromoError(err?.message || 'Failed to validate voucher.');
+      }
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
 
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    setPromoError('');
-    const code = promoCode.trim().toUpperCase();
+    validateAndApply(promoCode, true);
+  };
 
-    if (code === 'EBA10' || code === 'WELCOME10') {
-      const disc = Math.round(subtotal * 0.1);
-      setDiscountAmount(disc);
-      setPromoApplied(true);
-    } else if (code === 'FREESHIP') {
-      setDiscountAmount(250);
-      setPromoApplied(true);
-    } else {
-      setPromoError('Invalid promotion code. Try "EBA10" for 10% off.');
-    }
+  const handleRemovePromo = (clearInput = true) => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setPromoApplied(false);
+    setPromoMsg('');
+    if (clearInput) setPromoCode('');
+    sessionStorage.removeItem('eba_applied_coupon');
   };
 
   const handleMoveToWishlist = async (item: any) => {
@@ -78,18 +190,22 @@ export const CartPage: React.FC = () => {
           <div className="cart-shipping-card">
             <div className="shipping-card-text">
               <Truck size={18} />
-              {isFreeShipping ? (
-                <span>Complimentary Nationwide Express Shipping unlocked!</span>
+              {freeShippingThreshold === 0 ? (
+                <span>Complimentary Nationwide Express Delivery on all orders ({estimatedDeliveryDays})!</span>
+              ) : isFreeShipping ? (
+                <span>Complimentary Nationwide Express Delivery unlocked ({estimatedDeliveryDays})!</span>
               ) : (
                 <span>
-                  Add <strong>{formatPKR(freeShippingThreshold - subtotal)}</strong> more to qualify for <strong>Free Express Shipping</strong>.
+                  Add <strong>{formatPKR(freeShippingThreshold - subtotal)}</strong> more to qualify for <strong>Free Express Delivery</strong> ({estimatedDeliveryDays}).
                 </span>
               )}
             </div>
             <div className="cart-progress-track">
               <div
                 className="cart-progress-fill"
-                style={{ width: `${Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100))}%` }}
+                style={{
+                  width: freeShippingThreshold === 0 ? '100%' : `${Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100))}%`
+                }}
               />
             </div>
           </div>
@@ -191,29 +307,79 @@ export const CartPage: React.FC = () => {
 
             {/* Promo Code Form */}
             <form onSubmit={handleApplyPromo} className="promo-code-form">
-              <label className="form-label">Promotional Voucher</label>
-              <div className="promo-input-group">
-                <input
-                  type="text"
-                  placeholder="e.g. EBA10"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  className="promo-input"
-                  disabled={promoApplied}
-                />
-                <button
-                  type="submit"
-                  className="btn btn-secondary btn-sm"
-                  disabled={promoApplied || !promoCode.trim()}
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Tag size={13} color="var(--color-gold-dark)" />
+                <span>Promotional Voucher / Coupon</span>
+              </label>
+
+              {promoApplied && appliedCoupon ? (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    background: '#fcf9f2',
+                    border: '1px solid var(--color-gold)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    marginBottom: '8px',
+                  }}
                 >
-                  {promoApplied ? <Check size={14} /> : 'Apply'}
-                </button>
-              </div>
-              {promoApplied && (
-                <p className="promo-success-msg">✓ 10% Luxury privilege discount applied</p>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', color: 'var(--color-black-deep)', background: '#fff', padding: '2px 6px', borderRadius: '3px', border: '1px solid #e0d8c7' }}>
+                        {appliedCoupon.code}
+                      </span>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-gold-dark)' }}>
+                        -{formatPKR(discountAmount)}
+                      </span>
+                    </div>
+                    {promoMsg && (
+                      <p style={{ fontSize: '11px', color: '#047857', margin: '4px 0 0 0', fontWeight: 500 }}>
+                        {promoMsg}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePromo(true)}
+                    title="Remove coupon"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#888',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : (
+                <div className="promo-input-group">
+                  <input
+                    type="text"
+                    placeholder="e.g. WELCOME10, EBA10"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    className="promo-input"
+                    style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-secondary btn-sm"
+                    disabled={isValidatingPromo || !promoCode.trim()}
+                  >
+                    {isValidatingPromo ? 'Validating...' : 'Apply'}
+                  </button>
+                </div>
               )}
+
               {promoError && (
-                <p className="promo-error-msg">{promoError}</p>
+                <p className="promo-error-msg" style={{ marginTop: '6px' }}>{promoError}</p>
               )}
             </form>
 
@@ -224,13 +390,13 @@ export const CartPage: React.FC = () => {
               </div>
 
               <div className="summary-line">
-                <span>Estimated Nationwide Delivery</span>
+                <span>Estimated Nationwide Delivery ({estimatedDeliveryDays})</span>
                 <span>{isFreeShipping ? 'COMPLIMENTARY' : formatPKR(shippingEstimate)}</span>
               </div>
 
               {discountAmount > 0 && (
                 <div className="summary-line discount">
-                  <span>Privilege Discount</span>
+                  <span>Privilege Discount ({appliedCoupon?.code || promoCode})</span>
                   <span>-{formatPKR(discountAmount)}</span>
                 </div>
               )}

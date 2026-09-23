@@ -193,6 +193,9 @@ export const adminService = {
         men_image: '/assets/products/men/bin-faisal-1.jpg',
         women_image: '/assets/products/women/hussain-rehar-1.jpg',
       },
+      free_delivery_threshold: 5000,
+      default_shipping_fee: 250,
+      estimated_delivery_days: '2 - 4 Working Days',
     };
 
     let result = { ...defaultSettings };
@@ -227,6 +230,9 @@ export const adminService = {
               ...(generalRow.tiktok_url ? { tiktok_url: generalRow.tiktok_url } : {}),
               ...(generalRow.announcement_text ? { announcement_text: generalRow.announcement_text } : {}),
               ...(generalRow.currency ? { currency: generalRow.currency } : {}),
+              ...(generalRow.free_delivery_threshold !== undefined ? { free_delivery_threshold: Number(generalRow.free_delivery_threshold) } : {}),
+              ...(generalRow.default_shipping_fee !== undefined ? { default_shipping_fee: Number(generalRow.default_shipping_fee) } : {}),
+              ...(generalRow.estimated_delivery_days ? { estimated_delivery_days: generalRow.estimated_delivery_days } : {}),
             };
 
             if (generalRow.hero_banners && Array.isArray(generalRow.hero_banners)) {
@@ -285,6 +291,14 @@ export const adminService = {
             if (s.facebook) result.facebook_url = s.facebook;
             if (s.tiktok) result.tiktok_url = s.tiktok;
           }
+
+          const shippingSettings = data.find((r: any) => r.key === 'shipping_settings');
+          if (shippingSettings?.value) {
+            const sh = shippingSettings.value;
+            if (sh.free_delivery_threshold !== undefined) result.free_delivery_threshold = Number(sh.free_delivery_threshold);
+            if (sh.default_shipping_fee !== undefined) result.default_shipping_fee = Number(sh.default_shipping_fee);
+            if (sh.estimated_delivery_days) result.estimated_delivery_days = sh.estimated_delivery_days;
+          }
         }
       } catch (err) {
         console.warn('getSiteSettings fallback:', err);
@@ -332,6 +346,9 @@ export const adminService = {
             announcement_text: merged.announcement_text,
             hero_banners: merged.hero_banners || [],
             currency: merged.currency,
+            free_delivery_threshold: merged.free_delivery_threshold ?? 5000,
+            default_shipping_fee: merged.default_shipping_fee ?? 250,
+            estimated_delivery_days: merged.estimated_delivery_days ?? '2 - 4 Working Days',
             updated_at: new Date().toISOString()
           });
 
@@ -402,6 +419,16 @@ export const adminService = {
             key: 'category_banners',
             value: merged.category_banners || null,
             description: 'Page banners for Men, Women, Shop All, and Brands directory',
+            updated_at: new Date().toISOString(),
+          },
+          {
+            key: 'shipping_settings',
+            value: {
+              free_delivery_threshold: merged.free_delivery_threshold ?? 5000,
+              default_shipping_fee: merged.default_shipping_fee ?? 250,
+              estimated_delivery_days: merged.estimated_delivery_days ?? '2 - 4 Working Days',
+            },
+            description: 'Nationwide shipping rates, free delivery threshold, and estimated transit days',
             updated_at: new Date().toISOString(),
           }
         ]);

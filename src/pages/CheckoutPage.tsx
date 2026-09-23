@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, Truck, CreditCard, Banknote, Building2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Truck, CreditCard, Banknote, Building2, CheckCircle2, ArrowRight, Tag, X, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
-import { ShippingZone, PaymentMethod, Order } from '../types';
+import { adminService } from '../services/adminService';
+import { couponService } from '../services/couponService';
+import { ShippingZone, PaymentMethod, Order, Coupon } from '../types';
 import { formatPKR } from '../lib/supabase';
 import './CheckoutPage.css';
 
@@ -12,6 +14,18 @@ export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCart();
   const { user, profile } = useAuth();
+
+  // Dynamic Shipping & Delivery Settings
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(5000);
+  const [defaultShippingFee, setDefaultShippingFee] = useState<number>(250);
+  const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string>('2 - 4 Working Days');
+
+  // Coupon / Promo State
+  const [promoCode, setPromoCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
   // Shipping & Payment Methods
   const [shippingZones, setShippingZones] = useState<ShippingZone[]>([]);
@@ -32,16 +46,26 @@ export const CheckoutPage: React.FC = () => {
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Load zones & payment methods
+  // Load zones, payment methods, and live site delivery settings
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [zones, pMethods] = await Promise.all([
+        const [zones, pMethods, siteSettings] = await Promise.all([
           orderService.getShippingZones(),
           orderService.getPaymentMethods(),
+          adminService.getSiteSettings(),
         ]);
         setShippingZones(zones);
         setPaymentMethods(pMethods);
+        if (siteSettings.free_delivery_threshold !== undefined) {
+          setFreeShippingThreshold(Number(siteSettings.free_delivery_threshold));
+        }
+        if (siteSettings.default_shipping_fee !== undefined) {
+          setDefaultShippingFee(Number(siteSettings.default_shipping_fee));
+        }
+        if (siteSettings.estimated_delivery_days) {
+          setEstimatedDeliveryDays(siteSettings.estimated_delivery_days);
+        }
       } catch (err) {
         console.error('Checkout data error:', err);
       } finally {
@@ -62,9 +86,88 @@ export const CheckoutPage: React.FC = () => {
     }
   }, [profile, user]);
 
-  // Calculate dynamic shipping fee
-  const shippingFee = orderService.calculateShippingFee(shippingZones, province, subtotal);
-  const totalAmount = subtotal + shippingFee;
+  // Restore coupon from sessionStorage
+  useEffect(() => {
+    const restoreSessionCoupon = async () => {
+      try {
+        const raw = sessionStorage.getItem('eba_applied_coupon');
+        if (raw && subtotal > 0) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.code) {
+            setPromoCode(parsed.code);
+            await validateCouponCode(parsed.code, false);
+          }
+        }
+      } catch (e) {}
+    };
+    if (subtotal > 0) {
+      restoreSessionCoupon();
+    }
+  }, [subtotal]);
+
+  const validateCouponCode = async (codeToTest: string, showAlerts = true) => {
+    if (!codeToTest.trim()) return;
+    setIsValidatingPromo(true);
+    if (showAlerts) setPromoError('');
+
+    try {
+      let isNewCustomer = true;
+      if (user?.id) {
+        const pastOrders = await orderService.getCustomerOrders(user.id);
+        if (pastOrders && pastOrders.length > 0) {
+          isNewCustomer = false;
+        }
+      }
+
+      const res = await couponService.validateCoupon(codeToTest, subtotal, {
+        isNewCustomer,
+        customerEmail: email || user?.email,
+      });
+
+      if (res.valid && res.coupon) {
+        setAppliedCoupon(res.coupon);
+        setDiscountAmount(res.discountAmount);
+        sessionStorage.setItem('eba_applied_coupon', JSON.stringify({
+          code: res.coupon.code,
+          discountAmount: res.discountAmount,
+          description: res.coupon.description,
+        }));
+      } else {
+        if (showAlerts) {
+          setPromoError(res.error || 'Invalid coupon.');
+        }
+        handleRemoveCoupon(false);
+      }
+    } catch (err: any) {
+      if (showAlerts) setPromoError(err?.message || 'Error validating coupon.');
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    validateCouponCode(promoCode, true);
+  };
+
+  const handleRemoveCoupon = (clearInput = true) => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    if (clearInput) setPromoCode('');
+    sessionStorage.removeItem('eba_applied_coupon');
+  };
+
+  // Calculate dynamic shipping fee with freeDeliveryThreshold
+  const calculateFinalShippingFee = (): number => {
+    if (freeShippingThreshold === 0 || subtotal >= freeShippingThreshold) {
+      return 0;
+    }
+    const zoneFee = orderService.calculateShippingFee(shippingZones, province, subtotal);
+    return zoneFee > 0 ? zoneFee : defaultShippingFee;
+  };
+
+  const shippingFee = calculateFinalShippingFee();
+  const totalAmount = Math.max(0, subtotal + shippingFee - discountAmount);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +200,7 @@ export const CheckoutPage: React.FC = () => {
         },
         subtotal,
         shipping_fee: shippingFee,
-        discount: 0,
+        discount: discountAmount,
         total_amount: totalAmount,
         payment_method: selectedPaymentMethod,
         payment_status: 'PENDING' as const,
@@ -117,6 +220,12 @@ export const CheckoutPage: React.FC = () => {
       }));
 
       const created = await orderService.createOrder(orderPayload, orderItems);
+
+      if (appliedCoupon) {
+        await couponService.recordUsage(appliedCoupon.code);
+      }
+      sessionStorage.removeItem('eba_applied_coupon');
+
       setCompletedOrder(created);
       await clearCart();
     } catch (err: any) {
@@ -467,15 +576,108 @@ export const CheckoutPage: React.FC = () => {
               })}
             </div>
 
+            {/* Promotional Voucher in Checkout */}
+            <div style={{ marginTop: '16px', marginBottom: '16px', borderTop: '1px solid #e8dfcf', paddingTop: '16px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#666', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <Tag size={13} color="var(--color-gold-dark)" />
+                <span>Promotional Voucher</span>
+              </label>
+
+              {appliedCoupon ? (
+                <div
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: '#fcf9f2',
+                    border: '1px solid var(--color-gold)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', color: 'var(--color-black-deep)', background: '#fff', padding: '2px 6px', borderRadius: '3px', border: '1px solid #e0d8c7' }}>
+                      {appliedCoupon.code}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-gold-dark)' }}>
+                      -{formatPKR(discountAmount)}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCoupon(true)}
+                    title="Remove coupon"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#888',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. WELCOME10, EBA10"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        border: '1px solid #dcd7ce',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="btn btn-secondary btn-sm"
+                      disabled={isValidatingPromo || !promoCode.trim()}
+                      style={{ padding: '8px 14px', fontSize: '12px' }}
+                    >
+                      {isValidatingPromo ? 'Checking...' : 'Apply'}
+                    </button>
+                  </div>
+                  {promoError && (
+                    <p style={{ fontSize: '11px', color: '#dc2626', margin: '4px 0 0 0' }}>{promoError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="checkout-calculations">
               <div className="calc-row">
                 <span>Subtotal</span>
                 <span>{formatPKR(subtotal)}</span>
               </div>
               <div className="calc-row">
-                <span>Shipping ({province})</span>
+                <span>
+                  Shipping ({province})
+                  <small style={{ display: 'block', fontSize: '10px', color: '#777' }}>
+                    {estimatedDeliveryDays}
+                  </small>
+                </span>
                 <span>{shippingFee === 0 ? 'COMPLIMENTARY' : formatPKR(shippingFee)}</span>
               </div>
+
+              {discountAmount > 0 && (
+                <div className="calc-row" style={{ color: '#047857' }}>
+                  <span>Privilege Discount ({appliedCoupon?.code || promoCode})</span>
+                  <span>-{formatPKR(discountAmount)}</span>
+                </div>
+              )}
+
               <div className="calc-row total">
                 <span>Total Amount</span>
                 <span className="total-val">{formatPKR(totalAmount)}</span>

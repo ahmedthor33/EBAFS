@@ -11,6 +11,7 @@ import {
   Sparkles,
   X,
   ExternalLink,
+  Truck,
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { storageService } from '../../services/storageService';
@@ -58,6 +59,11 @@ export const AdminSettings: React.FC = () => {
   const [facebookUrl, setFacebookUrl] = useState('');
   const [tiktokUrl, setTiktokUrl] = useState('');
   const [currency, setCurrency] = useState('PKR');
+
+  // Nationwide Shipping & Free Delivery Details State
+  const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState<number>(5000);
+  const [defaultShippingFee, setDefaultShippingFee] = useState<number>(250);
+  const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string>('2 - 4 Working Days');
 
   // Hero Banners Slider State
   const [heroBanners, setHeroBanners] = useState<any[]>(defaultHeroSlides);
@@ -175,6 +181,15 @@ export const AdminSettings: React.FC = () => {
             all: { ...prev.all, ...(s.category_banners?.all || {}) },
             brands: { ...prev.brands, ...(s.category_banners?.brands || {}) },
           }));
+        }
+        if (s.free_delivery_threshold !== undefined) {
+          setFreeDeliveryThreshold(Number(s.free_delivery_threshold));
+        }
+        if (s.default_shipping_fee !== undefined) {
+          setDefaultShippingFee(Number(s.default_shipping_fee));
+        }
+        if (s.estimated_delivery_days) {
+          setEstimatedDeliveryDays(s.estimated_delivery_days);
         }
       } catch (err) {
         console.error('Error loading settings:', err);
@@ -344,6 +359,9 @@ export const AdminSettings: React.FC = () => {
         collection_banners: collectionBanners,
         category_banners: categoryBanners,
         currency,
+        free_delivery_threshold: Number(freeDeliveryThreshold),
+        default_shipping_fee: Number(defaultShippingFee),
+        estimated_delivery_days: estimatedDeliveryDays.trim(),
       });
 
       setActionMsg('Website settings & Page banners deployed successfully.');
@@ -412,6 +430,147 @@ export const AdminSettings: React.FC = () => {
               onChange={(e) => setAnnouncementText(e.target.value)}
               className="form-textarea"
             />
+          </div>
+        </div>
+
+        {/* Nationwide Shipping & Free Delivery Details Section */}
+        <div className="admin-form-section" style={{ margin: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div>
+              <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Truck size={18} color="var(--color-gold-dark)" />
+                Nationwide Shipping & Free Delivery Details
+              </h3>
+              <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
+                Set your free shipping eligibility threshold, default flat delivery fee, and customer-facing delivery timeline.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick presets */}
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#888', display: 'block', marginBottom: '8px' }}>
+              Free Delivery Quick Threshold Presets
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[
+                { label: 'PKR 3,000', value: 3000 },
+                { label: 'PKR 5,000 (Recommended)', value: 5000 },
+                { label: 'PKR 7,500', value: 7500 },
+                { label: 'PKR 10,000', value: 10000 },
+                { label: 'Always Free (PKR 0)', value: 0 },
+              ].map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setFreeDeliveryThreshold(preset.value)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    border: freeDeliveryThreshold === preset.value
+                      ? '1px solid var(--color-gold)'
+                      : '1px solid #dcd7ce',
+                    background: freeDeliveryThreshold === preset.value
+                      ? 'var(--color-gold-subtle, #fcf9f2)'
+                      : '#fff',
+                    color: freeDeliveryThreshold === preset.value
+                      ? 'var(--color-gold-dark)'
+                      : '#333',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-grid-3">
+            <div className="form-group">
+              <label className="form-label">
+                Free Delivery Threshold (PKR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="100"
+                value={freeDeliveryThreshold}
+                onChange={(e) => setFreeDeliveryThreshold(Math.max(0, Number(e.target.value)))}
+                required
+                className="form-input"
+                placeholder="5000"
+              />
+              <span style={{ fontSize: '11px', color: '#777', marginTop: '4px', display: 'block' }}>
+                Cart orders equal or above this amount get free shipping (0 = Free for all).
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Standard Shipping Fee (PKR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="50"
+                value={defaultShippingFee}
+                onChange={(e) => setDefaultShippingFee(Math.max(0, Number(e.target.value)))}
+                required
+                className="form-input"
+                placeholder="250"
+              />
+              <span style={{ fontSize: '11px', color: '#777', marginTop: '4px', display: 'block' }}>
+                Applied on orders below the free delivery threshold.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Estimated Nationwide Delivery
+              </label>
+              <input
+                type="text"
+                value={estimatedDeliveryDays}
+                onChange={(e) => setEstimatedDeliveryDays(e.target.value)}
+                required
+                className="form-input"
+                placeholder="2 - 4 Working Days"
+              />
+              <span style={{ fontSize: '11px', color: '#777', marginTop: '4px', display: 'block' }}>
+                Shown on Cart, Checkout & Product guarantee tags.
+              </span>
+            </div>
+          </div>
+
+          {/* Live Storefront Preview */}
+          <div
+            style={{
+              marginTop: '14px',
+              padding: '12px 16px',
+              borderRadius: '6px',
+              background: '#f8f5ee',
+              border: '1px solid #e8dfcf',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div style={{ fontSize: '20px' }}>📦</div>
+            <div style={{ fontSize: '12px', color: '#444', lineHeight: 1.5 }}>
+              <strong style={{ color: 'var(--color-black-deep)', display: 'block', marginBottom: '2px' }}>
+                Live Storefront Customer Preview:
+              </strong>
+              {freeDeliveryThreshold === 0 ? (
+                <span>🎉 <strong>All orders qualify for FREE Nationwide Delivery</strong> across Pakistan • Estimated Arrival: <strong>{estimatedDeliveryDays}</strong></span>
+              ) : (
+                <span>
+                  Orders of <strong>PKR {freeDeliveryThreshold.toLocaleString()}</strong> or more receive <strong>Complimentary FREE Delivery</strong> (Otherwise PKR {defaultShippingFee.toLocaleString()}) • Estimated Arrival: <strong>{estimatedDeliveryDays}</strong>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

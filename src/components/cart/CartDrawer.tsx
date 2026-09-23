@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { adminService } from '../../services/adminService';
 import { formatPKR } from '../../lib/supabase';
 import './CartDrawer.css';
 
 export const CartDrawer: React.FC = () => {
   const navigate = useNavigate();
   const { items, itemCount, subtotal, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart } = useCart();
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(5000);
 
-  const freeShippingThreshold = 5000;
-  const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
-  const remainingForFreeShipping = freeShippingThreshold - subtotal;
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const s = await adminService.getSiteSettings();
+        if (s.free_delivery_threshold !== undefined) {
+          setFreeShippingThreshold(Number(s.free_delivery_threshold));
+        }
+      } catch (e) {}
+    };
+    loadSettings();
+
+    const handleUpdate = (e: any) => {
+      if (e.detail?.free_delivery_threshold !== undefined) {
+        setFreeShippingThreshold(Number(e.detail.free_delivery_threshold));
+      }
+    };
+    window.addEventListener('eba_settings_updated', handleUpdate);
+    return () => window.removeEventListener('eba_settings_updated', handleUpdate);
+  }, []);
+
+  const isFree = freeShippingThreshold === 0 || subtotal >= freeShippingThreshold;
+  const progressPercent = freeShippingThreshold === 0 ? 100 : Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
+  const remainingForFreeShipping = freeShippingThreshold === 0 ? 0 : Math.max(0, freeShippingThreshold - subtotal);
 
   if (!isCartOpen) return null;
 

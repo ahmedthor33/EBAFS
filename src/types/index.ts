@@ -288,6 +288,24 @@ export interface SiteSettings {
     men_image?: string;
     women_image?: string;
   };
+  free_delivery_threshold?: number;
+  default_shipping_fee?: number;
+  estimated_delivery_days?: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  description?: string;
+  discount_type: 'PERCENTAGE' | 'FIXED';
+  discount_value: number; // e.g. 10 (%) or 500 (PKR)
+  min_order_amount?: number;
+  max_discount_amount?: number;
+  is_active: boolean;
+  expiry_date?: string;
+  for_new_customers_only?: boolean;
+  times_used: number;
+  created_at: string;
 }
 
 export interface AdminActivityLog {
