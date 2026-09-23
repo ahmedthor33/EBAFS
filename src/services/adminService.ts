@@ -189,6 +189,10 @@ export const adminService = {
           bgImage: "/assets/banners/hero-1.png",
         },
       },
+      collection_banners: {
+        men_image: '/assets/products/men/bin-faisal-1.jpg',
+        women_image: '/assets/products/women/hussain-rehar-1.jpg',
+      },
     };
 
     let result = { ...defaultSettings };
@@ -248,6 +252,14 @@ export const adminService = {
             result.category_banners = {
               ...result.category_banners,
               ...categoryBannersRow.value,
+            };
+          }
+
+          const collectionBannersRow = data.find((r: any) => r.key === 'collection_banners');
+          if (collectionBannersRow?.value) {
+            result.collection_banners = {
+              ...result.collection_banners,
+              ...collectionBannersRow.value,
             };
           }
 
@@ -345,6 +357,12 @@ export const adminService = {
             key: 'promo_banner',
             value: merged.promo_banner || null,
             description: 'Homepage Editorial Promotional Banner content and image',
+            updated_at: new Date().toISOString(),
+          },
+          {
+            key: 'collection_banners',
+            value: merged.collection_banners || null,
+            description: 'Homepage Shop By Collection Cards images for Men and Women',
             updated_at: new Date().toISOString(),
           },
           {

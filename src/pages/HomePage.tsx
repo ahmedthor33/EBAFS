@@ -41,10 +41,16 @@ const defaultPromoBanner = {
   btnLink: '/about',
 };
 
+const defaultCollectionBanners = {
+  men_image: '/assets/products/men/bin-faisal-1.jpg',
+  women_image: '/assets/products/women/hussain-rehar-1.jpg',
+};
+
 export const HomePage: React.FC = () => {
   const [heroSlide, setHeroSlide] = useState(0);
   const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
   const [promoBanner, setPromoBanner] = useState(defaultPromoBanner);
+  const [collectionBanners, setCollectionBanners] = useState(defaultCollectionBanners);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [menProducts, setMenProducts] = useState<Product[]>([]);
   const [womenProducts, setWomenProducts] = useState<Product[]>([]);
@@ -69,6 +75,9 @@ export const HomePage: React.FC = () => {
         if (s?.promo_banner) {
           setPromoBanner({ ...defaultPromoBanner, ...s.promo_banner });
         }
+        if (s?.collection_banners) {
+          setCollectionBanners({ ...defaultCollectionBanners, ...s.collection_banners });
+        }
       } catch (err) {
         console.warn('Hero banners dynamic load fallback:', err);
       }
@@ -85,6 +94,9 @@ export const HomePage: React.FC = () => {
       }
       if (e.detail?.promo_banner) {
         setPromoBanner({ ...defaultPromoBanner, ...e.detail.promo_banner });
+      }
+      if (e.detail?.collection_banners) {
+        setCollectionBanners({ ...defaultCollectionBanners, ...e.detail.collection_banners });
       }
     };
     window.addEventListener('eba_settings_updated', handleUpdate);
@@ -199,7 +211,7 @@ export const HomePage: React.FC = () => {
             <div className="collection-card">
               <div className="collection-image-wrap">
                 <img
-                  src="/assets/products/men/bin-faisal-1.jpg"
+                  src={collectionBanners.men_image || "/assets/products/men/bin-faisal-1.jpg"}
                   alt="Men's Unstitched Collection"
                   className="collection-img"
                 />
@@ -222,7 +234,7 @@ export const HomePage: React.FC = () => {
             <div className="collection-card">
               <div className="collection-image-wrap">
                 <img
-                  src="/assets/products/women/hussain-rehar-1.jpg"
+                  src={collectionBanners.women_image || "/assets/products/women/hussain-rehar-1.jpg"}
                   alt="Women's Luxury Collection"
                   className="collection-img"
                 />

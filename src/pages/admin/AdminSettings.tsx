@@ -78,6 +78,15 @@ export const AdminSettings: React.FC = () => {
   const [promoDragOver, setPromoDragOver] = useState(false);
   const promoFileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Homepage Shop By Collection Cards (Men's Unstitched & Women's Luxury)
+  const [collectionBanners, setCollectionBanners] = useState({
+    men_image: '/assets/products/men/bin-faisal-1.jpg',
+    women_image: '/assets/products/women/hussain-rehar-1.jpg',
+  });
+  const [uploadingColl, setUploadingColl] = useState<'men' | 'women' | null>(null);
+  const [collDragOver, setCollDragOver] = useState<'men' | 'women' | null>(null);
+  const collFileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
   // Category & Shop Page Banners State (Men, Women, Shop All, Brands Directory)
   const categoryTabs = [
     { key: 'men' as const, label: "Men's Wear", route: '/men', icon: '👔' },
@@ -155,6 +164,9 @@ export const AdminSettings: React.FC = () => {
         }
         if (s.promo_banner) {
           setPromoBanner((prev) => ({ ...prev, ...s.promo_banner }));
+        }
+        if (s.collection_banners) {
+          setCollectionBanners((prev) => ({ ...prev, ...s.collection_banners }));
         }
         if (s.category_banners) {
           setCategoryBanners((prev) => ({
@@ -251,6 +263,31 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  const handleCollectionImageUpload = async (key: 'men' | 'women', files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingColl(key);
+    try {
+      const res = await storageService.uploadProductImage(files[0], 'banners');
+      if (res?.url) {
+        setCollectionBanners(prev => ({
+          ...prev,
+          [`${key}_image`]: res.url,
+        }));
+        setActionMsg(`${key === 'men' ? "Men's" : "Women's"} collection card image updated.`);
+        setTimeout(() => setActionMsg(''), 4000);
+      } else if (res.error) {
+        setActionMsg(`Notice: ${res.error}`);
+        setTimeout(() => setActionMsg(''), 5000);
+      }
+    } catch (err: any) {
+      console.warn('Collection image upload notice:', err);
+      setActionMsg(`Notice: ${err?.message || 'Failed to upload image.'}`);
+      setTimeout(() => setActionMsg(''), 5000);
+    } finally {
+      setUploadingColl(null);
+    }
+  };
+
   const handleCategoryBannerUpload = async (catKey: 'men' | 'women' | 'all' | 'brands', files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploadingCategoryBanner(catKey);
@@ -304,6 +341,7 @@ export const AdminSettings: React.FC = () => {
         tiktok_url: tiktokUrl.trim(),
         hero_banners: heroBanners,
         promo_banner: promoBanner,
+        collection_banners: collectionBanners,
         category_banners: categoryBanners,
         currency,
       });
@@ -759,6 +797,192 @@ export const AdminSettings: React.FC = () => {
                     placeholder="e.g. /about or /shop"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Homepage Shop By Collection Cards */}
+        <div className="admin-form-section" style={{ margin: 0 }}>
+          <div style={{ marginBottom: '14px' }}>
+            <h3 className="section-title" style={{ margin: 0 }}>Homepage "Shop By Collection" Cards</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--color-neutral-muted)' }}>
+              Customize the portrait editorial photography displayed on the Home Page for GENTLEMEN'S WARDROBE (Men's Unstitched) and COUTURE & LAWN (Women's Luxury).
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+            {/* Men's Card */}
+            <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>👔 Men's Unstitched Card</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>Home Page Editorial</span>
+              </div>
+
+              {collectionBanners.men_image ? (
+                <div style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', border: '1px solid #ddd', marginBottom: '10px' }}>
+                  <img
+                    src={collectionBanners.men_image}
+                    alt="Men's Collection Card"
+                    style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/assets/products/men/bin-faisal-1.jpg';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCollectionBanners(prev => ({ ...prev, men_image: '' }))}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '26px',
+                      height: '26px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                    title="Remove Image"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                className={`brand-dropzone ${collDragOver === 'men' ? 'drag-over' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setCollDragOver('men'); }}
+                onDragLeave={() => setCollDragOver(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setCollDragOver(null);
+                  handleCollectionImageUpload('men', e.dataTransfer.files);
+                }}
+                onClick={() => collFileInputRefs.current['men']?.click()}
+                style={{ padding: '20px 14px' }}
+              >
+                <input
+                  type="file"
+                  ref={(el) => { collFileInputRefs.current['men'] = el; }}
+                  onChange={(e) => handleCollectionImageUpload('men', e.target.files)}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+                {uploadingColl === 'men' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <Loader2 size={22} className="animate-spin" style={{ color: 'var(--color-gold-dark)' }} />
+                    <p style={{ margin: 0, fontSize: '13px' }}>Uploading Men's Card...</p>
+                  </div>
+                ) : (
+                  <>
+                    <UploadCloud size={26} className="brand-dropzone-icon" />
+                    <p style={{ margin: '4px 0 0', fontWeight: 600, fontSize: '13px' }}>Drag & Drop Men's Image</p>
+                    <span style={{ fontSize: '11px', color: '#888' }}>or click to browse</span>
+                  </>
+                )}
+              </div>
+
+              <div style={{ marginTop: '10px' }}>
+                <input
+                  type="text"
+                  value={collectionBanners.men_image || ''}
+                  onChange={(e) => setCollectionBanners(prev => ({ ...prev, men_image: e.target.value }))}
+                  placeholder="Or enter image URL (/assets/... or https://...)"
+                  className="form-input"
+                  style={{ fontSize: '12px', padding: '7px 10px' }}
+                />
+              </div>
+            </div>
+
+            {/* Women's Card */}
+            <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>👗 Women's Luxury Card</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>Home Page Editorial</span>
+              </div>
+
+              {collectionBanners.women_image ? (
+                <div style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', border: '1px solid #ddd', marginBottom: '10px' }}>
+                  <img
+                    src={collectionBanners.women_image}
+                    alt="Women's Collection Card"
+                    style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/assets/products/women/hussain-rehar-1.jpg';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCollectionBanners(prev => ({ ...prev, women_image: '' }))}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '26px',
+                      height: '26px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                    title="Remove Image"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                className={`brand-dropzone ${collDragOver === 'women' ? 'drag-over' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setCollDragOver('women'); }}
+                onDragLeave={() => setCollDragOver(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setCollDragOver(null);
+                  handleCollectionImageUpload('women', e.dataTransfer.files);
+                }}
+                onClick={() => collFileInputRefs.current['women']?.click()}
+                style={{ padding: '20px 14px' }}
+              >
+                <input
+                  type="file"
+                  ref={(el) => { collFileInputRefs.current['women'] = el; }}
+                  onChange={(e) => handleCollectionImageUpload('women', e.target.files)}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+                {uploadingColl === 'women' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <Loader2 size={22} className="animate-spin" style={{ color: 'var(--color-gold-dark)' }} />
+                    <p style={{ margin: 0, fontSize: '13px' }}>Uploading Women's Card...</p>
+                  </div>
+                ) : (
+                  <>
+                    <UploadCloud size={26} className="brand-dropzone-icon" />
+                    <p style={{ margin: '4px 0 0', fontWeight: 600, fontSize: '13px' }}>Drag & Drop Women's Image</p>
+                    <span style={{ fontSize: '11px', color: '#888' }}>or click to browse</span>
+                  </>
+                )}
+              </div>
+
+              <div style={{ marginTop: '10px' }}>
+                <input
+                  type="text"
+                  value={collectionBanners.women_image || ''}
+                  onChange={(e) => setCollectionBanners(prev => ({ ...prev, women_image: e.target.value }))}
+                  placeholder="Or enter image URL (/assets/... or https://...)"
+                  className="form-input"
+                  style={{ fontSize: '12px', padding: '7px 10px' }}
+                />
               </div>
             </div>
           </div>

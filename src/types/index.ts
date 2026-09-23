@@ -284,6 +284,10 @@ export interface SiteSettings {
       bgImage?: string;
     };
   };
+  collection_banners?: {
+    men_image?: string;
+    women_image?: string;
+  };
 }
 
 export interface AdminActivityLog {
