@@ -1,0 +1,148 @@
+/* ==============================================================================
+   EBA Fashion Studio: Admin Brands Page Styles & Drag-and-Drop Image Uploader
+   ============================================================================== */
+
+.brand-dropzone {
+  border: 2px dashed var(--color-gold, #c5a059);
+  background-color: #FAF8F5;
+  border-radius: 6px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.brand-dropzone:hover,
+.brand-dropzone.drag-over {
+  background-color: #F4EFE6;
+  border-color: var(--color-black-deep, #0c0c0c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.15);
+}
+
+.brand-dropzone.uploading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.brand-dropzone-icon {
+  color: var(--color-gold-dark, #9b7829);
+  margin-bottom: 8px;
+}
+
+.brand-dropzone h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.brand-dropzone p {
+  font-size: 11px;
+  color: #777;
+  margin: 0;
+}
+
+.brand-image-preview-card {
+  position: relative;
+  border: 1px solid #e5e0d8;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.brand-image-preview-thumb {
+  width: 72px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ece7df;
+  background-color: #f7f5f2;
+}
+
+.brand-image-preview-thumb.logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  background-color: #ffffff;
+  padding: 4px;
+}
+
+.brand-image-preview-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-image-preview-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-image-preview-sub {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.brand-image-remove-btn {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.brand-image-remove-btn:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.brand-upload-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.brand-upload-tab {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid #e5e0d8;
+  background: #faf8f5;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.brand-upload-tab:hover {
+  background: #f0ebe1;
+  color: #1a1a1a;
+}
+
+.brand-upload-tab.active {
+  background: #0c0c0c;
+  color: #ffffff;
+  border-color: #0c0c0c;
+}
