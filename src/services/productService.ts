@@ -153,8 +153,26 @@ const hydrateProductImages = async (products: Product[]): Promise<Product[]> => 
   return products;
 };
 
+// 3-minute in-memory query cache for instant page switching & fast mobile performance
+const queryCache = new Map<string, { result: { products: Product[]; total: number }; timestamp: number }>();
+const CACHE_TTL_MS = 3 * 60 * 1000;
+
+export const clearProductCache = () => {
+  queryCache.clear();
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('eba_products_updated', () => clearProductCache());
+}
+
 export const productService = {
   async getProducts(filters: ProductFilters = {}): Promise<{ products: Product[]; total: number }> {
+    const cacheKey = JSON.stringify(filters);
+    const cached = queryCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      return cached.result;
+    }
+
     const deletedIds = getDeletedProductIds();
     const statusOverrides = getStatusOverrides();
     const localProds = getLocalProducts().filter(p => !deletedIds.has(p.id));
@@ -269,7 +287,10 @@ export const productService = {
           // Hydrate any missing images directly from Supabase
           filtered = await hydrateProductImages(filtered);
 
-          return { products: filtered, total: count || filtered.length };
+          const result = { products: filtered, total: count || filtered.length };
+          queryCache.set(cacheKey, { result, timestamp: Date.now() });
+
+          return result;
         }
       } catch (err) {
         console.warn('Supabase fetch notice, using local dataset:', err);
@@ -355,7 +376,10 @@ export const productService = {
     // Hydrate any missing images directly from Supabase
     list = await hydrateProductImages(list);
 
-    return { products: list, total: list.length };
+    const fallbackResult = { products: list, total: list.length };
+    queryCache.set(cacheKey, { result: fallbackResult, timestamp: Date.now() });
+
+    return fallbackResult;
   },
 
   async getProductBySlug(slug: string): Promise<Product | null> {
@@ -538,6 +562,7 @@ export const productService = {
       // ignore
     }
 
+    clearProductCache();
     return newProd as Product;
   },
 
@@ -627,9 +652,11 @@ export const productService = {
     } catch (e) {
       // ignore
     }
+    clearProductCache();
   },
 
   async deleteProduct(id: string): Promise<void> {
+    clearProductCache();
     addDeletedProductIds([id]);
 
     if (isSupabaseConfigured()) {
@@ -647,6 +674,7 @@ export const productService = {
 
   async deleteMultipleProducts(ids: string[]): Promise<void> {
     if (!ids || ids.length === 0) return;
+    clearProductCache();
     addDeletedProductIds(ids);
 
     if (isSupabaseConfigured()) {
