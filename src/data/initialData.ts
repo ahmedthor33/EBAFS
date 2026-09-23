@@ -348,7 +348,7 @@ export const initialProducts: Product[] = [
     status: 'PUBLISHED',
     is_featured: false,
     is_new: false,
-    is_bestseller: true,
+    is_bestseller: false,
     is_on_sale: false,
     brand: initialBrands[8],
     category: initialCategories[0],
