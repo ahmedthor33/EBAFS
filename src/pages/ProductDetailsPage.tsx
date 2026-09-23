@@ -176,9 +176,17 @@ export const ProductDetailsPage: React.FC = () => {
           {/* Main Display Image with Zoom Effect */}
           <div
             className="main-image-viewport"
-            onMouseEnter={() => setIsZoomed(true)}
+            onMouseEnter={() => {
+              if (typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+                setIsZoomed(true);
+              }
+            }}
             onMouseLeave={() => setIsZoomed(false)}
-            onMouseMove={handleMouseMove}
+            onMouseMove={(e) => {
+              if (typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+                handleMouseMove(e);
+              }
+            }}
           >
             <img
               src={selectedImage || '/assets/logo/eba-logo.png'}

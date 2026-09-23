@@ -32,6 +32,7 @@
 }
 
 /* Product View Layout */
+/* Product View Layout */
 .product-view-container {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -40,25 +41,20 @@
   margin-bottom: var(--space-16);
 }
 
-@media (max-width: 992px) {
-  .product-view-container {
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-  }
-}
-
 /* Image Gallery */
 .product-gallery {
   display: flex;
   gap: var(--space-4);
-  position: sticky;
-  top: 100px;
-  align-self: start;
+  position: relative;
+  width: 100%;
 }
 
-@media (max-width: 640px) {
+/* Only enable sticky gallery on Desktop viewports where details are in a side column */
+@media (min-width: 993px) {
   .product-gallery {
-    flex-direction: column-reverse;
+    position: sticky;
+    top: 100px;
+    align-self: start;
   }
 }
 
@@ -68,14 +64,6 @@
   gap: var(--space-2);
   width: 80px;
   flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .gallery-thumbnails {
-    flex-direction: row;
-    width: 100%;
-    overflow-x: auto;
-  }
 }
 
 .thumb-btn {
@@ -109,6 +97,8 @@
   border-radius: var(--radius-xs);
   background-color: #F3ECE5;
   cursor: zoom-in;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .main-display-image {
@@ -116,10 +106,59 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.25s ease-out;
+  display: block;
 }
 
-.main-display-image.zoomed {
-  transform: scale(2.2);
+/* Zoom is only allowed for mouse hover devices */
+@media (hover: hover) and (pointer: fine) {
+  .main-display-image.zoomed {
+    transform: scale(2.2);
+  }
+}
+
+/* Responsive: Tablet and Mobile Layout */
+@media (max-width: 992px) {
+  .product-view-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    margin-top: 0;
+    margin-bottom: var(--space-10);
+  }
+
+  .product-gallery {
+    position: relative !important;
+    top: auto !important;
+    align-self: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-gallery {
+    flex-direction: column-reverse;
+    gap: var(--space-3);
+  }
+
+  .main-image-viewport {
+    width: 100%;
+    max-height: 60vh;
+    aspect-ratio: 4 / 5;
+    cursor: default;
+  }
+
+  .gallery-thumbnails {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    gap: var(--space-2);
+    padding-bottom: var(--space-1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .thumb-btn {
+    width: 65px;
+    height: 85px;
+    flex-shrink: 0;
+  }
 }
 
 .main-image-badges {
