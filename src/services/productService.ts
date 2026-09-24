@@ -27,6 +27,14 @@ const INITIAL_TESTING_PRODUCT_IDS = [
   '16b99f34-632a-452c-83d6-eff675a4a847', // Test item: Ethnic Elegance Redefined
   'a702a789-3eac-40ca-9a01-85dd57be4a42', // Test item: Ethnic Elegance Redefined
   '01bb803b-0ccc-4d35-8b84-4fb758a2e4f6', // Test item: Aneela’s Premium Airjet Dhanak
+  'e0000000-0000-0000-0000-000000000001',
+  'e0000000-0000-0000-0000-000000000002',
+  'e0000000-0000-0000-0000-000000000003',
+  'e0000000-0000-0000-0000-000000000004',
+  'e0000000-0000-0000-0000-000000000005',
+  'e0000000-0000-0000-0000-000000000006',
+  'e0000000-0000-0000-0000-000000000007',
+  'e0000000-0000-0000-0000-000000000008',
 ];
 
 // Helpers for persistent deletion, local products, and status overrides across refreshes
@@ -85,6 +93,24 @@ const saveLocalProducts = (products: Product[]) => {
     // ignore
   }
 };
+
+// Purge any stale testing products from browser localStorage immediately on module load
+if (typeof window !== 'undefined') {
+  try {
+    const rawLocal = localStorage.getItem('eba_local_products');
+    if (rawLocal) {
+      const arr = JSON.parse(rawLocal);
+      if (Array.isArray(arr)) {
+        const cleaned = arr.filter((p: any) => p && !INITIAL_TESTING_PRODUCT_IDS.includes(p.id) && !p.id?.startsWith('e0000000-'));
+        if (cleaned.length !== arr.length) {
+          localStorage.setItem('eba_local_products', JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+}
 
 const getStatusOverrides = (): Record<string, string> => {
   if (typeof window === 'undefined') return {};
@@ -257,7 +283,7 @@ export const productService = {
 
         const { data, count, error } = await query;
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           // Filter by deleted IDs & status overrides
           let filtered = (data as Product[])
             .filter(p => !deletedIds.has(p.id))
@@ -265,7 +291,7 @@ export const productService = {
 
           // Merge any locally added products not in Supabase yet
           const existingIds = new Set(filtered.map(p => p.id));
-          let extraLocal = localProds.filter(p => !existingIds.has(p.id));
+          let extraLocal = localProds.filter(p => !existingIds.has(p.id) && !deletedIds.has(p.id));
 
           if (filters.gender) {
             extraLocal = extraLocal.filter(p => p.gender === filters.gender || p.gender === 'UNISEX');
@@ -278,6 +304,18 @@ export const productService = {
           }
           if (filters.subcategorySlug) {
             extraLocal = extraLocal.filter(p => p.subcategory?.slug === filters.subcategorySlug);
+          }
+          if (filters.isBestseller) {
+            extraLocal = extraLocal.filter(p => p.is_bestseller);
+          }
+          if (filters.onSale) {
+            extraLocal = extraLocal.filter(p => p.is_on_sale);
+          }
+          if (filters.isNew) {
+            extraLocal = extraLocal.filter(p => p.is_new);
+          }
+          if (filters.isFeatured) {
+            extraLocal = extraLocal.filter(p => p.is_featured);
           }
 
           filtered = [...filtered, ...extraLocal];
@@ -295,7 +333,7 @@ export const productService = {
           // Hydrate any missing images directly from Supabase
           filtered = await hydrateProductImages(filtered);
 
-          const result = { products: filtered, total: count || filtered.length };
+          const result = { products: filtered, total: count ?? filtered.length };
           queryCache.set(cacheKey, { result, timestamp: Date.now() });
 
           return result;
@@ -305,8 +343,8 @@ export const productService = {
       }
     }
 
-    // Local in-memory filtering fallback: initialProducts + localProds minus deletedIds
-    const baseList = [...initialProducts, ...localProds];
+    // Local in-memory filtering fallback: only when Supabase is not configured or query completely failed
+    const baseList = isSupabaseConfigured() ? localProds : [...initialProducts, ...localProds];
     const seen = new Set<string>();
     let list: Product[] = [];
     for (const p of baseList) {
@@ -420,7 +458,8 @@ export const productService = {
 
     if (!product) {
       const localProds = getLocalProducts();
-      const found = [...initialProducts, ...localProds].find(p => p.slug === slug && !deletedIds.has(p.id));
+      const base = isSupabaseConfigured() ? localProds : [...initialProducts, ...localProds];
+      const found = base.find(p => p.slug === slug && !deletedIds.has(p.id));
       product = found || null;
     }
 

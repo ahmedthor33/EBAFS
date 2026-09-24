@@ -319,29 +319,31 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 6. MEN'S COLLECTION SPOTLIGHT */}
-      <section className="product-showcase-section bg-warm">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-eyebrow">FOR GENTLEMEN</span>
-            <h2 className="section-title">Men's Unstitched & Shawls</h2>
-            <p className="section-subtitle">
-              Pure Giza cotton fabrics and heirloom Australian wool shawls.
-            </p>
-          </div>
+      {menProducts.length > 0 && (
+        <section className="product-showcase-section bg-warm">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-eyebrow">FOR GENTLEMEN</span>
+              <h2 className="section-title">Men's Unstitched & Shawls</h2>
+              <p className="section-subtitle">
+                Pure Giza cotton fabrics and heirloom Australian wool shawls.
+              </p>
+            </div>
 
-          <div className="products-grid">
-            {menProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+            <div className="products-grid">
+              {menProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
 
-          <div className="showcase-cta-wrap">
-            <Link to="/men" className="btn btn-primary">
-              Browse Men's Collection
-            </Link>
+            <div className="showcase-cta-wrap">
+              <Link to="/men" className="btn btn-primary">
+                Browse Men's Collection
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 7. WOMEN'S COLLECTION SPOTLIGHT */}
       <section className="product-showcase-section">
