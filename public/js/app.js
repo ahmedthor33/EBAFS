@@ -228,14 +228,23 @@
         };
 
         // Fetch featured products for the curated drops section
-        const featuredRes = await EBA_API.products.list({ limit: 6, is_featured: '1' });
-        const featuredProducts = featuredRes.products || [];
+        let featuredProducts = [];
+        try {
+          const featuredRes = await EBA_API.products.list({ limit: 6, is_featured: '1' });
+          featuredProducts = featuredRes?.products || [];
+        } catch (pErr) {
+          console.warn('Featured products fetch notice:', pErr);
+          featuredProducts = [];
+        }
+
+        const heroImg = hero.image || '/assets/hero_campaign_editorial.png';
+        const heroTitleClean = String(hero.title || 'The Art of Pakistani Weaves').replace(/<br\s*\/?>/gi, ' ');
 
         container.innerHTML = `
           <!-- HERO CAMPAIGN BANNER -->
           <section class="relative w-full overflow-hidden bg-surface">
             <div class="relative w-full h-[90vh] min-h-[600px] max-h-[920px] flex items-end overflow-hidden">
-              <img src="${hero.image}" alt="${hero.title.replace(/<br\/>/g, ' ')}" class="absolute inset-0 w-full h-full object-cover object-center filter brightness-95"/>
+              <img src="${heroImg}" alt="${heroTitleClean}" class="absolute inset-0 w-full h-full object-cover object-center filter brightness-95"/>
               <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/35 to-primary/30 pointer-events-none"></div>
               
               <div class="relative z-10 w-full px-margin-mobile md:px-margin pb-16 max-w-7xl mx-auto flex flex-col justify-end">
@@ -362,7 +371,21 @@
         `;
       } catch (err) {
         console.error('Render home error:', err);
-        container.innerHTML = `<div class="p-16 text-center text-red-600">Failed to render home view</div>`;
+        container.innerHTML = `
+          <section class="relative w-full overflow-hidden bg-surface py-24 px-margin-mobile md:px-margin text-center">
+            <div class="max-w-3xl mx-auto space-y-6">
+              <span class="font-label-sm uppercase tracking-[0.2em] text-secondary">EBA Fashion Studio</span>
+              <h1 class="font-display-lg uppercase text-primary text-3xl md:text-5xl">The Art of Pakistani Weaves</h1>
+              <p class="font-body-md text-on-surface-variant leading-relaxed">
+                Exquisite unstitched fabrics tailored for the discerning connoisseur — Hand-selected Egyptian Cotton, Festive Lawn, and Raw Silk woven across premier Pakistani mills.
+              </p>
+              <div class="pt-4 flex flex-wrap justify-center gap-4">
+                <a href="#men" class="btn-primary px-8 py-3.5">Explore Men's Unstitched</a>
+                <a href="#women" class="btn-secondary px-8 py-3.5">Explore Women's Couture</a>
+              </div>
+            </div>
+          </section>
+        `;
       }
     },
 
