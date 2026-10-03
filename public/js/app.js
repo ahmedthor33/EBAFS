@@ -2315,7 +2315,7 @@
         if (this.state.user) {
           userName.textContent = this.state.user.name.split(' ')[0];
         } else {
-          userName.textContent = 'Sign In';
+          userName.textContent = 'Account';
         }
       }
 
