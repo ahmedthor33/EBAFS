@@ -1,0 +1,551 @@
+/* ==========================================================================
+   EBA FASHION STUDIO - HAUTE COUTURE DESIGN SYSTEM
+   Editorial Minimalism & Architectural Line
+   Colors: Bone Canvas (#F9F9F7), Deep Obsidian (#111111), Champagne Gold (#C5A880)
+   ========================================================================== */
+
+:root {
+  --color-surface: #f9f9f7;
+  --color-surface-low: #f4f4f2;
+  --color-surface-container: #eeeeec;
+  --color-surface-high: #e8e8e6;
+  --color-surface-highest: #e2e3e1;
+  --color-primary: #111111;
+  --color-on-primary: #ffffff;
+  --color-secondary: #725b38;
+  --color-secondary-light: #c5a880;
+  --color-secondary-container: #fedeb2;
+  --color-outline: #747878;
+  --color-outline-variant: #e8e6e1;
+  --color-text-main: #1a1c1b;
+  --color-text-muted: #555859;
+  
+  --font-serif: 'Bodoni Moda', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reset & Primitives */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important; /* Zero radius across all primitives per DESIGN.md */
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography Classes */
+.font-display-lg {
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.font-headline-lg {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.font-headline-md {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 400;
+}
+
+.font-headline-sm {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.font-label-lg {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.font-label-md {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.font-label-sm {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.font-body-lg {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 300;
+}
+
+.font-body-md {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.font-body-sm {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+/* Hairline borders */
+.border-hairline {
+  border: 1px solid var(--color-outline-variant);
+}
+
+.border-b-hairline {
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.border-t-hairline {
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.border-r-hairline {
+  border-right: 1px solid var(--color-outline-variant);
+}
+
+.border-l-hairline {
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+/* Luxury Buttons */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s var(--ease-editorial);
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s var(--ease-editorial);
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.btn-gold {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: 1px solid var(--color-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-gold:hover {
+  background-color: #5a4529;
+  border-color: #5a4529;
+}
+
+/* Form Inputs */
+.form-input {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--color-outline-variant);
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-text-main);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+}
+
+.form-input::placeholder {
+  color: #999c9d;
+  font-weight: 300;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--color-primary);
+  background-color: #ffffff;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  margin: 0;
+  transition: background-color 0.2s ease;
+}
+
+.custom-checkbox::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: transform 0.12s ease-in-out;
+  background-color: var(--color-primary);
+}
+
+.custom-checkbox:checked::before {
+  transform: scale(1);
+}
+
+/* Product Card Styling */
+.product-card {
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid var(--color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.4s var(--ease-editorial), box-shadow 0.4s var(--ease-editorial);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+}
+
+.product-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: var(--color-surface-container);
+}
+
+.product-image-main,
+.product-image-hover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.7s var(--ease-editorial), opacity 0.5s ease;
+}
+
+.product-image-hover {
+  opacity: 0;
+}
+
+.product-card:hover .product-image-main {
+  transform: scale(1.05);
+}
+
+.product-card:hover .product-image-hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Quick Add Overlay */
+.quick-action-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0) 100%);
+  display: flex;
+  gap: 8px;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 0.3s var(--ease-editorial);
+}
+
+.product-card:hover .quick-action-bar {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Wishlist Floating Button */
+.wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--color-outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-primary);
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.wishlist-btn:hover,
+.wishlist-btn.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.wishlist-btn.active .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+  color: #ba1a1a;
+}
+
+/* Badges */
+.badge-status {
+  padding: 3px 8px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.badge-dark {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.badge-gold {
+  background-color: var(--color-secondary-container);
+  color: #584323;
+}
+
+.badge-outline {
+  background-color: #ffffff;
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-primary);
+}
+
+/* Swatches */
+.swatch-item {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--color-outline-variant);
+  display: inline-block;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.swatch-item.active,
+.swatch-item:hover {
+  transform: scale(1.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* Cart Slide-Over Drawer */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(17, 17, 17, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s var(--ease-editorial), visibility 0.4s var(--ease-editorial);
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background-color: #ffffff;
+  z-index: 999;
+  transform: translateX(100%);
+  transition: transform 0.4s var(--ease-editorial);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+}
+
+.drawer-backdrop.active .drawer-panel {
+  transform: translateX(0);
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border-left: 3px solid var(--color-secondary-light);
+  padding: 14px 20px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: slideInRight 0.3s var(--ease-editorial) forwards;
+  max-width: 380px;
+}
+
+.toast.toast-error {
+  border-left-color: #ba1a1a;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Hide native scrollbar for luxury appearance */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-high);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
+}
+
+/* Material Symbols fill utility */
+.icon-filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Running Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: 200%;
+  animation: marquee 28s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Print Invoice Styling */
+@media print {
+  header, footer, nav, #toast-container, .no-print {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+  }
+  .print-area {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+}

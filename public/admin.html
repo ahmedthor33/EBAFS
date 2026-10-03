@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EBA Fashion Studio | Administrative Atelier Console</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#f9f9f7",
+            "surface-dim": "#dadad8",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f4f4f2",
+            "surface-container": "#eeeeec",
+            "surface-container-high": "#e8e8e6",
+            "surface-container-highest": "#e2e3e1",
+            "on-surface": "#1a1c1b",
+            "on-surface-variant": "#444748",
+            primary: "#111111",
+            "on-primary": "#ffffff",
+            "primary-container": "#1c1b1b",
+            secondary: "#725b38",
+            "secondary-container": "#fedeb2",
+            "secondary-fixed": "#fedeb2",
+            "outline-variant": "#e8e6e1"
+          },
+          fontFamily: {
+            serif: ["Bodoni Moda", "serif"],
+            sans: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body class="bg-surface font-sans text-on-surface antialiased flex flex-col min-h-screen">
+
+  <!-- ADMIN AUTHENTICATION WALL (IF NOT LOGGED IN AS ADMIN) -->
+  <div id="admin-login-screen" class="fixed inset-0 z-50 bg-primary flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md p-8 md:p-10 shadow-2xl border border-surface-container-high relative">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 mx-auto mb-4 bg-primary text-white flex items-center justify-center">
+          <span class="font-serif text-2xl uppercase tracking-widest font-semibold">EBA</span>
+        </div>
+        <span class="font-label-sm text-secondary uppercase tracking-[0.2em] block mb-1">Administrative Atelier</span>
+        <h1 class="font-display-lg uppercase text-primary text-2xl md:text-3xl">Console Access</h1>
+        <p class="font-body-sm text-on-surface-variant mt-2">Authorized store management & operations only.</p>
+      </div>
+
+      <form id="admin-login-form" onsubmit="adminApp.handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Owner / Administrator Email *</label>
+          <input type="email" id="admin-email" required class="form-input text-xs" value="ahmedthor33@gmail.com"/>
+        </div>
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Security Key / Password *</label>
+          <input type="password" id="admin-password" required class="form-input text-xs" value="admin123"/>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3.5 text-xs">Verify Credentials & Enter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN CONSOLE LAYOUT -->
+  <div id="admin-app-layout" class="hidden flex-1 flex flex-col lg:flex-row min-h-screen">
+    
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <aside class="w-full lg:w-64 bg-primary text-white shrink-0 flex flex-col justify-between border-r border-white/10">
+      <div>
+        <!-- Brand Header -->
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-white text-primary flex items-center justify-center font-serif font-bold text-sm">
+              EBA
+            </div>
+            <div>
+              <span class="font-serif uppercase tracking-wider text-sm block">EBA Atelier</span>
+              <span class="font-label-sm text-[9px] uppercase tracking-widest text-secondary-fixed">Admin Console</span>
+            </div>
+          </div>
+          <a href="/" target="_blank" class="text-white/60 hover:text-white" title="Open Storefront">
+            <span class="material-symbols-outlined text-[18px]">launch</span>
+          </a>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="p-4 space-y-1 font-label-md uppercase tracking-wider text-xs" id="admin-nav-menu">
+          
+          <div class="text-[10px] text-white/40 px-3 pt-3 pb-1 tracking-[0.2em]">Overview</div>
+          <button onclick="adminApp.navigate('dashboard')" data-section="dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 text-left text-white bg-white/10 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">dashboard</span>
+            <span>Dashboard</span>
+          </button>
+
+          <div class="text-[10px] text-white/40 px-3 pt-4 pb-1 tracking-[0.2em]">Catalog</div>
+          <button onclick="adminApp.navigate('products')" data-section="products" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+            <span>Products</span>
+          </button>
+          <button onclick="adminApp.navigate('categories')" data-section="categories" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">category</span>
+            <span>Categories & Brands</span>
+          </button>
+          <button onclick="adminApp.navigate('inventory')" data-section="inventory" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">warehouse</span>
+            <span>Inventory Health</span>
+          </button>
+
+          <div class="text-[10px] text-white/40 px-3 pt-4 pb-1 tracking-[0.2em]">Sales & Operations</div>
+          <button onclick="adminApp.navigate('orders')" data-section="orders" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+            <span>Orders & Dispatch</span>
+          </button>
+          <button onclick="adminApp.navigate('shipping-zones')" data-section="shipping-zones" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">local_shipping</span>
+            <span>Shipping Zones</span>
+          </button>
+          <button onclick="adminApp.navigate('payments')" data-section="payments" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">payments</span>
+            <span>Payment Gateways</span>
+          </button>
+          <button onclick="adminApp.navigate('coupons')" data-section="coupons" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
+            <span>Coupons & Promos</span>
+          </button>
+
+          <div class="text-[10px] text-white/40 px-3 pt-4 pb-1 tracking-[0.2em]">Customers</div>
+          <button onclick="adminApp.navigate('customers')" data-section="customers" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">group</span>
+            <span>Customers</span>
+          </button>
+
+          <div class="text-[10px] text-white/40 px-3 pt-4 pb-1 tracking-[0.2em]">Content & CMS</div>
+          <button onclick="adminApp.navigate('cms')" data-section="cms" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">web</span>
+            <span>Homepage CMS</span>
+          </button>
+
+          <div class="text-[10px] text-white/40 px-3 pt-4 pb-1 tracking-[0.2em]">Analytics & Admin</div>
+          <button onclick="adminApp.navigate('reports')" data-section="reports" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">analytics</span>
+            <span>Financial Reports</span>
+          </button>
+          <button onclick="adminApp.navigate('users')" data-section="users" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+            <span>Admin Staff & Roles</span>
+          </button>
+          <button onclick="adminApp.navigate('settings')" data-section="settings" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">settings</span>
+            <span>Store Settings</span>
+          </button>
+
+        </nav>
+      </div>
+
+      <!-- Supabase Cloud Backend Status Indicator -->
+      <div class="px-4 py-3 bg-white/5 border-t border-white/10 flex items-center justify-between text-[11px]">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-white/80 font-medium">Supabase Cloud</span>
+        </div>
+        <a href="https://supabase.com/dashboard/project/ydycwzcfptlbfvzbyzlb" target="_blank" class="text-secondary-fixed text-[10px] hover:underline flex items-center gap-0.5" title="Supabase Dashboard">
+          <span>ydycwz...</span>
+          <span class="material-symbols-outlined text-[12px]">launch</span>
+        </a>
+      </div>
+
+      <!-- Current User & Logout -->
+      <div class="p-4 border-t border-white/10 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2 overflow-hidden">
+          <div class="w-7 h-7 rounded-full bg-secondary-fixed text-primary flex items-center justify-center font-bold text-[10px]">
+            AD
+          </div>
+          <div class="min-w-0">
+            <span id="admin-user-display" class="font-semibold block truncate">Administrator</span>
+            <span id="admin-role-display" class="font-label-sm text-[9px] text-secondary-fixed uppercase">superadmin</span>
+          </div>
+        </div>
+        <button onclick="adminApp.logout()" class="text-white/60 hover:text-white p-1" title="Sign Out">
+          <span class="material-symbols-outlined text-[18px]">logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN WORKSPACE -->
+    <main class="flex-1 flex flex-col bg-surface overflow-x-hidden min-w-0">
+      <!-- Top Bar -->
+      <header class="h-16 bg-surface-container-lowest border-b border-surface-container-high px-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h2 id="admin-header-title" class="font-headline-sm uppercase text-primary text-xl">Dashboard Overview</h2>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+          <a href="/" target="_blank" class="btn-secondary py-1.5 px-3 flex items-center gap-1.5 text-xs">
+            <span class="material-symbols-outlined text-[16px]">visibility</span>
+            <span>View Live Storefront</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Content Views Container -->
+      <div id="admin-content-area" class="p-6 md:p-8 flex-1 overflow-y-auto">
+        <!-- Rendered via JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- GENERIC ADMIN MODAL CONTAINER -->
+  <div id="admin-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="admin-modal-content" class="bg-surface-container-lowest w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl border border-surface-container-high">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

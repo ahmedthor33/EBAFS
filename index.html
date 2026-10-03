@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EBA Fashion Studio | Luxury Pakistani Unstitched Haute Couture</title>
+  <meta name="description" content="Exquisite Pakistani unstitched fabrics tailored for the discerning connoisseur — Hand-selected Egyptian Cotton 120s, Festive Lawn, and Pure Raw Silk woven across premier Pakistani mills."/>
+
+  <!-- Google Fonts: Bodoni Moda (Editorial Serif) & Plus Jakarta Sans (Clean Modern) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
+  
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Tailwind CSS via CDN with customized luxury palette matching DESIGN.md -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#f9f9f7",
+            "surface-dim": "#dadad8",
+            "surface-bright": "#f9f9f7",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f4f4f2",
+            "surface-container": "#eeeeec",
+            "surface-container-high": "#e8e8e6",
+            "surface-container-highest": "#e2e3e1",
+            "on-surface": "#1a1c1b",
+            "on-surface-variant": "#444748",
+            primary: "#111111",
+            "on-primary": "#ffffff",
+            "primary-container": "#1c1b1b",
+            secondary: "#725b38",
+            "on-secondary": "#ffffff",
+            "secondary-container": "#fedeb2",
+            "secondary-fixed": "#fedeb2",
+            "secondary-fixed-dim": "#e0c298",
+            "on-secondary-fixed": "#281800",
+            "outline-variant": "#e8e6e1",
+            outline: "#747878"
+          },
+          fontFamily: {
+            serif: ["Bodoni Moda", "serif"],
+            sans: ["Plus Jakarta Sans", "sans-serif"],
+            "display-lg": ["Bodoni Moda", "serif"],
+            "headline-lg": ["Bodoni Moda", "serif"],
+            "headline-md": ["Bodoni Moda", "serif"],
+            "headline-sm": ["Bodoni Moda", "serif"]
+          },
+          spacing: {
+            margin: "4rem",
+            "margin-tablet": "2rem",
+            "margin-mobile": "1.25rem",
+            gutter: "1.5rem",
+            "space-xl": "3.5rem",
+            "space-lg": "2rem",
+            "space-md": "1rem",
+            "space-sm": "0.5rem"
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Global Custom Styles -->
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body class="bg-surface font-sans text-on-surface antialiased flex flex-col min-h-screen selection:bg-secondary-container selection:text-primary">
+
+  <!-- TOP CMS ANNOUNCEMENT STRIP -->
+  <aside id="top-announcement-bar" class="w-full bg-surface-container-low text-on-surface-variant border-b border-surface-container-high py-2 px-margin-mobile md:px-margin text-center font-label-sm uppercase tracking-widest text-[10px] md:text-[11px] z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+      <span id="announcement-text">Free Express Delivery Across Pakistan on Orders Above PKR 5,000 | Cash on Delivery (COD) Available Worldwide</span>
+    </div>
+  </aside>
+
+  <!-- PRIMARY STICKY NAVIGATION HEADER (Strictly in one single line, logo on the left, no up/down words) -->
+  <header class="sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high transition-all duration-300">
+    <div class="h-20 w-full px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-6 whitespace-nowrap">
+      
+      <!-- Left: Logo & Navigation in One Clean Row -->
+      <div class="flex items-center gap-8 xl:gap-12 shrink-0">
+        <!-- Brand Logo Wordmark: Single horizontal line, no up/down words, on the left side of page -->
+        <a href="#home" class="flex items-center shrink-0 group py-1 whitespace-nowrap" aria-label="EBA Fashion Studio Home">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 36" class="h-8 md:h-9 w-auto transition-transform group-hover:scale-[1.02]" fill="none">
+            <text x="0" y="27" font-family="'Bodoni Moda', 'Playfair Display', serif" font-size="28" font-weight="700" letter-spacing="0.18em" fill="#111111">EBA</text>
+            <line x1="88" y1="8" x2="88" y2="28" stroke="#C5A880" stroke-width="1.5" stroke-opacity="0.9"/>
+            <text x="102" y="24" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-size="11.5" font-weight="600" letter-spacing="0.32em" fill="#444748">FASHION STUDIO</text>
+          </svg>
+        </a>
+
+        <!-- Desktop Navigation Links (All in one single line, no wrapping) -->
+        <nav class="hidden lg:flex items-center gap-6 xl:gap-8 text-[12px] font-semibold uppercase tracking-[0.16em] whitespace-nowrap" id="main-nav-links">
+          <a href="#home" data-nav="home" class="py-2 border-b-2 border-primary text-primary transition-colors">Home</a>
+          <a href="#men" data-nav="men" class="py-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary hover:border-primary transition-colors">Men</a>
+          <a href="#women" data-nav="women" class="py-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary hover:border-primary transition-colors">Women</a>
+          <a href="#new-arrivals" data-nav="new-arrivals" class="py-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary hover:border-primary transition-colors">New Arrivals</a>
+          <a href="#sale" data-nav="sale" class="py-2 border-b-2 border-transparent text-secondary hover:text-primary hover:border-primary transition-colors">Sale</a>
+        </nav>
+      </div>
+
+      <!-- Right Utility Actions (All in one single line) -->
+      <div class="flex items-center gap-3 sm:gap-4 md:gap-5 shrink-0 whitespace-nowrap">
+        
+        <!-- Live Instant Search Bar -->
+        <div class="relative hidden sm:flex items-center border-b border-surface-container-high pb-1 w-36 md:w-52 group focus-within:border-primary transition-colors">
+          <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-focus-within:text-primary mr-2">search</span>
+          <input type="text" id="store-search-input" placeholder="Search unstitched..." class="bg-transparent font-sans text-xs text-on-surface placeholder:text-outline focus:outline-none w-full" autocomplete="off"/>
+          <!-- Dropdown search preview -->
+          <div id="search-preview-box" class="absolute top-8 left-0 right-0 bg-surface-container-lowest border border-surface-container-high shadow-xl hidden z-50 max-h-96 overflow-y-auto"></div>
+        </div>
+
+        <!-- PKR Currency Badge -->
+        <div class="hidden md:flex items-center font-label-md text-on-surface border border-surface-container-high px-2.5 py-1 text-xs select-none">
+          <span class="text-secondary font-semibold">PKR</span>
+        </div>
+
+        <!-- Wishlist Icon -->
+        <button id="header-wishlist-btn" onclick="app.showWishlist()" class="text-on-surface-variant hover:text-primary transition-colors relative flex items-center justify-center p-1.5" title="Curated Wishlist">
+          <span class="material-symbols-outlined text-[22px]">favorite</span>
+          <span id="wishlist-badge" class="absolute -top-1 -right-1 bg-primary text-on-primary font-label-sm rounded-full w-4 h-4 flex items-center justify-center text-[10px] hidden">0</span>
+        </button>
+
+        <!-- Shopping Bag Trigger -->
+        <button id="header-cart-btn" onclick="app.toggleCartDrawer(true)" class="text-on-surface-variant hover:text-primary transition-colors relative flex items-center justify-center p-1.5" title="Shopping Bag">
+          <span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+          <span id="cart-badge" class="absolute -top-1 -right-1 bg-secondary text-on-secondary font-label-sm rounded-full w-4 h-4 flex items-center justify-center text-[10px] hidden">0</span>
+        </button>
+
+        <!-- Customer Salon Portal Trigger -->
+        <button id="header-auth-btn" onclick="app.handleAuthButtonClick()" class="flex items-center gap-2 group p-1" title="Client Salon">
+          <div class="w-8 h-8 bg-primary text-on-primary flex items-center justify-center transition-colors group-hover:bg-secondary">
+            <span class="material-symbols-outlined text-[18px]">person</span>
+          </div>
+          <span id="header-user-name" class="hidden xl:inline text-xs font-semibold uppercase tracking-wider text-primary truncate max-w-[100px]">Sign In</span>
+        </button>
+
+        <!-- Admin Panel Quick Access (Empty by default; dynamically injected ONLY when Owner/Admin signs in) -->
+        <div id="header-admin-slot"></div>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="lg:hidden text-primary p-1" onclick="app.toggleMobileMenu()">
+          <span class="material-symbols-outlined text-[26px]">menu</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-nav" class="lg:hidden hidden bg-surface-container-lowest border-b border-surface-container-high px-margin-mobile py-4 flex flex-col gap-3 font-label-lg tracking-widest text-xs uppercase">
+      <div class="pb-2 border-b border-surface-container-high">
+        <input type="text" id="mobile-search-input" placeholder="Search unstitched weaves..." class="w-full bg-surface-container-low px-3 py-2 text-xs text-on-surface focus:outline-none"/>
+      </div>
+      <a href="#home" onclick="app.toggleMobileMenu()" class="py-1 text-primary">Home</a>
+      <a href="#men" onclick="app.toggleMobileMenu()" class="py-1 text-on-surface-variant">Men's Atelier</a>
+      <a href="#women" onclick="app.toggleMobileMenu()" class="py-1 text-on-surface-variant">Women's Couture</a>
+      <a href="#new-arrivals" onclick="app.toggleMobileMenu()" class="py-1 text-on-surface-variant">New Arrivals</a>
+      <a href="#sale" onclick="app.toggleMobileMenu()" class="py-1 text-secondary">Seasonal Sale</a>
+      <a href="#cart" onclick="app.toggleMobileMenu()" class="py-1 text-on-surface-variant">Shopping Bag</a>
+      <a href="#account" onclick="app.toggleMobileMenu()" class="py-1 text-on-surface-variant">Client Account</a>
+      <div id="mobile-admin-slot"></div>
+    </div>
+  </header>
+
+  <!-- DYNAMIC VIEW CONTAINER -->
+  <main id="app-view" class="flex-1 w-full"></main>
+
+  <!-- EDITORIAL FOOTER -->
+  <footer class="w-full bg-primary text-on-primary border-t border-surface-container-high mt-auto">
+    <!-- Salon Trust Highlights -->
+    <div class="border-b border-white/10 py-10 px-margin-mobile md:px-margin">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="flex items-start gap-4">
+          <span class="material-symbols-outlined text-secondary-fixed text-2xl">verified</span>
+          <div>
+            <h4 class="font-label-lg uppercase tracking-wider text-surface-container-lowest">100% Authentic Weaves</h4>
+            <p class="font-body-sm text-surface-dim mt-1">Direct from master Swiss and Pakistani looms with certified thread counts.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <span class="material-symbols-outlined text-secondary-fixed text-2xl">local_shipping</span>
+          <div>
+            <h4 class="font-label-lg uppercase tracking-wider text-surface-container-lowest">Nationwide Express</h4>
+            <p class="font-body-sm text-surface-dim mt-1">Complimentary dispatch via TCS & Leopards on all orders above PKR 5,000.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <span class="material-symbols-outlined text-secondary-fixed text-2xl">payments</span>
+          <div>
+            <h4 class="font-label-lg uppercase tracking-wider text-surface-container-lowest">Cash on Delivery</h4>
+            <p class="font-body-sm text-surface-dim mt-1">Seamless COD verification code sent via WhatsApp prior to home delivery.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <span class="material-symbols-outlined text-secondary-fixed text-2xl">straighten</span>
+          <div>
+            <h4 class="font-label-lg uppercase tracking-wider text-surface-container-lowest">Master Bespoke Tailoring</h4>
+            <p class="font-body-sm text-surface-dim mt-1">Optional master atelier stitching service available directly at checkout.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Footer Directory -->
+    <div class="py-16 px-margin-mobile md:px-margin max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
+      <!-- Col 1: Brand & Heritage (4 cols) -->
+      <div class="md:col-span-4 flex flex-col gap-5">
+        <div class="flex items-center gap-3">
+          <span class="font-serif text-2xl uppercase tracking-wider text-surface-container-lowest">EBA Fashion Studio</span>
+        </div>
+        <p class="font-body-sm text-surface-dim leading-relaxed max-w-sm">
+          Pioneering architectural unstitched couture since 1988. Dedicated to the tactile luxury and timeless heritage of fine Pakistani textiles.
+        </p>
+        <div class="flex items-center gap-3 font-label-sm text-secondary-fixed tracking-wider">
+          <span class="material-symbols-outlined text-[16px]">pin_drop</span>
+          <span>Gulberg III Flagship Salon • Lahore, Pakistan</span>
+        </div>
+        <div class="flex items-center gap-3 text-surface-dim font-body-sm">
+          <span class="material-symbols-outlined text-[16px]">call</span>
+          <span>+92 321 8456789 (WhatsApp Concierge)</span>
+        </div>
+      </div>
+
+      <!-- Col 2: The Collections (2 cols) -->
+      <div class="md:col-span-2 flex flex-col gap-4">
+        <h4 class="font-label-md uppercase tracking-[0.2em] text-secondary-fixed">Collections</h4>
+        <ul class="flex flex-col gap-2.5 font-body-sm text-surface-dim">
+          <li><a href="#men" class="hover:text-surface-container-lowest transition-colors">Men's Unstitched</a></li>
+          <li><a href="#women" class="hover:text-surface-container-lowest transition-colors">Women's Couture</a></li>
+          <li><a href="#new-arrivals" class="hover:text-surface-container-lowest transition-colors">New Arrivals</a></li>
+          <li><a href="#catalog?category=egyptian-cotton-120s" class="hover:text-surface-container-lowest transition-colors">Egyptian Cotton 120s</a></li>
+          <li><a href="#catalog?category=pure-boski" class="hover:text-surface-container-lowest transition-colors">Pure Silk Boski</a></li>
+          <li><a href="#sale" class="hover:text-surface-container-lowest transition-colors text-secondary-fixed-dim">Seasonal Archive</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Atelier Concierge (3 cols) -->
+      <div class="md:col-span-3 flex flex-col gap-4">
+        <h4 class="font-label-md uppercase tracking-[0.2em] text-secondary-fixed">Client Concierge</h4>
+        <ul class="flex flex-col gap-2.5 font-body-sm text-surface-dim">
+          <li><a href="#account" class="hover:text-surface-container-lowest transition-colors">Client Salon Login</a></li>
+          <li><a href="#account" class="hover:text-surface-container-lowest transition-colors">Track Your TCS Shipment</a></li>
+          <li><a href="#cart" class="hover:text-surface-container-lowest transition-colors">Bespoke Tailoring Guide</a></li>
+          <li><a href="javascript:void(0)" onclick="app.showPolicyModal('shipping')" class="hover:text-surface-container-lowest transition-colors">Domestic & DHL Global Delivery</a></li>
+          <li><a href="javascript:void(0)" onclick="app.showPolicyModal('returns')" class="hover:text-surface-container-lowest transition-colors">7-Day Unstitched Inspection Guarantee</a></li>
+          <li id="footer-admin-slot"></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Newsletter & Salon Society (3 cols) -->
+      <div class="md:col-span-3 flex flex-col gap-4">
+        <h4 class="font-label-md uppercase tracking-[0.2em] text-secondary-fixed">Atelier Society</h4>
+        <p class="font-body-sm text-surface-dim">Receive private 48-hour preview invitations for limited lawn drops and seasonal handspun yardage.</p>
+        <form onsubmit="event.preventDefault(); EBA_API.showToast('Thank you for joining the EBA Atelier Society.'); this.reset();" class="flex flex-col gap-2">
+          <input type="email" placeholder="Enter your email address" required class="w-full bg-white/10 border border-white/20 px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-400 focus:outline-none focus:border-secondary-fixed"/>
+          <button type="submit" class="w-full bg-white text-primary font-label-sm py-2.5 hover:bg-secondary-fixed hover:text-on-secondary-fixed transition-colors">Request Invitation</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Copyright & Disclaimer Bar -->
+    <div class="border-t border-white/10 py-6 px-margin-mobile md:px-margin text-center font-label-sm text-surface-dim text-[11px] uppercase tracking-widest flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-4">
+      <span>&copy; 2026 EBA Fashion Studio. All Rights Reserved. Crafted for Haute Couture Pakistani Textiles.</span>
+      <div class="flex items-center gap-6">
+        <span>PKR Currency Verified</span>
+        <span>SSL 256-Bit Encrypted</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SLIDE-OVER SHOPPING BAG DRAWER -->
+  <div id="cart-drawer-backdrop" class="drawer-backdrop" onclick="if(event.target === this) app.toggleCartDrawer(false)">
+    <aside class="drawer-panel" id="cart-drawer-panel">
+      <!-- Drawer Header -->
+      <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-surface-container-lowest">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[22px]">shopping_bag</span>
+          <h2 class="font-headline-sm uppercase text-primary text-xl">Shopping Bag</h2>
+          <span id="drawer-item-count" class="font-body-sm text-on-surface-variant font-normal">(0)</span>
+        </div>
+        <button onclick="app.toggleCartDrawer(false)" class="text-on-surface-variant hover:text-primary transition-colors p-1">
+          <span class="material-symbols-outlined text-[22px]">close</span>
+        </button>
+      </div>
+
+      <!-- Free Shipping Progress Indicator -->
+      <div id="drawer-shipping-bar" class="bg-surface-container-low px-6 py-3 border-b border-surface-container-high text-xs">
+        <div class="flex items-center justify-between text-primary font-semibold mb-1">
+          <span id="drawer-shipping-msg">Express Delivery Available</span>
+          <span class="text-secondary font-label-sm uppercase">TCS Dispatch</span>
+        </div>
+        <div class="w-full bg-surface-container-high h-1.5 overflow-hidden">
+          <div id="drawer-shipping-progress" class="bg-secondary h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Drawer Items List -->
+      <div id="drawer-items-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Drawer Footer Totals & CTA -->
+      <div class="p-6 border-t border-surface-container-high bg-surface-container-low space-y-4">
+        <div class="space-y-1.5 text-xs">
+          <div class="flex justify-between text-on-surface-variant">
+            <span>Fabric Subtotal</span>
+            <span id="drawer-subtotal" class="font-semibold text-primary">PKR 0</span>
+          </div>
+          <div id="drawer-tailoring-row" class="flex justify-between text-on-surface-variant hidden">
+            <span>Master Tailor Add-on</span>
+            <span id="drawer-tailoring" class="font-semibold text-primary">PKR 0</span>
+          </div>
+          <div class="flex justify-between text-on-surface-variant">
+            <span>Estimated Shipping</span>
+            <span id="drawer-shipping" class="font-semibold text-secondary">Free</span>
+          </div>
+          <div class="flex justify-between text-sm font-semibold text-primary pt-2 border-t border-surface-container-high">
+            <span>Total Estimated</span>
+            <span id="drawer-total">PKR 0</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <a href="#checkout" onclick="app.toggleCartDrawer(false)" class="btn-primary w-full text-center py-3.5">
+            <span>Proceed to Express Checkout</span>
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+          <a href="#cart" onclick="app.toggleCartDrawer(false)" class="btn-secondary w-full text-center py-2.5 text-xs">
+            View Complete Shopping Bag
+          </a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- AUTHENTICATION MODAL (Client Salon) -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md p-8 relative shadow-2xl border border-surface-container-high">
+      <button onclick="app.toggleAuthModal(false)" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+
+      <div class="text-center mb-6">
+        <span class="font-label-sm text-secondary uppercase tracking-[0.2em] block mb-1">EBA Private Salon</span>
+        <h3 id="auth-modal-title" class="font-headline-sm uppercase text-primary text-2xl">Member Sign In</h3>
+        <p id="auth-modal-subtitle" class="font-body-sm text-on-surface-variant mt-1">Access your saved unstitched measurements and orders.</p>
+      </div>
+
+      <!-- Auth Tab Toggle -->
+      <div class="flex border-b border-surface-container-high mb-6">
+        <button id="modal-tab-signin" onclick="app.switchAuthMode('signin')" class="flex-1 pb-2 font-label-sm uppercase tracking-wider text-primary border-b-2 border-primary">Sign In</button>
+        <button id="modal-tab-signup" onclick="app.switchAuthMode('signup')" class="flex-1 pb-2 font-label-sm uppercase tracking-wider text-on-surface-variant border-b-2 border-transparent">Create Account</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="signin-form" onsubmit="app.handleSignIn(event)" class="space-y-4">
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Email Address *</label>
+          <input type="email" id="signin-email" required class="form-input text-xs" placeholder="fatima@example.com"/>
+        </div>
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Password *</label>
+          <input type="password" id="signin-password" required class="form-input text-xs" placeholder="••••••••"/>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="custom-checkbox" checked/>
+            <span class="text-on-surface-variant">Remember me</span>
+          </label>
+          <button type="button" onclick="EBA_API.showToast('Please contact concierge to reset your password.', 'info')" class="text-secondary hover:underline">Forgot?</button>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 text-xs">Sign In</button>
+        <div class="text-center text-xs text-on-surface-variant pt-2">
+          Demo Customer: <code class="bg-surface-container px-1 py-0.5 text-primary">fatima@example.com / fatima123</code>
+        </div>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="signup-form" onsubmit="app.handleSignUp(event)" class="space-y-3.5 hidden">
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Full Name *</label>
+          <input type="text" id="signup-name" required class="form-input text-xs" placeholder="Fatima Noor"/>
+        </div>
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Email Address *</label>
+          <input type="email" id="signup-email" required class="form-input text-xs" placeholder="your.email@example.com"/>
+        </div>
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Phone Number (WhatsApp) *</label>
+          <input type="tel" id="signup-phone" required class="form-input text-xs" placeholder="+92 300 1234567"/>
+        </div>
+        <div>
+          <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Password *</label>
+          <input type="password" id="signup-password" required minlength="6" class="form-input text-xs" placeholder="At least 6 characters"/>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 text-xs">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- Client JavaScript Applications -->
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
