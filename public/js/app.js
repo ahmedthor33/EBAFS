@@ -52,6 +52,14 @@
             text.textContent = this.state.cms.announcement_bar.text;
           }
         }
+
+        // Update WhatsApp Concierge in footer dynamically from store settings
+        const conciergePhone = this.state.settings?.general?.whatsapp || '0325-4473333';
+        const cleanDigits = conciergePhone.replace(/\D/g, '').replace(/^0/, '92');
+        const wLink = document.getElementById('footer-whatsapp-link');
+        const wText = document.getElementById('footer-whatsapp-text');
+        if (wText) wText.textContent = `${conciergePhone} (WhatsApp Concierge)`;
+        if (wLink) wLink.href = `https://wa.me/${cleanDigits}`;
       } catch (err) {
         console.warn('Failed to load CMS:', err);
       }
@@ -1188,7 +1196,7 @@
       if (paymentMethods.length === 0) {
         paymentMethods = [
           { id: 'cod', name: 'Cash on Delivery (COD)', description: 'Pay physical cash upon doorstep delivery anywhere in Pakistan via verified TCS courier.' },
-          { id: 'bank_transfer', name: 'Direct Bank Wire / Online Transfer (Meezan Bank IBAN)', bank_name: 'Meezan Bank Ltd', account_title: 'EBA Fashion Studio Pvt Ltd', account_number: '01000948210001', iban: 'PK64MEZN0001000948210001', branch: 'Gulberg III Main Boulevard Flagship, Lahore', instructions: 'Transfer to verified Meezan account and WhatsApp receipt to +92 321 8456789.' }
+          { id: 'bank_transfer', name: 'Direct Bank Wire / Online Transfer (Meezan Bank IBAN)', bank_name: 'Meezan Bank Ltd', account_title: 'EBA Fashion Studio Pvt Ltd', account_number: '01000948210001', iban: 'PK64MEZN0001000948210001', branch: 'Gulberg III Main Boulevard Flagship, Lahore', instructions: 'Transfer to verified Meezan account and WhatsApp receipt to 0325-4473333.' }
         ];
       }
 
@@ -1419,7 +1427,7 @@
                                   <p><strong>IBAN:</strong> <span class="font-bold text-secondary">${pm.iban || 'PK64MEZN0001000948210001'}</span></p>
                                   <p><strong>Branch:</strong> ${pm.branch || 'Gulberg III Main Boulevard Flagship, Lahore'}</p>
                                 </div>
-                                <p class="text-[11px] text-on-surface-variant mt-2">${pm.instructions || 'Transfer funds to our verified account and WhatsApp receipt to +92 321 8456789.'}</p>
+                                <p class="text-[11px] text-on-surface-variant mt-2">${pm.instructions || 'Transfer funds to our verified account and WhatsApp receipt to 0325-4473333.'}</p>
                               ` : ''}
 
                               ${pm.id === 'jazzcash' ? `

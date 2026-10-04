@@ -2379,7 +2379,7 @@
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">WhatsApp Concierge Phone</label>
-                  <input type="text" id="set-phone" value="${gen.whatsapp || '+92 321 8456789'}" class="form-input text-xs"/>
+                  <input type="text" id="set-phone" value="${gen.whatsapp || '0325-4473333'}" class="form-input text-xs"/>
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Flagship Salon Address</label>
@@ -2705,7 +2705,7 @@
           account_number: '01000948210001',
           iban: 'PK64MEZN0001000948210001',
           branch: 'Gulberg III Main Boulevard Flagship, Lahore',
-          instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+          instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp 0325-4473333.'
         };
         const jazz = payments.jazzcash || {
           enabled: true,
@@ -2828,7 +2828,7 @@
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1">Client Transfer Instructions</label>
-                    <textarea id="pay-bank-inst" rows="2" class="form-input text-xs">${bank.instructions || 'Transfer funds to our verified account and send transaction slip to WhatsApp +92 321 8456789.'}</textarea>
+                    <textarea id="pay-bank-inst" rows="2" class="form-input text-xs">${bank.instructions || 'Transfer funds to our verified account and send transaction slip to WhatsApp 0325-4473333.'}</textarea>
                   </div>
                 </div>
               </div>

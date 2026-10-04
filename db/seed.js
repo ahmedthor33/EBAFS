@@ -499,8 +499,8 @@ function seed() {
     tagline: 'Haute Couture Pakistani Unstitched Fabrics',
     logo_url: '/assets/logo.png',
     email: 'concierge@ebafashion.pk',
-    phone: '+92 321 8456789',
-    whatsapp: '+92 321 8456789',
+    phone: '0325-4473333',
+    whatsapp: '0325-4473333',
     address: 'Flagship Salon, M.M. Alam Road, Gulberg III, Lahore, Pakistan',
     city: 'Lahore',
     country: 'Pakistan'
@@ -529,7 +529,7 @@ function seed() {
       account_number: '01000948210001',
       iban: 'PK64MEZN0001000948210001',
       branch: 'Gulberg III Main Boulevard Flagship, Lahore',
-      instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+      instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp 0325-4473333.'
     },
     jazzcash: {
       enabled: true,

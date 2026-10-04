@@ -158,7 +158,7 @@
           account_number: payments.bank_transfer?.account_number || '01000948210001',
           iban: payments.bank_transfer?.iban || 'PK64MEZN0001000948210001',
           branch: payments.bank_transfer?.branch || 'Gulberg III Main Boulevard Flagship, Lahore',
-          instructions: payments.bank_transfer?.instructions || 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+          instructions: payments.bank_transfer?.instructions || 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp 0325-4473333.'
         });
       }
 
