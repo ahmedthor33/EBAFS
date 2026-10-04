@@ -80,8 +80,8 @@
     </div>
   </aside>
 
-  <!-- PRIMARY STICKY NAVIGATION HEADER (Strictly in one single line, logo on the left, no up/down words) -->
-  <header class="sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high transition-all duration-300">
+  <!-- PRIMARY NAVIGATION HEADER (Static on mobile for unobstructed image viewing, sticky on desktop) -->
+  <header class="relative lg:sticky lg:top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high transition-all duration-300">
     <div class="h-20 w-full px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-6 whitespace-nowrap">
       
       <!-- Left: Logo & Navigation in One Clean Row -->
@@ -103,6 +103,7 @@
           <a href="#new-arrivals" data-nav="new-arrivals" class="py-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary hover:border-primary transition-colors">New Arrivals</a>
           <a href="#sale" data-nav="sale" class="py-2 border-b-2 border-transparent text-secondary hover:text-primary hover:border-primary transition-colors">Sale</a>
           <a href="#account" data-nav="account" class="py-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary hover:border-primary transition-colors">My Account</a>
+          <div id="nav-admin-slot" class="inline-flex items-center"></div>
         </nav>
       </div>
 

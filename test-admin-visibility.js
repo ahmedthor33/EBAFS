@@ -14,7 +14,7 @@ async function run() {
   console.log('✅ PASS: Exactly ZERO links to /admin exist in public/index.html! No customer can ever see it.');
 
   console.log('\n--- 2. Testing Customer Authentication vs Owner Authentication ---');
-  const BASE = 'http://localhost:3000';
+  const BASE = 'http://127.0.0.1:3000';
 
   // Test Customer Login
   const customerRes = await fetch(`${BASE}/api/auth/login`, {
