@@ -514,10 +514,39 @@ function seed() {
   }));
 
   insertSetting.run('payments', JSON.stringify({
-    cod_enabled: true,
-    cod_title: 'Cash on Delivery (COD)',
-    bank_transfer_enabled: true,
-    bank_details: 'Meezan Bank Ltd\nAccount Title: EBA Fashion Studio Pvt Ltd\nIBAN: PK64MEZN0001000948210001\nBranch: Gulberg III Flagship, Lahore'
+    cod: {
+      enabled: true,
+      title: 'Cash on Delivery (COD)',
+      handling_fee: 0,
+      max_amount: 75000,
+      description: 'Pay with physical cash upon doorstep delivery anywhere in Pakistan via TCS / Leopards.'
+    },
+    bank_transfer: {
+      enabled: true,
+      title: 'Direct Bank Wire / Online IBAN Transfer',
+      bank_name: 'Meezan Bank Ltd',
+      account_title: 'EBA Fashion Studio Pvt Ltd',
+      account_number: '01000948210001',
+      iban: 'PK64MEZN0001000948210001',
+      branch: 'Gulberg III Main Boulevard Flagship, Lahore',
+      instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+    },
+    jazzcash: {
+      enabled: true,
+      title: 'JazzCash Mobile Wallet & Direct Pay',
+      merchant_id: '03001234567',
+      merchant_name: 'EBA FASHION STUDIO',
+      account_number: '0300 1234567',
+      instructions: 'Send payment via JazzCash App or dial *786# to Till 0300 1234567.'
+    },
+    easypaisa: {
+      enabled: true,
+      title: 'Easypaisa Mobile Wallet & QR Pay',
+      till_id: '78491',
+      account_title: 'EBA FASHION STUDIO',
+      account_number: '0321 8456789',
+      instructions: 'Send payment via Easypaisa App to Mobile Account: 0321 8456789.'
+    }
   }));
 
   insertSetting.run('tailoring', JSON.stringify({

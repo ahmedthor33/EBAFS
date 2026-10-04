@@ -2690,19 +2690,48 @@
     async renderPayments(area) {
       try {
         const payments = await EBA_API.admin.getPaymentGateways();
-        const cod = payments.cod || { enabled: true, title: 'Cash on Delivery (COD)', handling_fee: 0, max_amount: 50000 };
-        const bank = payments.bank_transfer || { enabled: true, title: 'Direct Bank Wire / Online IBAN Transfer', bank_name: 'Meezan Bank Ltd', account_title: 'EBA Fashion Studio Pvt Ltd', account_number: '01000948210001', iban: 'PK64MEZN0001000948210001', branch: 'Gulberg III Flagship, Lahore' };
-        const jazz = payments.jazzcash || { enabled: true, title: 'JazzCash Mobile Wallet & Direct Pay', merchant_id: '03001234567', account_number: '0300 1234567', instructions: 'Pay via JazzCash App or dial *786#' };
-        const easy = payments.easypaisa || { enabled: true, title: 'Easypaisa Mobile Wallet & QR Pay', till_id: '78491', account_number: '0321 8456789', instructions: 'Pay via Easypaisa App to Mobile Account' };
+        const cod = payments.cod || {
+          enabled: true,
+          title: 'Cash on Delivery (COD)',
+          handling_fee: 0,
+          max_amount: 75000,
+          description: 'Pay with physical cash upon doorstep delivery anywhere in Pakistan via TCS / Leopards.'
+        };
+        const bank = payments.bank_transfer || {
+          enabled: true,
+          title: 'Direct Bank Wire / Online IBAN Transfer',
+          bank_name: 'Meezan Bank Ltd',
+          account_title: 'EBA Fashion Studio Pvt Ltd',
+          account_number: '01000948210001',
+          iban: 'PK64MEZN0001000948210001',
+          branch: 'Gulberg III Main Boulevard Flagship, Lahore',
+          instructions: 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+        };
+        const jazz = payments.jazzcash || {
+          enabled: true,
+          title: 'JazzCash Mobile Wallet & Direct Pay',
+          merchant_id: '03001234567',
+          merchant_name: 'EBA FASHION STUDIO',
+          account_number: '0300 1234567',
+          instructions: 'Send payment via JazzCash App or dial *786# to Till 0300 1234567.'
+        };
+        const easy = payments.easypaisa || {
+          enabled: true,
+          title: 'Easypaisa Mobile Wallet & QR Pay',
+          till_id: '78491',
+          account_title: 'EBA FASHION STUDIO',
+          account_number: '0321 8456789',
+          instructions: 'Send payment via Easypaisa App to Mobile Account: 0321 8456789.'
+        };
 
         area.innerHTML = `
           <div class="space-y-6">
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 class="font-headline-sm uppercase text-primary text-lg">Pakistani Payment Channels</h3>
-                <p class="font-body-sm text-on-surface-variant text-xs">Configure online bank accounts, mobile wallets (JazzCash, Easypaisa), and Cash on Delivery with custom handling rules.</p>
+                <p class="font-body-sm text-on-surface-variant text-xs">Configure online bank accounts, mobile wallets (JazzCash, Easypaisa), and Cash on Delivery with real-time cloud synchronization.</p>
               </div>
-              <button onclick="adminApp.saveAllPayments()" class="btn-primary py-2.5 px-6 text-xs shrink-0">
+              <button onclick="adminApp.saveAllPayments(event)" class="btn-save-payments btn-primary py-2.5 px-6 text-xs shrink-0 flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px]">save</span>
                 <span>Save All Payment Settings</span>
               </button>
@@ -2736,11 +2765,11 @@
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="font-label-sm uppercase block mb-1">COD Handling Surcharge (PKR)</label>
-                      <input type="number" id="pay-cod-fee" value="${cod.handling_fee || 0}" class="form-input text-xs"/>
+                      <input type="number" id="pay-cod-fee" value="${cod.handling_fee !== undefined ? cod.handling_fee : 0}" class="form-input text-xs"/>
                     </div>
                     <div>
                       <label class="font-label-sm uppercase block mb-1">Maximum Order Limit (PKR)</label>
-                      <input type="number" id="pay-cod-max" value="${cod.max_amount || 50000}" class="form-input text-xs"/>
+                      <input type="number" id="pay-cod-max" value="${cod.max_amount !== undefined ? cod.max_amount : 75000}" class="form-input text-xs"/>
                     </div>
                   </div>
                   <div>
@@ -2769,6 +2798,10 @@
                 </div>
 
                 <div class="space-y-3 text-xs">
+                  <div>
+                    <label class="font-label-sm uppercase block mb-1">Gateway Display Title</label>
+                    <input type="text" id="pay-bank-title" value="${bank.title || 'Direct Bank Wire / Online IBAN Transfer'}" class="form-input text-xs"/>
+                  </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="font-label-sm uppercase block mb-1">Bank Name *</label>
@@ -2776,7 +2809,7 @@
                     </div>
                     <div>
                       <label class="font-label-sm uppercase block mb-1">Account Title *</label>
-                      <input type="text" id="pay-bank-title" value="${bank.account_title || 'EBA Fashion Studio Pvt Ltd'}" class="form-input text-xs"/>
+                      <input type="text" id="pay-bank-account-title" value="${bank.account_title || 'EBA Fashion Studio Pvt Ltd'}" class="form-input text-xs"/>
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
@@ -2791,7 +2824,7 @@
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1">Branch Name & City</label>
-                    <input type="text" id="pay-bank-branch" value="${bank.branch || 'Gulberg III Flagship, Lahore'}" class="form-input text-xs"/>
+                    <input type="text" id="pay-bank-branch" value="${bank.branch || 'Gulberg III Main Boulevard Flagship, Lahore'}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1">Client Transfer Instructions</label>
@@ -2825,13 +2858,17 @@
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="font-label-sm uppercase block mb-1">JazzCash Mobile / Till # *</label>
+                      <label class="font-label-sm uppercase block mb-1">JazzCash Mobile / Account # *</label>
                       <input type="text" id="pay-jazz-acc" value="${jazz.account_number || '0300 1234567'}" class="form-input text-xs font-mono font-bold"/>
                     </div>
                     <div>
-                      <label class="font-label-sm uppercase block mb-1">Merchant Title</label>
-                      <input type="text" id="pay-jazz-name" value="${jazz.merchant_name || 'EBA FASHION STUDIO'}" class="form-input text-xs"/>
+                      <label class="font-label-sm uppercase block mb-1">Merchant Till ID / Number</label>
+                      <input type="text" id="pay-jazz-merchant-id" value="${jazz.merchant_id || jazz.account_number || '0300 1234567'}" class="form-input text-xs font-mono"/>
                     </div>
+                  </div>
+                  <div>
+                    <label class="font-label-sm uppercase block mb-1">Merchant Title / Account Name</label>
+                    <input type="text" id="pay-jazz-name" value="${jazz.merchant_name || 'EBA FASHION STUDIO'}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1">Checkout Customer Instructions</label>
@@ -2865,13 +2902,17 @@
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="font-label-sm uppercase block mb-1">Easypaisa Mobile / Till # *</label>
+                      <label class="font-label-sm uppercase block mb-1">Easypaisa Mobile # *</label>
                       <input type="text" id="pay-easy-acc" value="${easy.account_number || '0321 8456789'}" class="form-input text-xs font-mono font-bold"/>
                     </div>
                     <div>
-                      <label class="font-label-sm uppercase block mb-1">Account Title / Till ID</label>
-                      <input type="text" id="pay-easy-name" value="${easy.account_title || 'EBA FASHION STUDIO'}" class="form-input text-xs"/>
+                      <label class="font-label-sm uppercase block mb-1">Till ID (Optional)</label>
+                      <input type="text" id="pay-easy-till-id" value="${easy.till_id || '78491'}" class="form-input text-xs font-mono"/>
                     </div>
+                  </div>
+                  <div>
+                    <label class="font-label-sm uppercase block mb-1">Account Title / Merchant Name</label>
+                    <input type="text" id="pay-easy-name" value="${easy.account_title || 'EBA FASHION STUDIO'}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1">Checkout Customer Instructions</label>
@@ -2881,55 +2922,110 @@
               </div>
 
             </div>
+
+            <!-- Bottom Persistent Action Bar -->
+            <div class="bg-surface-container-lowest p-4 border border-surface-container-high flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span class="text-xs text-on-surface-variant flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-secondary">cloud_done</span>
+                <span>Configured settings synchronize instantly across Hostinger frontend and PostgreSQL cloud.</span>
+              </span>
+              <button onclick="adminApp.saveAllPayments(event)" class="btn-save-payments btn-primary py-2.5 px-6 text-xs flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px]">save</span>
+                <span>Save All Payment Settings</span>
+              </button>
+            </div>
           </div>
         `;
       } catch (err) {
         console.error('Render payments error:', err);
+        area.innerHTML = `
+          <div class="p-8 text-center bg-surface-container-lowest border border-error/20">
+            <span class="material-symbols-outlined text-error text-3xl mb-2">error</span>
+            <p class="text-xs text-on-surface-variant font-semibold">Failed to load payment channel configurations.</p>
+            <p class="text-[11px] text-error mt-1">${err.message}</p>
+            <button onclick="adminApp.renderPayments(document.getElementById('admin-content-area'))" class="btn-secondary py-1.5 px-4 text-xs mt-4">Retry</button>
+          </div>
+        `;
       }
     },
 
-    async saveAllPayments() {
+    async saveAllPayments(event) {
+      if (event && event.preventDefault) event.preventDefault();
+      
+      const saveBtns = document.querySelectorAll('.btn-save-payments');
+      saveBtns.forEach(btn => {
+        btn.disabled = true;
+        btn.dataset.prevHtml = btn.innerHTML;
+        btn.innerHTML = `<span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span><span>Saving Settings...</span>`;
+      });
+
+      const getVal = (id, def = '') => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : def;
+      };
+      const getNum = (id, def = 0) => {
+        const el = document.getElementById(id);
+        const n = Number(el ? el.value : def);
+        return isNaN(n) ? def : n;
+      };
+      const getChecked = (id, def = false) => {
+        const el = document.getElementById(id);
+        return el ? el.checked : def;
+      };
+
       try {
         const payments = {
           cod: {
-            enabled: document.getElementById('pay-cod-enabled').checked,
-            title: document.getElementById('pay-cod-title').value,
-            handling_fee: Number(document.getElementById('pay-cod-fee').value),
-            max_amount: Number(document.getElementById('pay-cod-max').value),
-            description: document.getElementById('pay-cod-desc').value
+            enabled: getChecked('pay-cod-enabled', true),
+            title: getVal('pay-cod-title', 'Cash on Delivery (COD)'),
+            handling_fee: getNum('pay-cod-fee', 0),
+            max_amount: getNum('pay-cod-max', 75000),
+            description: getVal('pay-cod-desc', 'Pay cash directly to the courier upon doorstep delivery.')
           },
           bank_transfer: {
-            enabled: document.getElementById('pay-bank-enabled').checked,
-            title: 'Direct Bank Wire / Online IBAN Transfer',
-            bank_name: document.getElementById('pay-bank-name').value,
-            account_title: document.getElementById('pay-bank-title').value,
-            account_number: document.getElementById('pay-bank-acc').value,
-            iban: document.getElementById('pay-bank-iban').value,
-            branch: document.getElementById('pay-bank-branch').value,
-            instructions: document.getElementById('pay-bank-inst').value
+            enabled: getChecked('pay-bank-enabled', true),
+            title: getVal('pay-bank-title', 'Direct Bank Wire / Online IBAN Transfer'),
+            bank_name: getVal('pay-bank-name', 'Meezan Bank Ltd'),
+            account_title: getVal('pay-bank-account-title', 'EBA Fashion Studio Pvt Ltd'),
+            account_number: getVal('pay-bank-acc', '01000948210001'),
+            iban: getVal('pay-bank-iban', 'PK64MEZN0001000948210001'),
+            branch: getVal('pay-bank-branch', 'Gulberg III Main Boulevard Flagship, Lahore'),
+            instructions: getVal('pay-bank-inst', 'Transfer funds to our verified account and WhatsApp receipt.')
           },
           jazzcash: {
-            enabled: document.getElementById('pay-jazz-enabled').checked,
-            title: document.getElementById('pay-jazz-title').value,
-            merchant_id: document.getElementById('pay-jazz-acc').value,
-            merchant_name: document.getElementById('pay-jazz-name').value,
-            account_number: document.getElementById('pay-jazz-acc').value,
-            instructions: document.getElementById('pay-jazz-inst').value
+            enabled: getChecked('pay-jazz-enabled', true),
+            title: getVal('pay-jazz-title', 'JazzCash Mobile Wallet & Direct Pay'),
+            merchant_id: getVal('pay-jazz-merchant-id', getVal('pay-jazz-acc', '0300 1234567')),
+            merchant_name: getVal('pay-jazz-name', 'EBA FASHION STUDIO'),
+            account_number: getVal('pay-jazz-acc', '0300 1234567'),
+            instructions: getVal('pay-jazz-inst', 'Send total via JazzCash App or dial *786#.')
           },
           easypaisa: {
-            enabled: document.getElementById('pay-easy-enabled').checked,
-            title: document.getElementById('pay-easy-title').value,
-            till_id: document.getElementById('pay-easy-acc').value,
-            account_title: document.getElementById('pay-easy-name').value,
-            account_number: document.getElementById('pay-easy-acc').value,
-            instructions: document.getElementById('pay-easy-inst').value
+            enabled: getChecked('pay-easy-enabled', true),
+            title: getVal('pay-easy-title', 'Easypaisa Mobile Wallet & QR Pay'),
+            till_id: getVal('pay-easy-till-id', '78491'),
+            account_title: getVal('pay-easy-name', 'EBA FASHION STUDIO'),
+            account_number: getVal('pay-easy-acc', '0321 8456789'),
+            instructions: getVal('pay-easy-inst', 'Send payment via Easypaisa App to Mobile Account.')
           }
         };
 
         await EBA_API.admin.savePaymentGateways(payments);
         EBA_API.showToast('All 4 Pakistani Payment Gateways updated successfully');
+
+        // Refresh UI state to ensure saved values are cleanly reflected
+        const area = document.getElementById('admin-content-area');
+        if (area && this.state.currentSection === 'payments') {
+          await this.renderPayments(area);
+        }
       } catch (err) {
-        EBA_API.showToast(err.message, 'error');
+        console.error('Save payments error:', err);
+        EBA_API.showToast(err.message || 'Failed to save payment gateway settings', 'error');
+      } finally {
+        saveBtns.forEach(btn => {
+          btn.disabled = false;
+          if (btn.dataset.prevHtml) btn.innerHTML = btn.dataset.prevHtml;
+        });
       }
     },
 

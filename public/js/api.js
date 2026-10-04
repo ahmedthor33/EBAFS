@@ -129,8 +129,76 @@
       return { cms, settings };
     }
 
+    if (endpoint.startsWith('/api/store/payment-methods')) {
+      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settings = {};
+      (settingRows || []).forEach(r => {
+        try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
+      });
+      const payments = settings.payments || {};
+      const active = [];
+
+      if (payments.cod?.enabled !== false) {
+        active.push({
+          id: 'cod',
+          name: payments.cod?.title || 'Cash on Delivery (COD)',
+          description: payments.cod?.description || 'Pay physical cash upon doorstep delivery anywhere in Pakistan via TCS / Leopards.',
+          handling_fee: payments.cod?.handling_fee || 0,
+          max_amount: payments.cod?.max_amount || 75000
+        });
+      }
+
+      if (payments.bank_transfer?.enabled !== false) {
+        active.push({
+          id: 'bank_transfer',
+          name: payments.bank_transfer?.title || 'Direct Bank Wire / Online IBAN Transfer',
+          bank_name: payments.bank_transfer?.bank_name || 'Meezan Bank Ltd',
+          account_title: payments.bank_transfer?.account_title || 'EBA Fashion Studio Pvt Ltd',
+          account_number: payments.bank_transfer?.account_number || '01000948210001',
+          iban: payments.bank_transfer?.iban || 'PK64MEZN0001000948210001',
+          branch: payments.bank_transfer?.branch || 'Gulberg III Main Boulevard Flagship, Lahore',
+          instructions: payments.bank_transfer?.instructions || 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp +92 321 8456789.'
+        });
+      }
+
+      if (payments.jazzcash?.enabled !== false) {
+        active.push({
+          id: 'jazzcash',
+          name: payments.jazzcash?.title || 'JazzCash Mobile Wallet & Direct Pay',
+          merchant_id: payments.jazzcash?.merchant_id || payments.jazzcash?.account_number || '0300 1234567',
+          merchant_name: payments.jazzcash?.merchant_name || 'EBA FASHION STUDIO',
+          account_number: payments.jazzcash?.account_number || '0300 1234567',
+          instructions: payments.jazzcash?.instructions || 'Send total via JazzCash App or dial *786# to Till 0300 1234567.'
+        });
+      }
+
+      if (payments.easypaisa?.enabled !== false) {
+        active.push({
+          id: 'easypaisa',
+          name: payments.easypaisa?.title || 'Easypaisa Mobile Wallet & QR Pay',
+          till_id: payments.easypaisa?.till_id || '78491',
+          account_title: payments.easypaisa?.account_title || 'EBA FASHION STUDIO',
+          account_number: payments.easypaisa?.account_number || '0321 8456789',
+          instructions: payments.easypaisa?.instructions || 'Send payment via Easypaisa App to Mobile Account: 0321 8456789.'
+        });
+      }
+
+      return { methods: active, payments };
+    }
+
+    if (endpoint.startsWith('/api/store/shipping-zones')) {
+      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settings = {};
+      (settingRows || []).forEach(r => {
+        try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
+      });
+      const zones = Array.isArray(settings.shipping_zones) ? settings.shipping_zones : [];
+      const active = zones.filter(z => z.is_active !== false);
+      return { zones: active.length > 0 ? active : zones, all_zones: zones };
+    }
+
     if (endpoint.startsWith('/api/store')) {
-      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
+      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
@@ -667,26 +735,53 @@
     }
 
     if (endpoint.startsWith('/api/admin/settings')) {
-      if (options.method === 'PUT') {
-        const key = endpoint.split('/api/admin/settings/')[1];
+      const cleanPath = endpoint.split('?')[0].replace(/\/$/, '');
+      const subKey = cleanPath.replace('/api/admin/settings', '').replace(/^\//, '');
+
+      if (options.method === 'PUT' || options.method === 'POST') {
+        const key = subKey || 'payments';
         const body = JSON.parse(options.body || '{}');
-        const valStr = typeof body === 'object' ? JSON.stringify(body) : String(body);
+        const dataToSave = (key === 'payments' && body.payments !== undefined) ? body.payments
+          : ((key === 'shipping_zones' && body.zones !== undefined) ? body.zones : body);
+        const valStr = typeof dataToSave === 'object' ? JSON.stringify(dataToSave) : String(dataToSave);
+        const nowIso = new Date().toISOString();
+
         try {
           await supabaseRest('store_settings', {
             method: 'POST',
             headers: {
               'Prefer': 'resolution=merge-duplicates,return=representation'
             },
-            body: JSON.stringify({ key, value: valStr })
+            body: JSON.stringify({ key, value: valStr, updated_at: nowIso })
           });
         } catch(e) {
+          console.warn('Upsert fallback to PATCH for store_settings:', e.message);
           await supabaseRest(`store_settings?key=eq.${encodeURIComponent(key)}`, {
             method: 'PATCH',
-            body: JSON.stringify({ value: valStr })
+            body: JSON.stringify({ value: valStr, updated_at: nowIso })
           }).catch(() => {});
         }
-        return { success: true, message: 'Settings updated' };
+        return { success: true, message: `Store configuration '${key}' updated successfully`, payments: dataToSave };
       }
+
+      if (subKey === 'payments') {
+        const rows = await supabaseRest(`store_settings?key=eq.payments&_t=${Date.now()}`).catch(() => []);
+        let payData = {};
+        if (rows && rows[0]) {
+          try { payData = JSON.parse(rows[0].value); } catch(e) { payData = rows[0].value; }
+        }
+        return { payments: payData };
+      }
+
+      if (subKey === 'shipping-zones') {
+        const rows = await supabaseRest(`store_settings?key=eq.shipping_zones&_t=${Date.now()}`).catch(() => []);
+        let zoneData = [];
+        if (rows && rows[0]) {
+          try { zoneData = JSON.parse(rows[0].value); } catch(e) { zoneData = rows[0].value; }
+        }
+        return { zones: zoneData };
+      }
+
       const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
@@ -1251,6 +1346,12 @@
 
       // Shipping Zones
       async getShippingZones() {
+        try {
+          const res = await request('/api/admin/settings/shipping-zones', {}, true);
+          if (res && res.zones && Array.isArray(res.zones) && res.zones.length > 0) {
+            return res.zones;
+          }
+        } catch (e) {}
         const res = await this.getSettings();
         return res.settings?.shipping_zones || [];
       },
@@ -1260,10 +1361,28 @@
 
       // Payment Gateways
       async getPaymentGateways() {
-        const res = await this.getSettings();
-        return res.settings?.payments || {};
+        try {
+          const res = await request('/api/admin/settings/payments', {}, true);
+          if (res && res.payments && typeof res.payments === 'object' && Object.keys(res.payments).length > 0) {
+            try { localStorage.setItem('ebafs_cached_payments', JSON.stringify(res.payments)); } catch(e) {}
+            return res.payments;
+          }
+        } catch (e) {}
+        try {
+          const res = await this.getSettings();
+          if (res && res.settings && res.settings.payments) {
+            try { localStorage.setItem('ebafs_cached_payments', JSON.stringify(res.settings.payments)); } catch(e) {}
+            return res.settings.payments;
+          }
+        } catch (e) {}
+        try {
+          const cached = localStorage.getItem('ebafs_cached_payments');
+          if (cached) return JSON.parse(cached);
+        } catch (e) {}
+        return {};
       },
       async savePaymentGateways(payments) {
+        try { localStorage.setItem('ebafs_cached_payments', JSON.stringify(payments)); } catch(e) {}
         return this.updateSetting('payments', payments);
       }
     },

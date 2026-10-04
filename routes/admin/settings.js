@@ -1,7 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../db/database');
+const { supabase } = require('../../db/supabase');
 const { requirePermission } = require('../../middleware/auth');
+
+// Helper to sync settings to Supabase Cloud asynchronously
+function syncToSupabase(key, valueStr) {
+  if (supabase) {
+    supabase.from('store_settings').upsert({
+      key,
+      value: valueStr,
+      updated_at: new Date().toISOString()
+    }).then(({ error }) => {
+      if (error) console.warn(`Supabase sync warning for store_settings '${key}':`, error.message);
+    }).catch(err => {
+      console.warn(`Supabase sync error for store_settings '${key}':`, err.message);
+    });
+  }
+}
 
 // Get all settings
 router.get('/', requirePermission('settings.manage'), (req, res) => {
@@ -43,6 +59,9 @@ const savePaymentsHandler = (req, res) => {
         value = excluded.value,
         updated_at = CURRENT_TIMESTAMP
     `).run(valueStr);
+
+    syncToSupabase('payments', valueStr);
+
     res.json({ message: 'Payment gateway configurations saved successfully', payments: value });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save payment settings' });
@@ -73,6 +92,9 @@ const saveShippingZonesHandler = (req, res) => {
         value = excluded.value,
         updated_at = CURRENT_TIMESTAMP
     `).run(valueStr);
+
+    syncToSupabase('shipping_zones', valueStr);
+
     res.json({ message: 'Shipping zones saved successfully', zones: value });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save shipping zones' });
@@ -95,6 +117,8 @@ router.put('/:key', requirePermission('settings.manage'), (req, res) => {
         value = excluded.value,
         updated_at = CURRENT_TIMESTAMP
     `).run(key, valueStr);
+
+    syncToSupabase(key, valueStr);
 
     res.json({ message: `Store configuration '${key}' saved successfully` });
   } catch (err) {
