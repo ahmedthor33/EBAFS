@@ -354,7 +354,7 @@
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               <div class="lg:col-span-6 relative">
                 <div class="relative aspect-[4/5] overflow-hidden bg-surface-container-high shadow-2xl">
-                  <img src="${promo.image || '/assets/hero_campaign_split.png'}" alt="${promo.title || 'Ustad Master Weavers Pakistani Looms'}" class="w-full h-full object-cover"/>
+                  <img src="${promo.image || '/assets/hero_campaign_split.png'}" alt="${promo.title || 'Ustad Master Weavers Pakistani Looms'}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/assets/hero_campaign_split.png';"/>
                   <div class="absolute bottom-6 left-6 right-6 p-6 bg-surface-container-lowest/90 backdrop-blur-md border border-surface-container-high">
                     <span class="font-label-sm uppercase tracking-widest text-secondary block mb-1">Authentic Yardage Protocol</span>
                     <p class="font-headline-sm uppercase text-primary">Unstitched Luxury Without Compromise</p>

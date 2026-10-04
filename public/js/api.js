@@ -95,6 +95,7 @@
 
   async function supabaseRest(path, fetchOpts = {}) {
     const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/${path}`, {
+      cache: 'no-store',
       ...fetchOpts,
       headers: {
         'apikey': SUPABASE_CONFIG.anonKey,
@@ -115,8 +116,8 @@
     // 1. CMS & Store Settings
     if (endpoint.startsWith('/api/cms')) {
       const [cmsRows, settingRows] = await Promise.all([
-        supabaseRest(`cms_content?select=*&_t=${Date.now()}`).catch(() => []),
-        supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => [])
+        supabaseRest('cms_content?select=*').catch(() => []),
+        supabaseRest('store_settings?select=*').catch(() => [])
       ]);
       const cms = {};
       (cmsRows || []).forEach(r => {
@@ -130,7 +131,7 @@
     }
 
     if (endpoint.startsWith('/api/store/payment-methods')) {
-      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
@@ -187,7 +188,7 @@
     }
 
     if (endpoint.startsWith('/api/store/shipping-zones')) {
-      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
@@ -198,7 +199,7 @@
     }
 
     if (endpoint.startsWith('/api/store')) {
-      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
@@ -708,6 +709,7 @@
         const key = endpoint.split('/api/admin/cms/')[1]?.split('?')[0];
         const body = JSON.parse(options.body || '{}');
         const valStr = typeof body === 'object' ? JSON.stringify(body) : String(body);
+        const nowIso = new Date().toISOString();
         try {
           // Native atomic Supabase Upsert
           await supabaseRest('cms_content', {
@@ -715,18 +717,18 @@
             headers: {
               'Prefer': 'resolution=merge-duplicates,return=representation'
             },
-            body: JSON.stringify({ key, value: valStr })
+            body: JSON.stringify({ key, value: valStr, updated_at: nowIso })
           });
         } catch(e) {
           console.warn('CMS upsert fallback to PATCH:', e.message);
           await supabaseRest(`cms_content?key=eq.${encodeURIComponent(key)}`, {
             method: 'PATCH',
-            body: JSON.stringify({ value: valStr })
+            body: JSON.stringify({ value: valStr, updated_at: nowIso })
           }).catch(() => {});
         }
         return { success: true, message: 'CMS updated' };
       }
-      const cmsRows = await supabaseRest(`cms_content?select=*&_t=${Date.now()}`).catch(() => []);
+      const cmsRows = await supabaseRest('cms_content?select=*').catch(() => []);
       const cms = {};
       (cmsRows || []).forEach(r => {
         try { cms[r.key] = JSON.parse(r.value); } catch(e) { cms[r.key] = r.value; }
@@ -765,7 +767,7 @@
       }
 
       if (subKey === 'payments') {
-        const rows = await supabaseRest(`store_settings?key=eq.payments&_t=${Date.now()}`).catch(() => []);
+        const rows = await supabaseRest('store_settings?key=eq.payments').catch(() => []);
         let payData = {};
         if (rows && rows[0]) {
           try { payData = JSON.parse(rows[0].value); } catch(e) { payData = rows[0].value; }
@@ -774,7 +776,7 @@
       }
 
       if (subKey === 'shipping-zones') {
-        const rows = await supabaseRest(`store_settings?key=eq.shipping_zones&_t=${Date.now()}`).catch(() => []);
+        const rows = await supabaseRest('store_settings?key=eq.shipping_zones').catch(() => []);
         let zoneData = [];
         if (rows && rows[0]) {
           try { zoneData = JSON.parse(rows[0].value); } catch(e) { zoneData = rows[0].value; }
@@ -782,7 +784,7 @@
         return { zones: zoneData };
       }
 
-      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
+      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
