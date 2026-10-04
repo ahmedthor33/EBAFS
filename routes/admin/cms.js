@@ -37,6 +37,12 @@ router.put('/:key', requirePermission('homepage.manage'), (req, res) => {
         updated_at = CURRENT_TIMESTAMP
     `).run(key, valueStr);
 
+    // Sync to Supabase Cloud
+    try {
+      const { supabase } = require('../../db/supabase');
+      supabase.from('cms_content').upsert({ key, value: valueStr }, { onConflict: 'key' }).then(() => {}).catch(e => console.warn('Supabase CMS sync note:', e.message));
+    } catch(e) {}
+
     res.json({ message: `CMS section '${key}' updated successfully` });
   } catch (err) {
     console.error('Update CMS error:', err);

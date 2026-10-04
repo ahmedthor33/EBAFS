@@ -115,8 +115,8 @@
     // 1. CMS & Store Settings
     if (endpoint.startsWith('/api/cms')) {
       const [cmsRows, settingRows] = await Promise.all([
-        supabaseRest('cms_content?select=*').catch(() => []),
-        supabaseRest('store_settings?select=*').catch(() => [])
+        supabaseRest(`cms_content?select=*&_t=${Date.now()}`).catch(() => []),
+        supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => [])
       ]);
       const cms = {};
       (cmsRows || []).forEach(r => {
@@ -523,42 +523,142 @@
       return { products: mapped, total: mapped.length };
     }
 
+    if (endpoint.startsWith('/api/admin/inventory/adjust')) {
+      const body = JSON.parse(options.body || '{}');
+      const prodId = body.product_id;
+      const change = Number(body.change_amount) || 0;
+      const curr = await supabaseRest(`products?id=eq.${prodId}&select=stock_quantity`).catch(() => []);
+      const currQty = curr?.[0]?.stock_quantity || 0;
+      const newQty = Math.max(0, currQty + change);
+      await supabaseRest(`products?id=eq.${prodId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ stock_quantity: newQty })
+      }).catch(() => {});
+      return { success: true, message: 'Stock updated', new_quantity: newQty };
+    }
+
     if (endpoint.startsWith('/api/admin/inventory')) {
       const rows = await supabaseRest('products?select=*&order=id.desc').catch(() => []);
       return { inventory: rows || [], total: (rows || []).length };
     }
 
-    if (endpoint.startsWith('/api/admin/categories/brands/all')) {
+    if (endpoint.startsWith('/api/admin/categories/brands/all') || endpoint.startsWith('/api/admin/categories/brands')) {
+      if (options.method === 'POST') {
+        const body = JSON.parse(options.body || '{}');
+        const brandData = {
+          name: body.name,
+          slug: (body.slug || body.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          description: body.description || '',
+          logo_url: body.logo_url || null,
+          is_active: body.is_active !== undefined ? (body.is_active ? 1 : 0) : 1
+        };
+        const ins = await supabaseRest('brands', { method: 'POST', body: JSON.stringify(brandData) }).catch(() => []);
+        return { success: true, brand: Array.isArray(ins) ? ins[0] : brandData };
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/api/admin/categories/brands/')[1];
+        await supabaseRest(`brands?id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
+        return { success: true, message: 'Brand removed' };
+      }
       const brands = await supabaseRest('brands?select=*&order=id.desc').catch(() => []);
       return { brands: brands || [] };
     }
 
     if (endpoint.startsWith('/api/admin/categories')) {
+      if (options.method === 'POST') {
+        const body = JSON.parse(options.body || '{}');
+        const catData = {
+          name: body.name,
+          slug: (body.slug || body.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          parent_id: body.parent_id ? Number(body.parent_id) : null,
+          description: body.description || '',
+          image_url: body.image_url || null,
+          sort_order: Number(body.sort_order) || 0,
+          is_active: body.is_active !== undefined ? (body.is_active ? 1 : 0) : 1
+        };
+        const ins = await supabaseRest('categories', { method: 'POST', body: JSON.stringify(catData) }).catch(() => []);
+        return { success: true, category: Array.isArray(ins) ? ins[0] : catData };
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/api/admin/categories/')[1];
+        await supabaseRest(`categories?id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
+        return { success: true, message: 'Category removed' };
+      }
       const categories = await supabaseRest('categories?select=*&order=sort_order.asc').catch(() => []);
       return { categories: categories || [] };
     }
 
     if (endpoint.startsWith('/api/admin/coupons')) {
+      if (options.method === 'POST') {
+        const body = JSON.parse(options.body || '{}');
+        const couponData = {
+          code: (body.code || '').trim().toUpperCase(),
+          type: body.type || 'percentage',
+          value: Number(body.value) || 0,
+          min_order: Number(body.min_order) || 0,
+          max_discount: body.max_discount ? Number(body.max_discount) : null,
+          usage_limit: Number(body.usage_limit) || 100,
+          used_count: 0,
+          customer_usage_limit: Number(body.customer_usage_limit) || 1,
+          is_active: 1
+        };
+        const ins = await supabaseRest('coupons', { method: 'POST', body: JSON.stringify(couponData) }).catch(() => []);
+        return { success: true, message: 'Coupon created', coupon: Array.isArray(ins) ? ins[0] : couponData };
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/api/admin/coupons/')[1];
+        await supabaseRest(`coupons?id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
+        return { success: true, message: 'Coupon deleted' };
+      }
       const coupons = await supabaseRest('coupons?select=*&order=id.desc').catch(() => []);
       return { coupons: coupons || [] };
     }
 
     if (endpoint.startsWith('/api/admin/customers')) {
+      const singleCustMatch = endpoint.match(/\/api\/admin\/customers\/(\d+)$/);
+      if (singleCustMatch) {
+        const id = singleCustMatch[1];
+        const [cust, ords] = await Promise.all([
+          supabaseRest(`users?id=eq.${id}&select=*`).catch(() => []),
+          supabaseRest(`orders?customer_id=eq.${id}&select=*&order=id.desc`).catch(() => [])
+        ]);
+        const customerData = Array.isArray(cust) ? cust[0] : cust;
+        return { customer: customerData || null, orders: ords || [] };
+      }
+      if (options.method === 'PATCH' && endpoint.includes('/status')) {
+        const id = endpoint.split('/api/admin/customers/')[1].split('/status')[0];
+        const body = JSON.parse(options.body || '{}');
+        await supabaseRest(`users?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(body) }).catch(() => {});
+        return { success: true, message: 'Customer status updated' };
+      }
       const customers = await supabaseRest('users?role=eq.customer&select=*&order=id.desc').catch(() => []);
       return { customers: customers || [] };
     }
 
     if (endpoint.startsWith('/api/admin/cms')) {
       if (options.method === 'PUT') {
-        const key = endpoint.split('/api/admin/cms/')[1];
+        const key = endpoint.split('/api/admin/cms/')[1]?.split('?')[0];
         const body = JSON.parse(options.body || '{}');
-        await supabaseRest(`cms_content?key=eq.${encodeURIComponent(key)}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ value: JSON.stringify(body) })
-        }).catch(() => {});
+        const valStr = typeof body === 'object' ? JSON.stringify(body) : String(body);
+        try {
+          // Native atomic Supabase Upsert
+          await supabaseRest('cms_content', {
+            method: 'POST',
+            headers: {
+              'Prefer': 'resolution=merge-duplicates,return=representation'
+            },
+            body: JSON.stringify({ key, value: valStr })
+          });
+        } catch(e) {
+          console.warn('CMS upsert fallback to PATCH:', e.message);
+          await supabaseRest(`cms_content?key=eq.${encodeURIComponent(key)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ value: valStr })
+          }).catch(() => {});
+        }
         return { success: true, message: 'CMS updated' };
       }
-      const cmsRows = await supabaseRest('cms_content?select=*').catch(() => []);
+      const cmsRows = await supabaseRest(`cms_content?select=*&_t=${Date.now()}`).catch(() => []);
       const cms = {};
       (cmsRows || []).forEach(r => {
         try { cms[r.key] = JSON.parse(r.value); } catch(e) { cms[r.key] = r.value; }
@@ -570,13 +670,24 @@
       if (options.method === 'PUT') {
         const key = endpoint.split('/api/admin/settings/')[1];
         const body = JSON.parse(options.body || '{}');
-        await supabaseRest(`store_settings?key=eq.${encodeURIComponent(key)}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ value: JSON.stringify(body) })
-        }).catch(() => {});
+        const valStr = typeof body === 'object' ? JSON.stringify(body) : String(body);
+        try {
+          await supabaseRest('store_settings', {
+            method: 'POST',
+            headers: {
+              'Prefer': 'resolution=merge-duplicates,return=representation'
+            },
+            body: JSON.stringify({ key, value: valStr })
+          });
+        } catch(e) {
+          await supabaseRest(`store_settings?key=eq.${encodeURIComponent(key)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ value: valStr })
+          }).catch(() => {});
+        }
         return { success: true, message: 'Settings updated' };
       }
-      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
+      const settingRows = await supabaseRest(`store_settings?select=*&_t=${Date.now()}`).catch(() => []);
       const settings = {};
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
@@ -626,7 +737,52 @@
     }
   }
 
-  // Form Data Upload Request (Multer)
+  // Converts an Image file to a fast, compressed Base64 Data URL using HTML5 Canvas
+  function fileToOptimizedDataUrl(file, maxWidth = 1600, maxHeight = 900, quality = 0.82) {
+    return new Promise((resolve) => {
+      if (!file || !(file instanceof Blob)) {
+        return resolve('/assets/hero_campaign_editorial.png');
+      }
+      const reader = new FileReader();
+      reader.onerror = () => resolve('/assets/hero_campaign_editorial.png');
+      reader.onload = (e) => {
+        const rawDataUrl = e.target.result;
+        if (file.type === 'image/svg+xml') {
+          return resolve(rawDataUrl);
+        }
+        const img = new Image();
+        img.onerror = () => resolve(rawDataUrl);
+        img.onload = () => {
+          try {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth || height > maxHeight) {
+              if (width / height > maxWidth / maxHeight) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const optimized = canvas.toDataURL('image/jpeg', quality);
+            resolve(optimized);
+          } catch (canvasErr) {
+            resolve(rawDataUrl);
+          }
+        };
+        img.src = rawDataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Form Data Upload Request (Multer with Browser Canvas Fallback)
   async function uploadFiles(formData, isAdmin = true) {
     const token = isAdmin ? getAdminToken() : getCustomerToken();
     const headers = {};
@@ -634,17 +790,33 @@
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers,
-      body: formData
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Upload failed');
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+      const ct = response.headers.get('content-type') || '';
+      if (response.ok && ct.includes('application/json')) {
+        const data = await response.json();
+        if (data && (data.urls || data.url)) return data;
+      }
+    } catch (err) {
+      console.warn('Backend /api/upload unavailable, falling back to browser processing');
     }
-    return data;
+
+    const files = formData.getAll ? (formData.getAll('images') || formData.getAll('file') || []) : [];
+    const urls = [];
+    for (const f of files) {
+      if (f instanceof Blob) {
+        urls.push(await fileToOptimizedDataUrl(f));
+      }
+    }
+    return {
+      message: 'Visual assets processed and attached successfully',
+      urls,
+      url: urls[0] || '/assets/hero_campaign_editorial.png'
+    };
   }
 
   const API = {
@@ -997,6 +1169,9 @@
           body: JSON.stringify(data)
         }, true);
       },
+      async updateSetting(key, data) {
+        return this.updateSettings(key, data);
+      },
 
       // Reports
       async getReports(range = '30d') {
@@ -1032,24 +1207,46 @@
         }, true);
       },
 
-      // File & Image Uploads
+      // File & Image Uploads (Server Multer with Browser Canvas Fallback)
       async uploadImages(files) {
-        const formData = new FormData();
         const fileList = files instanceof FileList || Array.isArray(files) ? files : [files];
-        for (let i = 0; i < fileList.length; i++) {
-          formData.append('images', fileList[i]);
-        }
+        if (!fileList || fileList.length === 0) return { urls: [], url: '' };
+
         const token = getAdminToken();
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          body: formData
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Image upload failed');
+
+        // 1. Attempt Node.js backend upload if available
+        try {
+          const formData = new FormData();
+          for (let i = 0; i < fileList.length; i++) {
+            formData.append('images', fileList[i]);
+          }
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            body: formData
+          });
+          const ct = res.headers.get('content-type') || '';
+          if (res.ok && ct.includes('application/json')) {
+            const data = await res.json();
+            if (data && (data.urls || data.url)) {
+              return data;
+            }
+          }
+        } catch (serverErr) {
+          console.warn('Backend /api/upload unavailable, falling back to browser processing:', serverErr.message);
         }
-        return res.json();
+
+        // 2. Seamless Cloud / Static Hostinger Fallback: Convert to fast, lightweight Data URLs
+        const urls = [];
+        for (let i = 0; i < fileList.length; i++) {
+          const dataUrl = await fileToOptimizedDataUrl(fileList[i]);
+          urls.push(dataUrl);
+        }
+        return {
+          message: 'Visual assets processed and attached successfully',
+          urls,
+          url: urls[0] || '/assets/hero_campaign_editorial.png'
+        };
       },
 
       // Shipping Zones

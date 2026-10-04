@@ -227,6 +227,25 @@
           image: "/assets/hero_campaign_split.png"
         };
 
+        const portals = this.state.cms?.portal_sections || {
+          men: {
+            title: "The Gentleman's Edit",
+            edition: "Autumn / Winter Weaves • 01",
+            description: "Timeless unstitched Latha, structured winter Karandi, luxurious pure Boski, and crease-resistant high-twist Wash & Wear cuts.",
+            image: "/assets/men_luxury_unstitched.png",
+            cta_text: "Shop Men",
+            link: "#men"
+          },
+          women: {
+            title: "The Couture Lawn ’25",
+            edition: "Festive Lawn Drop • 02",
+            description: "Intricate Kashmiri tilla motifs, jacquard borders, printed chiffon dupattas, and three-piece unstitched masterpieces woven on Swiss looms.",
+            image: "/assets/woman_opulent_lawn.png",
+            cta_text: "Shop Women",
+            link: "#women"
+          }
+        };
+
         // Fetch featured products for the curated drops section
         let featuredProducts = [];
         try {
@@ -363,6 +382,67 @@
                   <div>
                     <span class="font-serif text-3xl text-primary font-semibold block">100%</span>
                     <span class="font-label-sm text-secondary uppercase tracking-wider">Natural Pure Fibers</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- WARDROBE DOMAINS & CATEGORY PORTALS -->
+          <section class="w-full bg-surface-container-low py-20 px-margin-mobile md:px-margin border-t border-surface-container-high">
+            <div class="max-w-7xl mx-auto">
+              <div class="text-center max-w-2xl mx-auto mb-14">
+                <span class="font-label-md uppercase tracking-[0.2em] text-secondary">Wardrobe Domains</span>
+                <h2 class="font-headline-lg uppercase text-primary mt-1">Curated Category Edits</h2>
+                <p class="font-body-sm text-on-surface-variant mt-2">Explore dedicated ateliers for gentlemen's unstitched fabrics and ladies' luxury festive lawn.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Men's Domain -->
+                <div class="group relative overflow-hidden bg-surface-container-lowest border border-surface-container-high flex flex-col justify-between shadow-sm hover:shadow-xl transition-all">
+                  <div class="relative aspect-[16/10] overflow-hidden bg-black/5">
+                    <img src="${portals.men?.image || '/assets/men_luxury_unstitched.png'}" alt="${portals.men?.title || 'Men Atelier'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+                    <span class="absolute top-4 left-4 bg-primary/90 text-on-primary font-label-sm uppercase tracking-wider px-3 py-1 backdrop-blur-sm">
+                      Men's Atelier
+                    </span>
+                  </div>
+                  <div class="p-8 space-y-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span class="font-label-sm text-secondary uppercase tracking-widest block">${portals.men?.edition || 'Autumn / Winter Weaves • 01'}</span>
+                      <h3 class="font-headline-md uppercase text-primary text-2xl mt-1">${portals.men?.title || "The Gentleman's Edit"}</h3>
+                      <p class="font-body-sm text-on-surface-variant mt-2 leading-relaxed">${portals.men?.description || 'Timeless unstitched Latha, structured winter Karandi, luxurious pure Boski, and crease-resistant high-twist Wash & Wear cuts.'}</p>
+                    </div>
+                    <div class="pt-4">
+                      <a href="${portals.men?.link || '#men'}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 text-xs">
+                        <span>${portals.men?.cta_text || 'Shop Men'}</span>
+                        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Women's Domain -->
+                <div class="group relative overflow-hidden bg-surface-container-lowest border border-surface-container-high flex flex-col justify-between shadow-sm hover:shadow-xl transition-all">
+                  <div class="relative aspect-[16/10] overflow-hidden bg-black/5">
+                    <img src="${portals.women?.image || '/assets/woman_opulent_lawn.png'}" alt="${portals.women?.title || 'Women Atelier'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+                    <span class="absolute top-4 left-4 bg-primary/90 text-on-primary font-label-sm uppercase tracking-wider px-3 py-1 backdrop-blur-sm">
+                      Women's Couture
+                    </span>
+                  </div>
+                  <div class="p-8 space-y-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span class="font-label-sm text-secondary uppercase tracking-widest block">${portals.women?.edition || 'Festive Lawn Drop • 02'}</span>
+                      <h3 class="font-headline-md uppercase text-primary text-2xl mt-1">${portals.women?.title || "The Couture Lawn ’25"}</h3>
+                      <p class="font-body-sm text-on-surface-variant mt-2 leading-relaxed">${portals.women?.description || 'Intricate Kashmiri tilla motifs, jacquard borders, printed chiffon dupattas, and three-piece unstitched masterpieces woven on Swiss looms.'}</p>
+                    </div>
+                    <div class="pt-4">
+                      <a href="${portals.women?.link || '#women'}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 text-xs">
+                        <span>${portals.women?.cta_text || 'Shop Women'}</span>
+                        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

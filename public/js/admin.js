@@ -1589,18 +1589,55 @@
       try {
         const res = await EBA_API.admin.getCMS();
         const cms = res.cms || {};
+        this.state.cms = cms;
 
-        const ann = cms.announcement_bar || { text: '', enabled: true };
-        const hero = cms.hero_banner || { title: '', subtitle: '', tagline: '' };
-        const promo = cms.promotional_banner || { title: 'Woven on Historic Looms, Preserved for Generations', subtitle: '', image: '/assets/hero_campaign_split.png', enabled: true };
-        const ticker = Array.isArray(cms.running_ticker) ? cms.running_ticker : [];
-        const portals = cms.portal_sections || { men: {}, women: {} };
+        const ann = cms.announcement_bar || { text: 'Exclusive Festive Eid Drop Now Live | Free Express Delivery Across Pakistan', enabled: true };
+        const hero = cms.hero_banner || {
+          tagline: "Unstitched Autumn/Festive ’25 Edition",
+          title: "The Art of Pakistani Weaves",
+          subtitle: "Exquisite unstitched fabrics tailored for the discerning connoisseur — Hand-selected Egyptian Cotton, Festive Lawn, and Raw Silk woven across premier Pakistani mills.",
+          image: "/assets/hero_campaign_editorial.png",
+          badge1: "Complimentary Nationwide Shipping",
+          badge2: "Cash on Delivery Available",
+          cta_men_text: "Explore Men's Unstitched",
+          cta_men_link: "#men",
+          cta_women_text: "Explore Women's Haute Couture",
+          cta_women_link: "#women",
+          enabled: true
+        };
+        const promo = cms.promotional_banner || {
+          title: 'Woven on Historic Looms, Preserved for Generations',
+          subtitle: 'Pakistani textile craft exists in a league of its own. From the riverbanks of the Indus where long-staple cotton was first domesticated 5,000 years ago, our atelier selects only the purest Supima and Egyptian Giza fibers.',
+          image: '/assets/hero_campaign_split.png',
+          enabled: true
+        };
+        const ticker = Array.isArray(cms.running_ticker) ? cms.running_ticker : [
+          "100% Authentic Thread Counts",
+          "Pure Supima & Egyptian Cotton 120s",
+          "Master Artisan Embroideries",
+          "Worldwide DHL Express Delivery",
+          "Bespoke Studio Master-Tailoring"
+        ];
+        const portals = cms.portal_sections || {
+          men: {
+            title: "The Gentleman's Edit",
+            edition: "Autumn / Winter Weaves • 01",
+            description: "Timeless unstitched Latha, structured winter Karandi, luxurious pure Boski, and crease-resistant high-twist Wash & Wear cuts.",
+            image: "/assets/men_luxury_unstitched.png"
+          },
+          women: {
+            title: "The Couture Lawn ’25",
+            edition: "Festive Lawn Drop • 02",
+            description: "Intricate Kashmiri tilla motifs, jacquard borders, printed chiffon dupattas, and three-piece unstitched masterpieces woven on Swiss looms.",
+            image: "/assets/woman_opulent_lawn.png"
+          }
+        };
 
         area.innerHTML = `
           <div class="space-y-8">
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high">
-              <h3 class="font-headline-sm uppercase text-primary text-lg">Homepage CMS Management</h3>
-              <p class="font-body-sm text-on-surface-variant text-xs">Modifying these fields immediately updates the public storefront with full Drag & Drop image controls.</p>
+              <h3 class="font-headline-sm uppercase text-primary text-lg">Homepage CMS & Banner Management</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs">Modifying these fields immediately updates the public storefront with full Drag & Drop and Direct Image URL controls.</p>
             </div>
 
             <!-- Block 1: Announcement Bar -->
@@ -1614,31 +1651,56 @@
               </div>
               <div>
                 <label class="font-label-sm uppercase tracking-wider block mb-1">Banner Announcement Text</label>
-                <input type="text" id="cms-ann-text" value="${ann.text}" class="form-input text-xs"/>
+                <input type="text" id="cms-ann-text" value="${(ann.text || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
               </div>
-              <button onclick="adminApp.saveAnnouncementCMS()" class="btn-primary py-2 px-6 text-xs">
+              <button onclick="adminApp.saveAnnouncementCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Update Announcement Strip
               </button>
             </div>
 
             <!-- Block 2: Hero Campaign Banner with Drag & Drop Visual -->
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
-              <h3 class="font-headline-sm uppercase text-primary text-base pb-3 border-b border-surface-container-high">Hero Campaign Visual & Headline</h3>
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Hero Campaign Visual & Headline</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Main Welcome Banner</span>
+              </div>
               
-              <!-- Drag & Drop Uploader for Hero Banner -->
-              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-2">
-                <label class="font-label-sm uppercase block text-xs">Hero Background Visual (Drag & Drop to Replace)</label>
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                  <img id="cms-img-hero-preview" src="${hero.image || '/assets/hero_campaign_editorial.png'}" alt="Hero Visual" class="w-32 h-20 object-cover border border-surface-container-high bg-white shadow shrink-0"/>
-                  <div class="flex-1 w-full border-2 border-dashed border-primary/30 hover:border-primary p-4 text-center cursor-pointer transition-all bg-white"
-                    ondragover="adminApp.handleDragOver(event, this)"
-                    ondragleave="adminApp.handleDragLeave(event, this)"
-                    ondrop="adminApp.handleDrop(event, 'cms-hero')"
-                    onclick="document.getElementById('cms-hero-file').click()">
-                    <span class="material-symbols-outlined text-2xl text-primary/60">cloud_upload</span>
-                    <p class="text-xs font-semibold text-primary">Drop new Hero photo here, or <span class="text-secondary underline">browse</span></p>
-                    <input type="file" id="cms-hero-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-hero')"/>
-                    <input type="hidden" id="cms-img-hero" value="${hero.image || '/assets/hero_campaign_editorial.png'}"/>
+              <!-- Visual Asset Manager for Hero Banner -->
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Hero Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image file or paste direct web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <!-- Live Preview with Fallback -->
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-hero-preview" src="${hero.image || '/assets/hero_campaign_editorial.png'}" alt="Hero Visual Preview" class="w-full h-full object-cover" onerror="this.src='/assets/hero_campaign_editorial.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <!-- Dropzone & URL Input Controls -->
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-hero')"
+                      onclick="document.getElementById('cms-hero-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop new Hero photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Auto-compressed for instant loading (JPEG, PNG, WEBP)</p>
+                      </div>
+                      <input type="file" id="cms-hero-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-hero')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-hero" value="${(hero.image || '/assets/hero_campaign_editorial.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-hero', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-hero', '/assets/hero_campaign_editorial.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap" title="Reset to original">Reset</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1646,11 +1708,11 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Tagline</label>
-                  <input type="text" id="cms-hero-tagline" value="${hero.tagline || ''}" class="form-input text-xs"/>
+                  <input type="text" id="cms-hero-tagline" value="${(hero.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Headline Title (HTML supported for breaks)</label>
-                  <input type="text" id="cms-hero-title" value="${hero.title || ''}" class="form-input text-xs"/>
+                  <input type="text" id="cms-hero-title" value="${(hero.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                 </div>
                 <div class="sm:col-span-2">
                   <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
@@ -1658,35 +1720,58 @@
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Men CTA Text</label>
-                  <input type="text" id="cms-hero-ctamen" value="${hero.cta_men_text || ''}" class="form-input text-xs"/>
+                  <input type="text" id="cms-hero-ctamen" value="${(hero.cta_men_text || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Women CTA Text</label>
-                  <input type="text" id="cms-hero-ctawomen" value="${hero.cta_women_text || ''}" class="form-input text-xs"/>
+                  <input type="text" id="cms-hero-ctawomen" value="${(hero.cta_women_text || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                 </div>
               </div>
-              <button onclick="adminApp.saveHeroCMS()" class="btn-primary py-2 px-6 text-xs">
+              <button onclick="adminApp.saveHeroCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Save Hero Banner
               </button>
             </div>
 
             <!-- Block 3: The Loom Craft Narrative / Story Section with Drag & Drop Visual -->
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
-              <h3 class="font-headline-sm uppercase text-primary text-base pb-3 border-b border-surface-container-high">Loom Craft Narrative & Story Visual</h3>
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Loom Craft Narrative & Story Visual</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Mid-Page Story Editorial</span>
+              </div>
               
-              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-2">
-                <label class="font-label-sm uppercase block text-xs">Story Feature Visual (Drag & Drop to Replace)</label>
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                  <img id="cms-img-story-preview" src="${promo.image || '/assets/hero_campaign_split.png'}" alt="Story Visual" class="w-32 h-20 object-cover border border-surface-container-high bg-white shadow shrink-0"/>
-                  <div class="flex-1 w-full border-2 border-dashed border-primary/30 hover:border-primary p-4 text-center cursor-pointer transition-all bg-white"
-                    ondragover="adminApp.handleDragOver(event, this)"
-                    ondragleave="adminApp.handleDragLeave(event, this)"
-                    ondrop="adminApp.handleDrop(event, 'cms-story')"
-                    onclick="document.getElementById('cms-story-file').click()">
-                    <span class="material-symbols-outlined text-2xl text-primary/60">cloud_upload</span>
-                    <p class="text-xs font-semibold text-primary">Drop new Story photo here, or <span class="text-secondary underline">browse</span></p>
-                    <input type="file" id="cms-story-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-story')"/>
-                    <input type="hidden" id="cms-img-story" value="${promo.image || '/assets/hero_campaign_split.png'}"/>
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Story Feature Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image file or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-story-preview" src="${promo.image || '/assets/hero_campaign_split.png'}" alt="Story Visual Preview" class="w-full h-full object-cover" onerror="this.src='/assets/hero_campaign_split.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-story')"
+                      onclick="document.getElementById('cms-story-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop new Story photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Auto-compressed for instant loading (JPEG, PNG, WEBP)</p>
+                      </div>
+                      <input type="file" id="cms-story-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-story')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-story" value="${(promo.image || '/assets/hero_campaign_split.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-story', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-story', '/assets/hero_campaign_split.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap" title="Reset to original">Reset</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1694,14 +1779,14 @@
               <div class="space-y-3 text-xs">
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Headline Title</label>
-                  <input type="text" id="cms-story-title" value="${promo.title || 'Woven on Historic Looms, Preserved for Generations'}" class="form-input text-xs"/>
+                  <input type="text" id="cms-story-title" value="${(promo.title || 'Woven on Historic Looms, Preserved for Generations').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                 </div>
                 <div>
                   <label class="font-label-sm uppercase block mb-1">Narrative Description</label>
                   <textarea id="cms-story-subtitle" rows="3" class="form-input text-xs">${promo.subtitle || ''}</textarea>
                 </div>
               </div>
-              <button onclick="adminApp.savePromoCMS()" class="btn-primary py-2 px-6 text-xs">
+              <button onclick="adminApp.savePromoCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Save Narrative Section
               </button>
             </div>
@@ -1714,39 +1799,51 @@
                 <label class="font-label-sm uppercase block mb-1">Ticker Items (One per line)</label>
                 <textarea id="cms-ticker-items" rows="4" class="form-input text-xs font-mono">${ticker.join('\n')}</textarea>
               </div>
-              <button onclick="adminApp.saveTickerCMS()" class="btn-primary py-2 px-6 text-xs">
+              <button onclick="adminApp.saveTickerCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Save Running Ticker
               </button>
             </div>
 
             <!-- Block 5: Wardrobe Domains & Category Portals with Drag & Drop Visuals -->
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-6">
-              <h3 class="font-headline-sm uppercase text-primary text-base pb-3 border-b border-surface-container-high">Wardrobe Domains & Category Portals</h3>
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Wardrobe Domains & Category Portals</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Category Gateways</span>
+              </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Men Portal -->
                 <div class="p-4 border border-surface-container-high space-y-3 bg-surface-container-low">
                   <span class="font-headline-sm uppercase text-primary text-sm font-bold block">Men's Atelier Domain</span>
-                  <div class="flex items-center gap-3">
-                    <img id="cms-img-portal-men-preview" src="${(portals.men && portals.men.image) || '/assets/men_luxury_unstitched.png'}" class="w-20 h-24 object-cover border border-surface-container-high bg-white shadow shrink-0"/>
-                    <div class="flex-1 border-2 border-dashed border-primary/30 p-3 text-center cursor-pointer bg-white"
-                      ondragover="adminApp.handleDragOver(event, this)"
-                      ondragleave="adminApp.handleDragLeave(event, this)"
-                      ondrop="adminApp.handleDrop(event, 'cms-portal-men')"
-                      onclick="document.getElementById('cms-portal-men-file').click()">
-                      <span class="material-symbols-outlined text-xl text-primary/60">cloud_upload</span>
-                      <p class="text-[11px] font-semibold text-primary">Drop Men visual</p>
-                      <input type="file" id="cms-portal-men-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-portal-men')"/>
-                      <input type="hidden" id="cms-img-portal-men" value="${(portals.men && portals.men.image) || '/assets/men_luxury_unstitched.png'}"/>
+                  
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-3">
+                      <div class="relative w-24 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                        <img id="cms-img-portal-men-preview" src="${(portals.men && portals.men.image) || '/assets/men_luxury_unstitched.png'}" class="w-full h-full object-cover" onerror="this.src='/assets/men_luxury_unstitched.png'"/>
+                      </div>
+                      <div class="flex-1 border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer bg-white transition-all"
+                        ondragover="adminApp.handleDragOver(event, this)"
+                        ondragleave="adminApp.handleDragLeave(event, this)"
+                        ondrop="adminApp.handleDrop(event, 'cms-portal-men')"
+                        onclick="document.getElementById('cms-portal-men-file').click()">
+                        <span class="material-symbols-outlined text-xl text-primary/60">cloud_upload</span>
+                        <p class="text-[11px] font-semibold text-primary">Drop Men visual</p>
+                        <p class="text-[9px] text-on-surface-variant">or browse file</p>
+                        <input type="file" id="cms-portal-men-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-portal-men')"/>
+                      </div>
+                    </div>
+                    <div>
+                      <input type="text" id="cms-img-portal-men" value="${((portals.men && portals.men.image) || '/assets/men_luxury_unstitched.png').replace(/"/g, '&quot;')}" class="form-input text-[11px] font-mono" placeholder="Image URL / Path..." oninput="adminApp.handleCmsImageUrlChange('cms-portal-men', this.value)"/>
                     </div>
                   </div>
+
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Title</label>
-                    <input type="text" id="cms-men-title" value="${(portals.men && portals.men.title) ? portals.men.title.replace(/"/g, '&quot;') : 'The Gentleman Edit'}" class="form-input text-xs"/>
+                    <input type="text" id="cms-men-title" value="${((portals.men && portals.men.title) || 'The Gentleman Edit').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Edition Subtitle</label>
-                    <input type="text" id="cms-men-edition" value="${(portals.men && portals.men.edition) || 'Autumn / Winter Weaves • 01'}" class="form-input text-xs"/>
+                    <input type="text" id="cms-men-edition" value="${((portals.men && portals.men.edition) || 'Autumn / Winter Weaves • 01').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Description</label>
@@ -1757,26 +1854,35 @@
                 <!-- Women Portal -->
                 <div class="p-4 border border-surface-container-high space-y-3 bg-surface-container-low">
                   <span class="font-headline-sm uppercase text-primary text-sm font-bold block">Women's Couture Domain</span>
-                  <div class="flex items-center gap-3">
-                    <img id="cms-img-portal-women-preview" src="${(portals.women && portals.women.image) || '/assets/woman_opulent_lawn.png'}" class="w-20 h-24 object-cover border border-surface-container-high bg-white shadow shrink-0"/>
-                    <div class="flex-1 border-2 border-dashed border-primary/30 p-3 text-center cursor-pointer bg-white"
-                      ondragover="adminApp.handleDragOver(event, this)"
-                      ondragleave="adminApp.handleDragLeave(event, this)"
-                      ondrop="adminApp.handleDrop(event, 'cms-portal-women')"
-                      onclick="document.getElementById('cms-portal-women-file').click()">
-                      <span class="material-symbols-outlined text-xl text-primary/60">cloud_upload</span>
-                      <p class="text-[11px] font-semibold text-primary">Drop Women visual</p>
-                      <input type="file" id="cms-portal-women-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-portal-women')"/>
-                      <input type="hidden" id="cms-img-portal-women" value="${(portals.women && portals.women.image) || '/assets/woman_opulent_lawn.png'}"/>
+                  
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-3">
+                      <div class="relative w-24 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                        <img id="cms-img-portal-women-preview" src="${(portals.women && portals.women.image) || '/assets/woman_opulent_lawn.png'}" class="w-full h-full object-cover" onerror="this.src='/assets/woman_opulent_lawn.png'"/>
+                      </div>
+                      <div class="flex-1 border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer bg-white transition-all"
+                        ondragover="adminApp.handleDragOver(event, this)"
+                        ondragleave="adminApp.handleDragLeave(event, this)"
+                        ondrop="adminApp.handleDrop(event, 'cms-portal-women')"
+                        onclick="document.getElementById('cms-portal-women-file').click()">
+                        <span class="material-symbols-outlined text-xl text-primary/60">cloud_upload</span>
+                        <p class="text-[11px] font-semibold text-primary">Drop Women visual</p>
+                        <p class="text-[9px] text-on-surface-variant">or browse file</p>
+                        <input type="file" id="cms-portal-women-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-portal-women')"/>
+                      </div>
+                    </div>
+                    <div>
+                      <input type="text" id="cms-img-portal-women" value="${((portals.women && portals.women.image) || '/assets/woman_opulent_lawn.png').replace(/"/g, '&quot;')}" class="form-input text-[11px] font-mono" placeholder="Image URL / Path..." oninput="adminApp.handleCmsImageUrlChange('cms-portal-women', this.value)"/>
                     </div>
                   </div>
+
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Title</label>
-                    <input type="text" id="cms-women-title" value="${(portals.women && portals.women.title) || 'The Couture Lawn ’25'}" class="form-input text-xs"/>
+                    <input type="text" id="cms-women-title" value="${((portals.women && portals.women.title) || 'The Couture Lawn ’25').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Edition Subtitle</label>
-                    <input type="text" id="cms-women-edition" value="${(portals.women && portals.women.edition) || 'Festive Lawn Drop • 02'}" class="form-input text-xs"/>
+                    <input type="text" id="cms-women-edition" value="${((portals.women && portals.women.edition) || 'Festive Lawn Drop • 02').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
                   </div>
                   <div>
                     <label class="font-label-sm uppercase block mb-1 text-[11px]">Description</label>
@@ -1785,7 +1891,7 @@
                 </div>
               </div>
 
-              <button onclick="adminApp.savePortalsCMS()" class="btn-primary py-2 px-6 text-xs">
+              <button onclick="adminApp.savePortalsCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Save Category Domains
               </button>
             </div>
@@ -1797,88 +1903,166 @@
       }
     },
 
-    async saveAnnouncementCMS() {
+    async saveAnnouncementCMS(event) {
+      const saveBtn = event?.currentTarget || document.querySelector('button[onclick*="saveAnnouncementCMS"]');
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Updating...';
+      }
       try {
         const text = document.getElementById('cms-ann-text').value;
         const enabled = document.getElementById('cms-ann-enabled').checked;
         await EBA_API.admin.updateCMS('announcement_bar', { text, enabled });
+        if (this.state.cms) this.state.cms.announcement_bar = { text, enabled };
         EBA_API.showToast('Announcement bar updated on storefront');
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Update Announcement Strip';
+        }
       }
     },
 
-    async saveHeroCMS() {
+    async saveHeroCMS(event) {
+      const saveBtn = event?.currentTarget || document.querySelector('button[onclick*="saveHeroCMS"]');
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Saving Hero Banner...';
+      }
       try {
         const tagline = document.getElementById('cms-hero-tagline').value;
         const title = document.getElementById('cms-hero-title').value;
         const subtitle = document.getElementById('cms-hero-subtitle').value;
         const cta_men_text = document.getElementById('cms-hero-ctamen').value;
         const cta_women_text = document.getElementById('cms-hero-ctawomen').value;
-        const image = document.getElementById('cms-img-hero').value || '/assets/hero_campaign_editorial.png';
+        const image = (document.getElementById('cms-img-hero').value || '').trim() || '/assets/hero_campaign_editorial.png';
 
-        await EBA_API.admin.updateCMS('hero_banner', {
-          tagline, title, subtitle, cta_men_text, cta_women_text,
+        const existingHero = this.state.cms?.hero_banner || {};
+        const heroPayload = {
+          ...existingHero,
+          tagline,
+          title,
+          subtitle,
+          cta_men_text,
+          cta_women_text,
           image,
           enabled: true
-        });
-        EBA_API.showToast('Hero campaign updated');
+        };
+
+        await EBA_API.admin.updateCMS('hero_banner', heroPayload);
+        if (this.state.cms) this.state.cms.hero_banner = heroPayload;
+        EBA_API.showToast('Hero campaign & banner image updated successfully!');
       } catch (err) {
-        EBA_API.showToast(err.message, 'error');
+        EBA_API.showToast(err.message || 'Failed to update Hero banner', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Save Hero Banner';
+        }
       }
     },
 
-    async savePromoCMS() {
+    async savePromoCMS(event) {
+      const saveBtn = event?.currentTarget || document.querySelector('button[onclick*="savePromoCMS"]');
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Saving Narrative...';
+      }
       try {
         const title = document.getElementById('cms-story-title').value;
         const subtitle = document.getElementById('cms-story-subtitle').value;
-        const image = document.getElementById('cms-img-story').value || '/assets/hero_campaign_split.png';
+        const image = (document.getElementById('cms-img-story').value || '').trim() || '/assets/hero_campaign_split.png';
 
-        await EBA_API.admin.updateCMS('promotional_banner', {
-          title, subtitle, image, enabled: true
-        });
-        EBA_API.showToast('Craft narrative section updated');
+        const existingPromo = this.state.cms?.promotional_banner || {};
+        const promoPayload = {
+          ...existingPromo,
+          title,
+          subtitle,
+          image,
+          enabled: true
+        };
+
+        await EBA_API.admin.updateCMS('promotional_banner', promoPayload);
+        if (this.state.cms) this.state.cms.promotional_banner = promoPayload;
+        EBA_API.showToast('Craft narrative section updated successfully!');
       } catch (err) {
-        EBA_API.showToast(err.message, 'error');
+        EBA_API.showToast(err.message || 'Failed to update craft narrative', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Save Narrative Section';
+        }
       }
     },
 
-    async saveTickerCMS() {
+    async saveTickerCMS(event) {
+      const saveBtn = event?.currentTarget || document.querySelector('button[onclick*="saveTickerCMS"]');
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Saving Ticker...';
+      }
       try {
         const raw = document.getElementById('cms-ticker-items').value;
         const items = raw.split('\n').map(s => s.trim()).filter(Boolean);
         await EBA_API.admin.updateCMS('running_ticker', items);
-        EBA_API.showToast('Running marquee ticker updated');
+        if (this.state.cms) this.state.cms.running_ticker = items;
+        EBA_API.showToast('Running marquee ticker updated successfully!');
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Save Running Ticker';
+        }
       }
     },
 
-    async savePortalsCMS() {
+    async savePortalsCMS(event) {
+      const saveBtn = event?.currentTarget || document.querySelector('button[onclick*="savePortalsCMS"]');
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Saving Domains...';
+      }
       try {
+        const existingPortals = this.state.cms?.portal_sections || {};
         const portalsData = {
           men: {
+            ...(existingPortals.men || {}),
             title: document.getElementById('cms-men-title').value,
             edition: document.getElementById('cms-men-edition').value,
             description: document.getElementById('cms-men-desc').value,
-            image: document.getElementById('cms-img-portal-men').value || '/assets/men_luxury_unstitched.png',
-            cta_text: 'Shop Men',
-            link: '#men'
+            image: (document.getElementById('cms-img-portal-men').value || '').trim() || '/assets/men_luxury_unstitched.png',
+            cta_text: existingPortals.men?.cta_text || 'Shop Men',
+            link: existingPortals.men?.link || '#men'
           },
           women: {
+            ...(existingPortals.women || {}),
             title: document.getElementById('cms-women-title').value,
             edition: document.getElementById('cms-women-edition').value,
             description: document.getElementById('cms-women-desc').value,
-            image: document.getElementById('cms-img-portal-women').value || '/assets/woman_opulent_lawn.png',
-            cta_text: 'Shop Women',
-            link: '#women'
+            image: (document.getElementById('cms-img-portal-women').value || '').trim() || '/assets/woman_opulent_lawn.png',
+            cta_text: existingPortals.women?.cta_text || 'Shop Women',
+            link: existingPortals.women?.link || '#women'
           }
         };
 
         await EBA_API.admin.updateCMS('portal_sections', portalsData);
-        EBA_API.showToast('Category portals updated on storefront');
+        if (this.state.cms) this.state.cms.portal_sections = portalsData;
+        EBA_API.showToast('Category portals & domain visuals updated successfully!');
       } catch (err) {
-        EBA_API.showToast(err.message, 'error');
+        EBA_API.showToast(err.message || 'Failed to update category portals', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Save Category Domains';
+        }
       }
     },
 
@@ -2785,7 +2969,7 @@
 
     async processImageFiles(files, targetType) {
       try {
-        EBA_API.showToast('Uploading images to server...', 'info');
+        EBA_API.showToast('Processing visual assets...', 'info');
         const res = await EBA_API.admin.uploadImages(files);
         const urls = res.urls || (res.url ? [res.url] : []);
 
@@ -2803,13 +2987,49 @@
           const fieldId = targetType.replace('cms-', 'cms-img-');
           const inputEl = document.getElementById(fieldId);
           const previewEl = document.getElementById(fieldId + '-preview');
-          if (inputEl && urls[0]) inputEl.value = urls[0];
-          if (previewEl && urls[0]) previewEl.src = urls[0];
-          EBA_API.showToast('Section visual updated');
+          if (inputEl && urls[0]) {
+            inputEl.value = urls[0];
+          }
+          if (previewEl && urls[0]) {
+            previewEl.src = urls[0];
+          }
+          EBA_API.showToast('Visual asset attached to preview. Click "Save" below to apply to storefront.');
         }
       } catch (err) {
-        EBA_API.showToast(err.message, 'error');
+        EBA_API.showToast(err.message || 'Image processing error', 'error');
       }
+    },
+
+    handleCmsImageUrlChange(targetType, url) {
+      const fieldId = targetType.startsWith('cms-img-') ? targetType : targetType.replace('cms-', 'cms-img-');
+      const previewEl = document.getElementById(fieldId + '-preview');
+      if (previewEl) {
+        previewEl.src = (url && url.trim()) ? url.trim() : '/assets/hero_campaign_editorial.png';
+      }
+    },
+
+    resetCmsImage(targetType, defaultUrl) {
+      const fieldId = targetType.startsWith('cms-img-') ? targetType : targetType.replace('cms-', 'cms-img-');
+      const inputEl = document.getElementById(fieldId);
+      const previewEl = document.getElementById(fieldId + '-preview');
+      if (inputEl) inputEl.value = defaultUrl;
+      if (previewEl) previewEl.src = defaultUrl;
+      EBA_API.showToast('Banner visual reset to original asset. Click Save to persist.');
+    },
+
+    addManualProductImage() {
+      const input = document.getElementById('manual-image-url');
+      if (!input) return;
+      const url = (input.value || '').trim();
+      if (!url) return;
+      this.state.currentModalImages.push({
+        image_url: url,
+        image_type: this.state.currentModalImages.length === 0 ? 'primary' : 'gallery',
+        is_primary: this.state.currentModalImages.length === 0 ? 1 : 0
+      });
+      input.value = '';
+      this.renderProductModalImages();
+      EBA_API.showToast('Product visual added to gallery');
     },
 
     renderProductModalImages() {
