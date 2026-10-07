@@ -134,6 +134,72 @@ async function runTests() {
   const publicCms = await publicCmsRes.json();
   assert(publicCms.cms.announcement_bar.text === updatedAnnouncement, 'Public CMS immediately reflects updated announcement text without code edits!');
 
+  // Validate collection and page banners
+  assert(publicCms.cms.men_banner && publicCms.cms.men_banner.image, 'Public CMS includes Men Atelier banner visual and copy');
+  assert(publicCms.cms.women_banner && publicCms.cms.women_banner.image, 'Public CMS includes Women Couture banner visual and copy');
+  assert(publicCms.cms.new_arrivals_banner && publicCms.cms.new_arrivals_banner.image, 'Public CMS includes New Arrivals banner visual and copy');
+  assert(publicCms.cms.sale_banner && publicCms.cms.sale_banner.image, 'Public CMS includes Seasonal Sale banner visual and copy');
+  assert(publicCms.cms.catalog_banner && publicCms.cms.catalog_banner.image, 'Public CMS includes Curated Master Catalog banner visual and copy');
+  assert(publicCms.cms.cart_banner && publicCms.cms.cart_banner.image, 'Public CMS includes Shopping Bag / Cart banner visual and copy');
+  assert(publicCms.cms.checkout_banner && publicCms.cms.checkout_banner.image, 'Public CMS includes Express Checkout Salon banner visual and copy');
+
+  // Test admin update of men_banner
+  const updatedMenTitle = "Men's Sartorial Haute Atelier • Autumn Edition";
+  const updateMenBannerRes = await fetch(`${BASE}/api/admin/cms/men_banner`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({
+      ...publicCms.cms.men_banner,
+      title: updatedMenTitle
+    })
+  });
+  assert(updateMenBannerRes.status === 200, 'Admin successfully updated Men collection banner');
+
+  // Test admin update of cart_banner
+  const updatedCartTitle = "Curated Atelier Wardrobe Selection";
+  const updateCartRes = await fetch(`${BASE}/api/admin/cms/cart_banner`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({
+      ...publicCms.cms.cart_banner,
+      title: updatedCartTitle
+    })
+  });
+  assert(updateCartRes.status === 200, 'Admin successfully updated Shopping Bag banner');
+
+  // Test admin update of checkout_banner
+  const updatedCheckoutTitle = "VIP Atelier Concierge & Express Checkout";
+  const updateCheckoutRes = await fetch(`${BASE}/api/admin/cms/checkout_banner`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({
+      ...publicCms.cms.checkout_banner,
+      title: updatedCheckoutTitle
+    })
+  });
+  assert(updateCheckoutRes.status === 200, 'Admin successfully updated Checkout Salon banner');
+
+  const verifyCmsRes = await fetch(`${BASE}/api/cms`);
+  const verifyCms = await verifyCmsRes.json();
+  assert(verifyCms.cms.men_banner.title === updatedMenTitle, 'Public CMS immediately reflects updated Men collection banner title');
+  assert(verifyCms.cms.cart_banner.title === updatedCartTitle, 'Public CMS immediately reflects updated Shopping Bag banner title');
+  assert(verifyCms.cms.checkout_banner.title === updatedCheckoutTitle, 'Public CMS immediately reflects updated Checkout banner title');
+
+  // Verify Admin Panel HTML has "All Page Hero Banners" button
+  const adminHtmlRes = await fetch(`${BASE}/admin.html`);
+  const adminHtmlText = await adminHtmlRes.text();
+  assert(adminHtmlText.includes('data-section="page-banners"'), 'Admin HTML console includes data-section="page-banners" button');
+  assert(adminHtmlText.includes('All Page Hero Banners'), 'Admin HTML console displays "All Page Hero Banners" in navigation sidebar');
+
   console.log('\n--- 9. Testing Supabase Cloud Backend Integration ---');
   const sbRes = await fetch(`${BASE}/api/supabase/status`);
   const sbData = await sbRes.json();

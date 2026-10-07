@@ -173,17 +173,18 @@
       if (path === 'home' || path === '') {
         await this.renderHome(container);
       } else if (path === 'men') {
-        await this.renderCatalog(container, { category: 'men', title: "Men's Unstitched Atelier" });
+        await this.renderCatalog(container, { category: 'men', pageKey: 'men', title: "Men's Unstitched Atelier" });
       } else if (path === 'women' || path === 'festive-lawn-25') {
-        await this.renderCatalog(container, { category: 'women', title: "Women's Haute Couture" });
+        await this.renderCatalog(container, { category: 'women', pageKey: 'women', title: "Women's Luxury Festive Lawn '25" });
       } else if (path === 'new-arrivals') {
-        await this.renderCatalog(container, { is_featured: '1', title: 'New Unstitched Arrivals' });
+        await this.renderCatalog(container, { is_featured: '1', pageKey: 'new_arrivals', title: 'New Unstitched Arrivals' });
       } else if (path === 'sale') {
-        await this.renderCatalog(container, { is_sale: '1', title: 'Seasonal Archive & Sale' });
+        await this.renderCatalog(container, { is_sale: '1', pageKey: 'sale', title: 'Seasonal Archive & Sale' });
       } else if (path === 'catalog') {
         const cat = params.get('category');
         const q = params.get('q');
-        await this.renderCatalog(container, { category: cat, q, title: q ? `Search: "${q}"` : 'Curated Atelier Catalog' });
+        const pageKey = cat === 'men' ? 'men' : (cat === 'women' ? 'women' : 'catalog');
+        await this.renderCatalog(container, { category: cat, q, pageKey, title: q ? `Search: "${q}"` : 'Curated Atelier Catalog' });
       } else if (path.startsWith('product/')) {
         const slug = path.replace('product/', '');
         await this.renderProductDetails(container, slug);
@@ -482,28 +483,196 @@
     // ----------------------------------------------------
     async renderCatalog(container, filterOptions = {}) {
       try {
-        const title = filterOptions.title || 'Curated Atelier Catalog';
-        
+        const pageKey = filterOptions.pageKey || (
+          filterOptions.category === 'men' ? 'men' :
+          (filterOptions.category === 'women' ? 'women' :
+          (filterOptions.is_featured ? 'new_arrivals' :
+          (filterOptions.is_sale ? 'sale' : 'catalog')))
+        );
+
+        const bannerDefaults = {
+          men: {
+            tagline: "Haute Sartorial Weaves • The Gentleman's Edit",
+            title: "Men's Unstitched Atelier",
+            subtitle: "Timeless Pakistani craft meets modern sartorial precision. Discover 4.5-meter cuts of premium Egyptian Giza 120s cotton, royal pure Boski silk, crisp summer Latha, and seasonal Wash & Wear crafted for distinguished silhouette drapes.",
+            image: "/assets/men_luxury_unstitched.png",
+            badge1: "100% Authentic Thread Counts",
+            badge2: "Mother-of-Pearl Buttons Included",
+            badge3: "Complimentary Nationwide Shipping",
+            pills: [
+              { label: "All Men", filterKey: "category", filterVal: "men" },
+              { label: "Egyptian Cotton 120s", filterKey: "fabric", filterVal: "Egyptian Giza Cotton 120s" },
+              { label: "Pure Boski", filterKey: "fabric", filterVal: "Pure Chinese Boski" },
+              { label: "Summer Latha", filterKey: "fabric", filterVal: "Summer Latha" },
+              { label: "Winter Karandi", filterKey: "fabric", filterVal: "Winter Karandi" },
+              { label: "Wash & Wear", filterKey: "fabric", filterVal: "Premium Wash & Wear" },
+              { label: "Sale Edits", filterKey: "is_sale", filterVal: "1" }
+            ],
+            callout: "Master Tailoring Inclusions: Every unstitched cut ships with authentic mother-of-pearl buttons & signature EBA woven collar label."
+          },
+          women: {
+            tagline: "Festive Couture ’25 • Vol. I",
+            title: "Women's Luxury Festive Lawn '25",
+            subtitle: "Sumptuous 3-piece unstitched masterpieces featuring intricate zari marori embroidery, organza cutwork borders, and pure silk & printed chiffon dupattas crafted for celebratory splendor.",
+            image: "/assets/woman_opulent_lawn.png",
+            badge1: "3-Piece Luxury Festive Suites",
+            badge2: "Pure Silk Chiffon Dupattas",
+            badge3: "Bespoke Master Tailoring Available",
+            pills: [
+              { label: "All Ensembles", filterKey: "category", filterVal: "women" },
+              { label: "3-Piece Festive", filterKey: "product_type", filterVal: "3-Piece Unstitched" },
+              { label: "Supima Lawn", filterKey: "fabric", filterVal: "Supima Lawn 80s" },
+              { label: "Pure Silk Chiffon", filterKey: "fabric", filterVal: "Pure Silk Chiffon" },
+              { label: "Schiffli Organza", filterKey: "fabric", filterVal: "Schiffli Organza" },
+              { label: "In Stock Ready to Ship", filterKey: "in_stock", filterVal: "1" }
+            ],
+            callout: "Master Tailoring Inclusions: Bespoke atelier stitching available with custom neckline, sleeve styling & premium silk lining."
+          },
+          new_arrivals: {
+            tagline: "Fresh Loom Dispatches • Autumn / Festive ’25",
+            title: "New Unstitched Arrivals",
+            subtitle: "Fresh off the master looms. Hand-curated seasonal releases in ultra-fine Egyptian cotton, embroidered festive lawn, and heritage textured weaves.",
+            image: "/assets/hero_campaign_editorial.png",
+            badge1: "Fresh Loom Dispatches",
+            badge2: "Limited Edition Yardage",
+            badge3: "48-Hour Priority Dispatch",
+            pills: [
+              { label: "All New Arrivals", filterKey: "is_featured", filterVal: "1" },
+              { label: "Men's New", filterKey: "category", filterVal: "men" },
+              { label: "Women's New", filterKey: "category", filterVal: "women" },
+              { label: "Egyptian 120s", filterKey: "fabric", filterVal: "Egyptian Giza Cotton 120s" },
+              { label: "Festive Lawn", filterKey: "fabric", filterVal: "Supima Lawn 80s" }
+            ],
+            callout: "Limited Edition Yardage: Direct from master looms with certified authentic thread counts & climate-sealed packaging."
+          },
+          sale: {
+            tagline: "Exclusive Archive Reductions",
+            title: "Seasonal Archive & Sale",
+            subtitle: "Exceptional values on select end-of-edition unstitched luxury fabrics. Complete with authentic selvedge verification and complimentary signature packaging.",
+            image: "/assets/hero_campaign_split.png",
+            badge1: "Privilege Reductions Up to 30%",
+            badge2: "Authentic Yardage Certification",
+            badge3: "Limited Vault Stocks",
+            pills: [
+              { label: "All Sale Items", filterKey: "is_sale", filterVal: "1" },
+              { label: "Men's Sale", filterKey: "category", filterVal: "men" },
+              { label: "Women's Sale", filterKey: "category", filterVal: "women" },
+              { label: "In Stock", filterKey: "in_stock", filterVal: "1" }
+            ],
+            callout: "Archive Privilege: All sale fabrics include complimentary heirloom gift box packaging and inspection guarantee."
+          },
+          catalog: {
+            tagline: "The Master Textile Vault",
+            title: filterOptions.q ? `Search: "${filterOptions.q}"` : "Curated Atelier Catalog",
+            subtitle: "Explore the complete archives of EBA Fashion Studio — from regal winter Karandi and Egyptian cottons to decadent celebratory lawn ensembles.",
+            image: "/assets/hero_campaign_editorial.png",
+            badge1: "Certified Thread Counts",
+            badge2: "Nationwide Express Shipping",
+            badge3: "Master Bespoke Tailoring",
+            pills: [
+              { label: "All Collections", filterKey: "category", filterVal: "" },
+              { label: "Men's Atelier", filterKey: "category", filterVal: "men" },
+              { label: "Women's Couture", filterKey: "category", filterVal: "women" },
+              { label: "New Arrivals", filterKey: "is_featured", filterVal: "1" },
+              { label: "Seasonal Sale", filterKey: "is_sale", filterVal: "1" }
+            ],
+            callout: "Complimentary Nationwide Express Shipping on all orders above PKR 5,000 • Verified Cash on Delivery"
+          }
+        };
+
+        const activeDefault = bannerDefaults[pageKey] || bannerDefaults.catalog;
+        const cmsKey = pageKey === 'new_arrivals' ? 'new_arrivals_banner' : `${pageKey}_banner`;
+        const cmsBanner = this.state.cms?.[cmsKey] || {};
+
+        const banner = {
+          tagline: cmsBanner.tagline || activeDefault.tagline,
+          title: filterOptions.q ? `Search: "${filterOptions.q}"` : (cmsBanner.title || activeDefault.title),
+          subtitle: cmsBanner.subtitle || activeDefault.subtitle,
+          image: cmsBanner.image || activeDefault.image,
+          badge1: cmsBanner.badge1 || activeDefault.badge1,
+          badge2: cmsBanner.badge2 || activeDefault.badge2,
+          badge3: cmsBanner.badge3 || activeDefault.badge3,
+          pills: activeDefault.pills,
+          callout: activeDefault.callout
+        };
+
         // Fetch facets
         const facetsRes = await EBA_API.products.getFacets();
         const facets = facetsRes || {};
 
         container.innerHTML = `
-          <!-- Collection Hero Header -->
-          <header class="w-full bg-surface-container-low border-b border-surface-container-high py-12 px-margin-mobile md:px-margin">
-            <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <nav class="flex items-center gap-2 font-label-sm uppercase tracking-wider text-on-surface-variant mb-2">
-                  <a href="#home" class="hover:text-primary">Home</a>
-                  <span>/</span>
-                  <span class="text-primary font-semibold">${title}</span>
-                </nav>
-                <h1 class="font-display-lg uppercase text-primary leading-tight">${title}</h1>
+          <!-- EDITORIAL COLLECTION HERO BANNER -->
+          <section class="relative w-full min-h-[360px] md:min-h-[440px] bg-primary overflow-hidden flex items-center">
+            <!-- Background Visual with Luxury Overlay -->
+            <img src="${banner.image}" alt="${banner.title}" class="absolute inset-0 w-full h-full object-cover object-top opacity-40 transition-transform duration-1000 scale-100 hover:scale-105" onerror="this.src='/assets/hero_campaign_editorial.png'"/>
+            <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/85 to-primary/40 pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-black/30 pointer-events-none"></div>
+
+            <div class="relative z-10 w-full max-w-7xl mx-auto px-margin-mobile md:px-margin py-12 flex flex-col justify-center">
+              <!-- Breadcrumb Rail -->
+              <nav class="flex items-center gap-2 font-label-sm uppercase tracking-widest text-surface-dim/80 text-[11px] mb-4">
+                <a href="#home" class="hover:text-white transition-colors">Home</a>
+                <span class="text-white/40">/</span>
+                <span class="text-secondary-fixed font-semibold">${banner.title}</span>
+              </nav>
+
+              <!-- Editorial Tagline -->
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+                <span class="font-label-sm uppercase tracking-[0.25em] text-secondary-fixed font-semibold text-xs">${banner.tagline}</span>
               </div>
-              <div class="flex items-center gap-4">
+
+              <!-- Main Title -->
+              <h1 class="font-display-lg text-3xl sm:text-5xl lg:text-6xl text-white uppercase leading-tight font-normal tracking-tight max-w-3xl">
+                ${banner.title}
+              </h1>
+
+              <!-- Subtitle Description -->
+              <p class="font-body-md text-surface-dim max-w-2xl leading-relaxed mt-3 text-xs sm:text-sm font-light">
+                ${banner.subtitle}
+              </p>
+
+              <!-- Trust Badges Pill Row -->
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-6">
+                ${banner.badge1 ? `
+                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[15px] text-secondary-fixed">verified</span>
+                    <span>${banner.badge1}</span>
+                  </div>
+                ` : ''}
+                ${banner.badge2 ? `
+                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[15px] text-secondary-fixed">local_shipping</span>
+                    <span>${banner.badge2}</span>
+                  </div>
+                ` : ''}
+                ${banner.badge3 ? `
+                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[15px] text-secondary-fixed">straighten</span>
+                    <span>${banner.badge3}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </section>
+
+          <!-- Interactive Quick Filter Ribbon & Sorting Bar -->
+          <div class="w-full bg-surface-container-lowest border-b border-surface-container-high px-margin-mobile md:px-margin py-3.5 shadow-sm sticky top-20 z-20">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              <!-- Quick Filter Pills -->
+              <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                ${(banner.pills || []).map((pill, idx) => `
+                  <button type="button" onclick="app.applyQuickPillFilter('${pill.filterKey}', '${pill.filterVal}', this)" class="quick-pill-btn shrink-0 px-4 py-2 text-xs font-label-sm uppercase tracking-wider transition-all border ${idx === 0 ? 'bg-primary text-white border-primary shadow-sm' : 'bg-surface-container-low text-on-surface hover:bg-surface-container border-transparent'}">
+                    ${pill.label}
+                  </button>
+                `).join('')}
+              </div>
+
+              <!-- Sorting & Layout Controls -->
+              <div class="flex items-center justify-between md:justify-end gap-4 shrink-0">
                 <div class="flex items-center gap-2">
-                  <label for="catalog-sort" class="font-label-sm uppercase tracking-wider text-on-surface-variant hidden sm:inline">Sort By:</label>
-                  <select id="catalog-sort" onchange="app.applyCatalogSort()" class="bg-surface-container-lowest border border-surface-container-high px-3 py-2 text-xs font-label-sm uppercase tracking-wider focus:outline-none">
+                  <label for="catalog-sort" class="font-label-sm uppercase tracking-wider text-on-surface-variant text-xs hidden sm:inline">Sort:</label>
+                  <select id="catalog-sort" onchange="app.applyCatalogSort()" class="bg-surface-container-low border border-surface-container-high px-3 py-1.5 text-xs font-label-sm uppercase tracking-wider focus:outline-none cursor-pointer">
                     <option value="featured">Featured Edit</option>
                     <option value="newest">Newest Arrivals</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -513,7 +682,20 @@
                 </div>
               </div>
             </div>
-          </header>
+          </div>
+
+          <!-- Master Atelier Reassurance Strip -->
+          <div class="w-full bg-surface-container-low border-b border-surface-container-high px-margin-mobile md:px-margin py-3">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-2 text-primary">
+                <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+                <span class="font-label-sm uppercase tracking-wider font-semibold">${banner.callout}</span>
+              </div>
+              <div class="flex items-center gap-3 text-on-surface-variant font-label-sm uppercase text-[11px] shrink-0">
+                <span>Free WhatsApp Concierge: <strong class="text-primary">0325-4473333</strong></span>
+              </div>
+            </div>
+          </div>
 
           <!-- Main Catalog Content -->
           <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-12">
@@ -640,6 +822,33 @@
       }
     },
 
+    applyQuickPillFilter(key, val, btnEl) {
+      if (btnEl) {
+        document.querySelectorAll('.quick-pill-btn').forEach(b => {
+          b.className = 'quick-pill-btn shrink-0 px-4 py-2 text-xs font-label-sm uppercase tracking-wider transition-all border bg-surface-container-low text-on-surface hover:bg-surface-container border-transparent';
+        });
+        btnEl.className = 'quick-pill-btn shrink-0 px-4 py-2 text-xs font-label-sm uppercase tracking-wider transition-all border bg-primary text-white border-primary shadow-sm';
+      }
+
+      if (key === 'category') {
+        const rad = document.querySelector(`input[name="cat_filter"][value="${val}"]`);
+        if (rad) rad.checked = true;
+        this.applyCatalogFilter('category', val);
+      } else if (key === 'fabric') {
+        this.applyCatalogFilter('fabric', val);
+      } else if (key === 'product_type') {
+        this.applyCatalogFilter('product_type', val);
+      } else if (key === 'is_sale') {
+        this.applyCatalogFilter('is_sale', val);
+      } else if (key === 'is_featured') {
+        this.applyCatalogFilter('is_featured', val);
+      } else if (key === 'in_stock') {
+        this.applyCatalogFilter('in_stock', val);
+      } else {
+        this.applyCatalogFilter(key, val);
+      }
+    },
+
     applyCatalogFilter(key, val) {
       if (!val) {
         delete this.state.currentFilter[key];
@@ -671,6 +880,13 @@
       this.state.currentFilter = {};
       const sortSelect = document.getElementById('catalog-sort');
       if (sortSelect) sortSelect.value = 'featured';
+      document.querySelectorAll('.quick-pill-btn').forEach((b, idx) => {
+        b.className = idx === 0 
+          ? 'quick-pill-btn shrink-0 px-4 py-2 text-xs font-label-sm uppercase tracking-wider transition-all border bg-primary text-white border-primary shadow-sm'
+          : 'quick-pill-btn shrink-0 px-4 py-2 text-xs font-label-sm uppercase tracking-wider transition-all border bg-surface-container-low text-on-surface hover:bg-surface-container border-transparent';
+      });
+      document.querySelectorAll('input[name="cat_filter"]').forEach(r => r.checked = r.value === '');
+      document.querySelectorAll('#catalog-sidebar input[type="checkbox"]').forEach(c => c.checked = false);
       this.loadCatalogProducts();
     },
 
@@ -703,6 +919,28 @@
               <a href="#${product.category_slug || 'catalog'}" class="hover:text-primary">${product.category_name || 'Catalog'}</a>
               <span>/</span>
               <span class="text-primary font-semibold truncate">${product.name}</span>
+            </div>
+          </div>
+
+          <!-- ATELIER ASSURANCE BANNER STRIP -->
+          <div class="w-full bg-primary text-white py-3 px-margin-mobile md:px-margin border-b border-surface-container-high">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-[11px] font-label-sm uppercase tracking-widest text-surface-dim">
+              <span class="flex items-center gap-1.5 text-white font-semibold">
+                <span class="material-symbols-outlined text-[16px] text-secondary-fixed">verified</span>
+                100% Authentic Mill-Certified Yardage
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-secondary-fixed">local_shipping</span>
+                Nationwide 48-Hour Dispatch via TCS
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-secondary-fixed">payments</span>
+                Cash on Delivery (COD) Available
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-secondary-fixed">straighten</span>
+                Optional Master Atelier Bespoke Stitching
+              </span>
             </div>
           </div>
 
@@ -951,6 +1189,15 @@
     async renderCartPage(container) {
       await this.refreshCart();
       const cart = this.state.cart;
+      const cartBanner = this.state.cms?.cart_banner || {
+        tagline: "Atelier Bag • Haute Couture Dispatch",
+        title: "Your Curated Wardrobe Bag",
+        subtitle: "Every unstitched length is delivered in a climate-sealed monogrammed heirloom box with authentic yardage certification.",
+        image: "/assets/hero_campaign_split.png",
+        badge1: "Complimentary Archive Packaging",
+        badge2: "Free nationwide express delivery above PKR 5,000",
+        enabled: true
+      };
 
       container.innerHTML = `
         <!-- Delivery Progress Strip -->
@@ -970,11 +1217,39 @@
           </div>
         </section>
 
-        <!-- Cart Header -->
-        <header class="w-full max-w-7xl mx-auto px-margin-mobile md:px-margin pt-10 pb-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
-          <h1 class="font-display-lg uppercase text-primary">
-            Your Shopping Bag <span class="font-body-md text-on-surface-variant font-normal">(${cart.itemCount} Items)</span>
-          </h1>
+        <!-- LUXURY ATELIER CART BANNER -->
+        <section class="relative w-full bg-primary text-on-primary py-10 md:py-14 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
+          <div class="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity" style="background-image: url('${cartBanner.image || '/assets/hero_campaign_split.png'}')"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/60 pointer-events-none"></div>
+          
+          <div class="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+                <span class="font-label-sm uppercase tracking-[0.25em] text-secondary-fixed text-xs font-semibold">${cartBanner.tagline || 'Atelier Bag • Haute Couture Dispatch'}</span>
+              </div>
+              <h1 class="font-display-lg text-3xl sm:text-5xl text-white uppercase tracking-tight">${cartBanner.title || 'Your Curated Wardrobe Bag'}</h1>
+              <p class="font-body-sm text-surface-dim mt-2 max-w-xl text-xs sm:text-sm">
+                ${cartBanner.subtitle || 'Every unstitched length is delivered in a climate-sealed monogrammed heirloom box with authentic yardage certification.'}
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 p-4 shrink-0">
+              <span class="material-symbols-outlined text-secondary-fixed text-3xl">inventory_2</span>
+              <div class="text-xs">
+                <span class="font-label-sm uppercase tracking-wider text-white block font-semibold">${cartBanner.badge1 || 'Complimentary Archive Packaging'}</span>
+                <span class="text-surface-dim text-[11px]">${cartBanner.badge2 || 'Free nationwide express delivery above PKR 5,000'}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Cart Subheader Actions -->
+        <header class="w-full max-w-7xl mx-auto px-margin-mobile md:px-margin pt-6 pb-4 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="font-headline-sm uppercase text-primary text-xl">Bag Contents</span>
+            <span class="font-body-sm text-on-surface-variant font-normal">(${cart.itemCount} Items)</span>
+          </div>
           <a href="#catalog" class="font-label-sm text-secondary uppercase hover:underline">
             &larr; Continue Curating Wardrobe
           </a>
@@ -1213,8 +1488,40 @@
       const user = this.state.user || {};
       const discount = this.state.appliedCoupon ? this.state.appliedCoupon.discount_amount : 0;
       const initialTotal = Math.max(0, cart.total - discount);
+      const checkoutBanner = this.state.cms?.checkout_banner || {
+        tagline: "Verified Checkout Salon",
+        title: "Express Atelier Checkout",
+        subtitle: "256-Bit SSL Encrypted • Real-time SMS & WhatsApp Courier Dispatch Verification",
+        image: "/assets/hero_campaign_editorial.png",
+        badge1: "Live Inventory Locked",
+        badge2: "TCS Nationwide",
+        enabled: true
+      };
 
       container.innerHTML = `
+        <!-- CHECKOUT LUXURY ATELIER BANNER -->
+        <section class="relative w-full bg-primary text-on-primary py-8 md:py-10 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
+          <div class="absolute inset-0 bg-cover bg-center opacity-25" style="background-image: url('${checkoutBanner.image || '/assets/hero_campaign_editorial.png'}')"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/70 pointer-events-none"></div>
+
+          <div class="relative z-10 max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+                <span class="font-label-sm uppercase tracking-[0.2em] text-secondary-fixed text-xs font-semibold">${checkoutBanner.tagline || 'Verified Checkout Salon'}</span>
+              </div>
+              <h1 class="font-display-lg text-2xl sm:text-4xl text-white uppercase tracking-tight">${checkoutBanner.title || 'Express Atelier Checkout'}</h1>
+              <p class="font-body-sm text-surface-dim text-xs mt-1">${checkoutBanner.subtitle || '256-Bit SSL Encrypted • Real-time SMS & WhatsApp Courier Dispatch Verification'}</p>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-4 text-xs font-label-sm uppercase tracking-wider text-surface-dim shrink-0 bg-white/10 px-3.5 py-2 border border-white/15">
+              <span class="flex items-center gap-1.5 text-white font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ${checkoutBanner.badge1 || 'Live Inventory Locked'}</span>
+              <span class="text-white/40">•</span>
+              <span class="text-secondary-fixed font-semibold">${checkoutBanner.badge2 || 'TCS Nationwide'}</span>
+            </div>
+          </div>
+        </section>
+
         <!-- 4-STEP PROGRESS HEADER TRACKER (FROM STITCH SCREEN) -->
         <section class="w-full bg-surface-container-low py-8 px-margin-mobile md:px-margin border-b border-surface-container-high">
           <div class="max-w-6xl mx-auto">
@@ -1983,6 +2290,34 @@
                 </a>
               </div>
             ` : ''}
+
+            <!-- VIP Member Salon Banner -->
+            <div class="relative w-full bg-primary text-on-primary p-8 md:p-10 border border-surface-container-high overflow-hidden shadow-lg">
+              <div class="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity" style="background-image: url('/assets/men_luxury_unstitched.png')"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/70 pointer-events-none"></div>
+              <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+                    <span class="font-label-sm uppercase tracking-[0.25em] text-secondary-fixed text-xs font-semibold">Private Patron Salon • Lahore Atelier</span>
+                  </div>
+                  <h2 class="font-display-lg text-2xl sm:text-4xl text-white uppercase tracking-tight">The EBA Private Salon Portal</h2>
+                  <p class="font-body-sm text-surface-dim mt-1.5 max-w-xl text-xs sm:text-sm">
+                    Exclusive member sanctuary: Track live TCS logistics, browse your curated wishlists, and consult with bespoke tailoring artisans.
+                  </p>
+                </div>
+                <div class="flex items-center gap-4 shrink-0">
+                  <div class="bg-white/10 border border-white/20 p-3.5 text-center min-w-[80px]">
+                    <span class="font-headline-sm text-white text-lg block">${orders.length}</span>
+                    <span class="font-label-sm text-surface-dim uppercase text-[10px] tracking-wider">Orders Logged</span>
+                  </div>
+                  <div class="bg-white/10 border border-white/20 p-3.5 text-center min-w-[80px]">
+                    <span class="font-headline-sm text-secondary-fixed text-lg block">${wishlist.length}</span>
+                    <span class="font-label-sm text-surface-dim uppercase text-[10px] tracking-wider">Saved Weaves</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- Member Header -->
             <div class="bg-surface-container-lowest p-8 border border-surface-container-high flex flex-col md:flex-row md:items-center justify-between gap-6">

@@ -132,6 +132,10 @@
           titleEl.textContent = 'Client Directory & Spending Ledgers';
           await this.renderCustomers(area);
           break;
+        case 'page-banners':
+          titleEl.textContent = 'All Page Hero Banners & Campaign Headers';
+          await this.renderPageBanners(area);
+          break;
         case 'cms':
           titleEl.textContent = 'Homepage CMS & Editorial Content';
           await this.renderCMS(area);
@@ -1583,6 +1587,465 @@
     },
 
     // ----------------------------------------------------
+    // 7B. ALL PAGE HERO BANNERS & CAMPAIGN HEADERS
+    // ----------------------------------------------------
+    async renderPageBanners(area) {
+      try {
+        const res = await EBA_API.admin.getCMS();
+        const cms = res.cms || {};
+        this.state.cms = cms;
+
+        const hero = cms.hero_banner || {
+          tagline: "Unstitched Autumn/Festive ’25 Edition",
+          title: "The Art of Pakistani Weaves",
+          subtitle: "Exquisite unstitched fabrics tailored for the discerning connoisseur — Hand-selected Egyptian Cotton, Festive Lawn, and Raw Silk woven across premier Pakistani mills.",
+          image: "/assets/hero_campaign_editorial.png",
+          badge1: "Complimentary Nationwide Shipping",
+          badge2: "Cash on Delivery Available",
+          cta_men_text: "Explore Men's Unstitched",
+          cta_men_link: "#men",
+          cta_women_text: "Explore Women's Haute Couture",
+          cta_women_link: "#women",
+          enabled: true
+        };
+
+        const menBanner = cms.men_banner || {
+          tagline: "Haute Sartorial Weaves • The Gentleman's Edit",
+          title: "Men's Unstitched Atelier",
+          subtitle: "Timeless Pakistani craft meets modern sartorial precision. Discover 4.5-meter cuts of premium Egyptian Giza 120s cotton, royal pure Boski silk, crisp summer Latha, and seasonal Wash & Wear crafted for distinguished silhouette drapes.",
+          image: "/assets/men_luxury_unstitched.png",
+          badge1: "100% Authentic Thread Counts",
+          badge2: "Mother-of-Pearl Buttons Included",
+          badge3: "Complimentary Nationwide Shipping",
+          enabled: true
+        };
+
+        const womenBanner = cms.women_banner || {
+          tagline: "Festive Couture ’25 • Vol. I",
+          title: "Women's Luxury Festive Lawn '25",
+          subtitle: "Sumptuous 3-piece unstitched masterpieces featuring intricate zari marori embroidery, organza cutwork borders, and pure silk & printed chiffon dupattas crafted for celebratory splendor.",
+          image: "/assets/woman_opulent_lawn.png",
+          badge1: "3-Piece Luxury Festive Suites",
+          badge2: "Pure Silk Chiffon Dupattas",
+          badge3: "Bespoke Master Tailoring Available",
+          enabled: true
+        };
+
+        const newArrivalsBanner = cms.new_arrivals_banner || {
+          tagline: "Fresh Loom Dispatches • Autumn / Festive ’25",
+          title: "New Unstitched Arrivals",
+          subtitle: "Fresh off the master looms. Hand-curated seasonal releases in ultra-fine Egyptian cotton, embroidered festive lawn, and heritage textured weaves.",
+          image: "/assets/hero_campaign_editorial.png",
+          badge1: "Fresh Loom Dispatches",
+          badge2: "Limited Edition Yardage",
+          badge3: "48-Hour Priority Dispatch",
+          enabled: true
+        };
+
+        const saleBanner = cms.sale_banner || {
+          tagline: "Exclusive Archive Reductions",
+          title: "Seasonal Archive & Sale",
+          subtitle: "Exceptional values on select end-of-edition unstitched luxury fabrics. Complete with authentic selvedge verification and complimentary signature packaging.",
+          image: "/assets/hero_campaign_split.png",
+          badge1: "Privilege Reductions Up to 30%",
+          badge2: "Authentic Yardage Certification",
+          badge3: "Limited Vault Stocks",
+          enabled: true
+        };
+
+        const catalogBanner = cms.catalog_banner || {
+          tagline: "The Master Textile Vault",
+          title: "Curated Atelier Catalog",
+          subtitle: "Explore the complete archives of EBA Fashion Studio — from regal winter Karandi and Egyptian cottons to decadent celebratory lawn ensembles.",
+          image: "/assets/hero_campaign_editorial.png",
+          badge1: "Certified Thread Counts",
+          badge2: "Nationwide Express Shipping",
+          badge3: "Master Bespoke Tailoring",
+          enabled: true
+        };
+
+        const cartBanner = cms.cart_banner || {
+          tagline: "Atelier Bag • Haute Couture Dispatch",
+          title: "Your Curated Wardrobe Bag",
+          subtitle: "Every unstitched length is delivered in a climate-sealed monogrammed heirloom box with authentic yardage certification.",
+          image: "/assets/hero_campaign_split.png",
+          badge1: "Complimentary Archive Packaging",
+          badge2: "Free Shipping Above PKR 5,000",
+          enabled: true
+        };
+
+        const checkoutBanner = cms.checkout_banner || {
+          tagline: "Verified Checkout Salon",
+          title: "Express Atelier Checkout",
+          subtitle: "256-Bit SSL Encrypted • Real-time SMS & WhatsApp Courier Dispatch Verification",
+          image: "/assets/hero_campaign_editorial.png",
+          badge1: "Live Inventory Locked",
+          badge2: "TCS Nationwide Delivery",
+          enabled: true
+        };
+
+        const bannerConfigs = [
+          {
+            id: 'men',
+            key: 'men_banner',
+            prefix: 'men',
+            name: "Men's Unstitched Atelier",
+            tag: "Men's Collection",
+            icon: 'man',
+            route: '#men',
+            defaultImg: '/assets/men_luxury_unstitched.png',
+            helpText: "High-impact campaign header on the Men's collection page.",
+            data: menBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Weave Credential', defaultVal: '100% Authentic Thread Counts' },
+              { key: 'badge2', label: 'Badge 2: Packaging Accent', defaultVal: 'Mother-of-Pearl Buttons Included' },
+              { key: 'badge3', label: 'Badge 3: Delivery Privilege', defaultVal: 'Complimentary Nationwide Shipping' }
+            ]
+          },
+          {
+            id: 'women',
+            key: 'women_banner',
+            prefix: 'women',
+            name: "Women's Luxury Festive Lawn",
+            tag: "Women's Couture",
+            icon: 'woman',
+            route: '#women',
+            defaultImg: '/assets/woman_opulent_lawn.png',
+            helpText: "Opulent campaign banner on the Women's festive lawn collection page.",
+            data: womenBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Suit Specification', defaultVal: '3-Piece Luxury Festive Suites' },
+              { key: 'badge2', label: 'Badge 2: Dupatta Specification', defaultVal: 'Pure Silk Chiffon Dupattas' },
+              { key: 'badge3', label: 'Badge 3: Atelier Tailoring', defaultVal: 'Bespoke Master Tailoring Available' }
+            ]
+          },
+          {
+            id: 'newarrivals',
+            key: 'new_arrivals_banner',
+            prefix: 'newarrivals',
+            name: "New Unstitched Arrivals",
+            tag: "Loom Releases",
+            icon: 'auto_awesome',
+            route: '#new-arrivals',
+            defaultImg: '/assets/hero_campaign_editorial.png',
+            helpText: "Header banner for fresh releases and featured looms across the boutique.",
+            data: newArrivalsBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Dispatch Type', defaultVal: 'Fresh Loom Dispatches' },
+              { key: 'badge2', label: 'Badge 2: Scarcity Spec', defaultVal: 'Limited Edition Yardage' },
+              { key: 'badge3', label: 'Badge 3: Dispatch Speed', defaultVal: '48-Hour Priority Dispatch' }
+            ]
+          },
+          {
+            id: 'sale',
+            key: 'sale_banner',
+            prefix: 'sale',
+            name: "Seasonal Archive & Sale",
+            tag: "Archive Reductions",
+            icon: 'loyalty',
+            route: '#sale',
+            defaultImg: '/assets/hero_campaign_split.png',
+            helpText: "Banner for exclusive archive fabrics and seasonal promotional pricing.",
+            data: saleBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Reduction Offer', defaultVal: 'Privilege Reductions Up to 30%' },
+              { key: 'badge2', label: 'Badge 2: Yardage Verification', defaultVal: 'Authentic Yardage Certification' },
+              { key: 'badge3', label: 'Badge 3: Stock Status', defaultVal: 'Limited Vault Stocks' }
+            ]
+          },
+          {
+            id: 'catalog',
+            key: 'catalog_banner',
+            prefix: 'catalog',
+            name: "Curated Master Catalog",
+            tag: "Textile Vault",
+            icon: 'menu_book',
+            route: '#catalog',
+            defaultImg: '/assets/hero_campaign_editorial.png',
+            helpText: "Header for the complete master textile catalog and fabric filters.",
+            data: catalogBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Quality Guarantee', defaultVal: 'Certified Thread Counts' },
+              { key: 'badge2', label: 'Badge 2: Logistics Partner', defaultVal: 'Nationwide Express Shipping' },
+              { key: 'badge3', label: 'Badge 3: Atelier Service', defaultVal: 'Master Bespoke Tailoring' }
+            ]
+          },
+          {
+            id: 'cart',
+            key: 'cart_banner',
+            prefix: 'cart',
+            name: "Shopping Bag / Wardrobe Cart",
+            tag: "Client Cart",
+            icon: 'shopping_bag',
+            route: '#cart',
+            defaultImg: '/assets/hero_campaign_split.png',
+            helpText: "Luxury reassuring banner displayed above items in the customer bag.",
+            data: cartBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Packaging Accent', defaultVal: 'Complimentary Archive Packaging' },
+              { key: 'badge2', label: 'Badge 2: Shipping Privilege', defaultVal: 'Free Shipping Above PKR 5,000' }
+            ]
+          },
+          {
+            id: 'checkout',
+            key: 'checkout_banner',
+            prefix: 'checkout',
+            name: "Express Atelier Checkout",
+            tag: "Checkout Salon",
+            icon: 'lock',
+            route: '#checkout',
+            defaultImg: '/assets/hero_campaign_editorial.png',
+            helpText: "Security, escrow and logistics reassurance banner on the checkout page.",
+            data: checkoutBanner,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Inventory Lock', defaultVal: 'Live Inventory Locked' },
+              { key: 'badge2', label: 'Badge 2: Courier Partner', defaultVal: 'TCS Nationwide Delivery' }
+            ]
+          },
+          {
+            id: 'home',
+            key: 'hero_banner',
+            prefix: 'hero',
+            name: "Homepage Hero Welcome",
+            tag: "Homepage Prime",
+            icon: 'cottage',
+            route: '#home',
+            defaultImg: '/assets/hero_campaign_editorial.png',
+            helpText: "Prime hero campaign visual and headline on the storefront homepage entrance.",
+            data: hero,
+            badges: [
+              { key: 'badge1', label: 'Badge 1: Delivery Offer', defaultVal: 'Complimentary Nationwide Shipping' },
+              { key: 'badge2', label: 'Badge 2: Payment Reassurance', defaultVal: 'Cash on Delivery Available' }
+            ],
+            hasCtas: true
+          }
+        ];
+
+        area.innerHTML = `
+          <div class="space-y-6">
+            <!-- Header Banner Summary -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span class="font-label-sm uppercase tracking-widest text-secondary font-semibold text-xs">Omnichannel Storefront Customizer</span>
+                </div>
+                <h3 class="font-headline-sm uppercase text-primary text-xl font-bold">All Page Hero Banners & Campaign Headers</h3>
+                <p class="font-body-sm text-on-surface-variant text-xs mt-1 max-w-3xl">
+                  Customize the hero banner visuals, headlines, taglines, subtext, and reassurance badges for every page across the storefront. Changes are synced with cloud storage and reflected instantly on the live site.
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="/" target="_blank" class="btn-secondary py-2.5 px-4 text-xs flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
+                  <span>Storefront Live</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Page Selector Tabs -->
+            <div class="bg-surface-container-low p-2 border border-surface-container-high overflow-x-auto">
+              <div class="flex items-center gap-1.5 min-w-max" id="banner-tab-strip">
+                <button onclick="adminApp.switchBannerTab('all')" data-tab="all" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-primary text-white font-semibold transition-all shadow-sm flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">apps</span>
+                  <span>View All Pages (8)</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('men')" data-tab="men" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">man</span>
+                  <span>Men's Atelier</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('women')" data-tab="women" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">woman</span>
+                  <span>Women's Couture</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('newarrivals')" data-tab="newarrivals" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+                  <span>New Arrivals</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('sale')" data-tab="sale" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">loyalty</span>
+                  <span>Seasonal Sale</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('catalog')" data-tab="catalog" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">menu_book</span>
+                  <span>Master Catalog</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('cart')" data-tab="cart" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
+                  <span>Shopping Bag</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('checkout')" data-tab="checkout" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">lock</span>
+                  <span>Checkout Salon</span>
+                </button>
+                <button onclick="adminApp.switchBannerTab('home')" data-tab="home" class="px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">cottage</span>
+                  <span>Homepage Hero</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Banner Customization Cards List -->
+            <div class="space-y-6" id="banner-cards-container">
+              ${bannerConfigs.map(cfg => `
+                <div id="banner-card-${cfg.id}" data-banner-tab="${cfg.id}" class="page-banner-card bg-surface-container-lowest p-6 border border-surface-container-high space-y-5 transition-all">
+                  
+                  <!-- Card Header Bar -->
+                  <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-surface-container-high">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded bg-primary/10 text-primary flex items-center justify-center font-bold">
+                        <span class="material-symbols-outlined text-2xl">${cfg.icon}</span>
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <h3 class="font-headline-sm uppercase text-primary text-base font-bold">${cfg.name}</h3>
+                          <span class="bg-surface-container-high text-primary font-label-sm text-[10px] uppercase px-2 py-0.5 tracking-wider font-semibold">${cfg.tag}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant mt-0.5">
+                          <span>Route:</span>
+                          <a href="/${cfg.route}" target="_blank" class="text-secondary font-mono hover:underline flex items-center gap-1 font-semibold">
+                            <span>/${cfg.route}</span>
+                            <span class="material-symbols-outlined text-[13px]">launch</span>
+                          </a>
+                          <span>•</span>
+                          <span class="text-[11px]">${cfg.helpText}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                      <label class="flex items-center gap-2 cursor-pointer text-xs bg-surface-container-low px-3 py-1.5 border border-surface-container-high">
+                        <input type="checkbox" id="cms-${cfg.prefix}-enabled" ${cfg.data.enabled !== false ? 'checked' : ''} class="custom-checkbox"/>
+                        <span class="font-label-sm uppercase font-semibold text-primary">Active on Storefront</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Visual Asset Manager -->
+                  <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                    <div class="flex items-center justify-between">
+                      <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Background Visual Asset</label>
+                      <span class="text-[11px] text-secondary">Drop image file or paste web/local URL</span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <!-- Live Preview with Fallback -->
+                      <div class="relative w-48 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                        <img id="cms-img-${cfg.prefix}-preview" src="${cfg.data.image || cfg.defaultImg}" alt="${cfg.name} Preview" class="w-full h-full object-cover" onerror="this.src='${cfg.defaultImg}'"/>
+                        <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Live Preview</div>
+                      </div>
+
+                      <!-- Dropzone & URL Input Controls -->
+                      <div class="flex-1 w-full space-y-2">
+                        <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                          ondragover="adminApp.handleDragOver(event, this)"
+                          ondragleave="adminApp.handleDragLeave(event, this)"
+                          ondrop="adminApp.handleDrop(event, 'cms-${cfg.prefix}')"
+                          onclick="document.getElementById('cms-${cfg.prefix}-file').click()">
+                          <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                          <div class="text-left">
+                            <p class="text-xs font-semibold text-primary">Drop banner photo here, or <span class="text-secondary underline">browse files</span></p>
+                            <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res landscape (auto-compressed)</p>
+                          </div>
+                          <input type="file" id="cms-${cfg.prefix}-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-${cfg.prefix}')"/>
+                        </div>
+
+                        <div>
+                          <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Local File Path</label>
+                          <div class="flex items-center gap-2">
+                            <input type="text" id="cms-img-${cfg.prefix}" value="${(cfg.data.image || cfg.defaultImg).replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-${cfg.prefix}', this.value)"/>
+                            <button type="button" onclick="adminApp.resetCmsImage('cms-${cfg.prefix}', '${cfg.defaultImg}')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap" title="Reset to original default">Reset</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Editorial Copy & Typography -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">Editorial Tagline</label>
+                      <input type="text" id="cms-${cfg.prefix}-tagline" value="${(cfg.data.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs" placeholder="e.g. Haute Sartorial Weaves • Vol. I"/>
+                    </div>
+                    <div>
+                      <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">Headline Title</label>
+                      <input type="text" id="cms-${cfg.prefix}-title" value="${(cfg.data.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs" placeholder="e.g. Master Textile Vault"/>
+                    </div>
+                    <div class="sm:col-span-2">
+                      <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">Subtext Description & Editorial Narrative</label>
+                      <textarea id="cms-${cfg.prefix}-subtitle" rows="2" class="form-input text-xs" placeholder="Detailed luxury narrative...">${cfg.data.subtitle || ''}</textarea>
+                    </div>
+
+                    <!-- Badges (if configured) -->
+                    ${(cfg.badges || []).map(b => `
+                      <div>
+                        <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">${b.label}</label>
+                        <input type="text" id="cms-${cfg.prefix}-${b.key}" value="${(cfg.data[b.key] || b.defaultVal || '').replace(/"/g, '&quot;')}" class="form-input text-xs" placeholder="${b.defaultVal}"/>
+                      </div>
+                    `).join('')}
+
+                    <!-- CTAs if Homepage -->
+                    ${cfg.hasCtas ? `
+                      <div>
+                        <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">Men CTA Button Text</label>
+                        <input type="text" id="cms-${cfg.prefix}-ctamen" value="${(cfg.data.cta_men_text || 'Explore Men\'s Unstitched').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                      </div>
+                      <div>
+                        <label class="font-label-sm uppercase block mb-1 font-semibold text-primary">Women CTA Button Text</label>
+                        <input type="text" id="cms-${cfg.prefix}-ctawomen" value="${(cfg.data.cta_women_text || 'Explore Women\'s Haute Couture').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <!-- Action Strip -->
+                  <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-surface-container-high">
+                    <div class="flex items-center gap-2">
+                      <button onclick="adminApp.savePageBanner(event, '${cfg.key}', '${cfg.prefix}', '${cfg.defaultImg}', '${cfg.name}')" class="btn-primary py-2.5 px-6 text-xs flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[16px]">save</span>
+                        <span>Save ${cfg.name}</span>
+                      </button>
+                      <button type="button" onclick="adminApp.resetCmsImage('cms-${cfg.prefix}', '${cfg.defaultImg}')" class="btn-secondary py-2.5 px-3 text-xs">
+                        Reset Visual
+                      </button>
+                    </div>
+                    <a href="/${cfg.route}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-secondary hover:underline font-label-sm uppercase font-semibold">
+                      <span>Preview Live on Storefront</span>
+                      <span class="material-symbols-outlined text-[16px]">launch</span>
+                    </a>
+                  </div>
+
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Render Page Banners error:', err);
+        EBA_API.showToast(err.message || 'Failed to load page banners', 'error');
+      }
+    },
+
+    switchBannerTab(tabId) {
+      document.querySelectorAll('#banner-tab-strip button').forEach(btn => {
+        const target = btn.getAttribute('data-tab');
+        if (target === tabId) {
+          btn.className = 'px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-primary text-white font-semibold transition-all shadow-sm flex items-center gap-1.5';
+        } else {
+          btn.className = 'px-4 py-2 text-xs uppercase font-label-sm tracking-wider bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:bg-surface-container-low border border-surface-container-high transition-all flex items-center gap-1.5';
+        }
+      });
+
+      document.querySelectorAll('.page-banner-card').forEach(card => {
+        const cardTab = card.getAttribute('data-banner-tab');
+        if (tabId === 'all' || cardTab === tabId) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    },
+
+    // ----------------------------------------------------
     // 8. HOMEPAGE CMS
     // ----------------------------------------------------
     async renderCMS(area) {
@@ -1633,11 +2096,42 @@
           }
         };
 
+        const menBanner = cms.men_banner || {
+          tagline: "Haute Sartorial Weaves • The Gentleman's Edit",
+          title: "Men's Unstitched Atelier",
+          subtitle: "Timeless Pakistani craft meets modern sartorial precision. Discover 4.5-meter cuts of premium Egyptian Giza 120s cotton, royal pure Boski silk, crisp summer Latha, and seasonal Wash & Wear crafted for distinguished silhouette drapes.",
+          image: "/assets/men_luxury_unstitched.png"
+        };
+        const womenBanner = cms.women_banner || {
+          tagline: "Festive Couture ’25 • Vol. I",
+          title: "Women's Luxury Festive Lawn '25",
+          subtitle: "Sumptuous 3-piece unstitched masterpieces featuring intricate zari marori embroidery, organza cutwork borders, and pure silk & printed chiffon dupattas crafted for celebratory splendor.",
+          image: "/assets/woman_opulent_lawn.png"
+        };
+        const newArrivalsBanner = cms.new_arrivals_banner || {
+          tagline: "Fresh Loom Dispatches • Autumn / Festive ’25",
+          title: "New Unstitched Arrivals",
+          subtitle: "Fresh off the master looms. Hand-curated seasonal releases in ultra-fine Egyptian cotton, embroidered festive lawn, and heritage textured weaves.",
+          image: "/assets/hero_campaign_editorial.png"
+        };
+        const saleBanner = cms.sale_banner || {
+          tagline: "Exclusive Archive Reductions",
+          title: "Seasonal Archive & Sale",
+          subtitle: "Exceptional values on select end-of-edition unstitched luxury fabrics. Complete with authentic selvedge verification and complimentary signature packaging.",
+          image: "/assets/hero_campaign_split.png"
+        };
+        const catalogBanner = cms.catalog_banner || {
+          tagline: "The Master Textile Vault",
+          title: "Curated Atelier Catalog",
+          subtitle: "Explore the complete archives of EBA Fashion Studio — from regal winter Karandi and Egyptian cottons to decadent celebratory lawn ensembles.",
+          image: "/assets/hero_campaign_editorial.png"
+        };
+
         area.innerHTML = `
           <div class="space-y-8">
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high">
-              <h3 class="font-headline-sm uppercase text-primary text-lg">Homepage CMS & Banner Management</h3>
-              <p class="font-body-sm text-on-surface-variant text-xs">Modifying these fields immediately updates the public storefront with full Drag & Drop and Direct Image URL controls.</p>
+              <h3 class="font-headline-sm uppercase text-primary text-lg">Storefront CMS & Page Banners Management</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs">Manage banners for Homepage, Men's Collection, Women's Collection, New Arrivals, Sale, and Catalog with Drag & Drop uploads and instant storefront updates.</p>
             </div>
 
             <!-- Block 1: Announcement Bar -->
@@ -1729,6 +2223,321 @@
               </div>
               <button onclick="adminApp.saveHeroCMS(event)" class="btn-primary py-2.5 px-6 text-xs">
                 Save Hero Banner
+              </button>
+            </div>
+
+            <!-- Block 2B: Men's Atelier Collection Banner -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Men's Atelier Collection Banner</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Page: #men</span>
+              </div>
+              
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Men Banner Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-men-preview" src="${menBanner.image || '/assets/men_luxury_unstitched.png'}" alt="Men Banner Preview" class="w-full h-full object-cover" onerror="this.src='/assets/men_luxury_unstitched.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-men')"
+                      onclick="document.getElementById('cms-men-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop Men's collection photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res portrait/editorial</p>
+                      </div>
+                      <input type="file" id="cms-men-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-men')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-men" value="${(menBanner.image || '/assets/men_luxury_unstitched.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-men', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-men', '/assets/men_luxury_unstitched.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Tagline</label>
+                  <input type="text" id="cms-men-tagline" value="${(menBanner.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Headline Title</label>
+                  <input type="text" id="cms-men-title" value="${(menBanner.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
+                  <textarea id="cms-men-subtitle" rows="2" class="form-input text-xs">${menBanner.subtitle || ''}</textarea>
+                </div>
+              </div>
+              <button onclick="adminApp.savePageBanner(event, 'men_banner', 'men', '/assets/men_luxury_unstitched.png', 'Men\\'s Atelier Banner')" class="btn-primary py-2.5 px-6 text-xs">
+                Save Men's Banner
+              </button>
+            </div>
+
+            <!-- Block 2C: Women's Luxury Festive Lawn Banner -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Women's Couture Lawn Banner</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Page: #women</span>
+              </div>
+              
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Women Banner Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-women-preview" src="${womenBanner.image || '/assets/woman_opulent_lawn.png'}" alt="Women Banner Preview" class="w-full h-full object-cover" onerror="this.src='/assets/woman_opulent_lawn.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-women')"
+                      onclick="document.getElementById('cms-women-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop Women's collection photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res portrait/editorial</p>
+                      </div>
+                      <input type="file" id="cms-women-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-women')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-women" value="${(womenBanner.image || '/assets/woman_opulent_lawn.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-women', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-women', '/assets/woman_opulent_lawn.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Tagline</label>
+                  <input type="text" id="cms-women-tagline" value="${(womenBanner.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Headline Title</label>
+                  <input type="text" id="cms-women-title" value="${(womenBanner.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
+                  <textarea id="cms-women-subtitle" rows="2" class="form-input text-xs">${womenBanner.subtitle || ''}</textarea>
+                </div>
+              </div>
+              <button onclick="adminApp.savePageBanner(event, 'women_banner', 'women', '/assets/woman_opulent_lawn.png', 'Women\\'s Couture Banner')" class="btn-primary py-2.5 px-6 text-xs">
+                Save Women's Banner
+              </button>
+            </div>
+
+            <!-- Block 2D: New Arrivals Collection Banner -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">New Arrivals Banner</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Page: #new-arrivals</span>
+              </div>
+              
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">New Arrivals Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-newarrivals-preview" src="${newArrivalsBanner.image || '/assets/hero_campaign_editorial.png'}" alt="New Arrivals Banner Preview" class="w-full h-full object-cover" onerror="this.src='/assets/hero_campaign_editorial.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-newarrivals')"
+                      onclick="document.getElementById('cms-newarrivals-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop New Arrivals photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res portrait/editorial</p>
+                      </div>
+                      <input type="file" id="cms-newarrivals-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-newarrivals')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-newarrivals" value="${(newArrivalsBanner.image || '/assets/hero_campaign_editorial.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-newarrivals', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-newarrivals', '/assets/hero_campaign_editorial.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Tagline</label>
+                  <input type="text" id="cms-newarrivals-tagline" value="${(newArrivalsBanner.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Headline Title</label>
+                  <input type="text" id="cms-newarrivals-title" value="${(newArrivalsBanner.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
+                  <textarea id="cms-newarrivals-subtitle" rows="2" class="form-input text-xs">${newArrivalsBanner.subtitle || ''}</textarea>
+                </div>
+              </div>
+              <button onclick="adminApp.savePageBanner(event, 'new_arrivals_banner', 'newarrivals', '/assets/hero_campaign_editorial.png', 'New Arrivals Banner')" class="btn-primary py-2.5 px-6 text-xs">
+                Save New Arrivals Banner
+              </button>
+            </div>
+
+            <!-- Block 2E: Seasonal Archive & Sale Banner -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Seasonal Archive & Sale Banner</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Page: #sale</span>
+              </div>
+              
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Sale Banner Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-sale-preview" src="${saleBanner.image || '/assets/hero_campaign_split.png'}" alt="Sale Banner Preview" class="w-full h-full object-cover" onerror="this.src='/assets/hero_campaign_split.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-sale')"
+                      onclick="document.getElementById('cms-sale-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop Sale photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res portrait/editorial</p>
+                      </div>
+                      <input type="file" id="cms-sale-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-sale')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-sale" value="${(saleBanner.image || '/assets/hero_campaign_split.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-sale', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-sale', '/assets/hero_campaign_split.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Tagline</label>
+                  <input type="text" id="cms-sale-tagline" value="${(saleBanner.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Headline Title</label>
+                  <input type="text" id="cms-sale-title" value="${(saleBanner.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
+                  <textarea id="cms-sale-subtitle" rows="2" class="form-input text-xs">${saleBanner.subtitle || ''}</textarea>
+                </div>
+              </div>
+              <button onclick="adminApp.savePageBanner(event, 'sale_banner', 'sale', '/assets/hero_campaign_split.png', 'Seasonal Sale Banner')" class="btn-primary py-2.5 px-6 text-xs">
+                Save Sale Banner
+              </button>
+            </div>
+
+            <!-- Block 2F: Master Catalog & Archive Banner -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+                <h3 class="font-headline-sm uppercase text-primary text-base">Curated Master Catalog Banner</h3>
+                <span class="text-xs text-secondary font-medium">Storefront Page: #catalog</span>
+              </div>
+              
+              <div class="p-4 bg-surface-container-low border border-surface-container-high space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-label-sm uppercase block text-xs font-semibold text-primary">Catalog Banner Background Visual</label>
+                  <span class="text-[11px] text-secondary">Drop image or paste web link</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="relative w-44 h-28 shrink-0 bg-black/5 border border-surface-container-high overflow-hidden shadow">
+                    <img id="cms-img-catalog-preview" src="${catalogBanner.image || '/assets/hero_campaign_editorial.png'}" alt="Catalog Banner Preview" class="w-full h-full object-cover" onerror="this.src='/assets/hero_campaign_editorial.png'"/>
+                    <div class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] px-1 font-mono uppercase">Preview</div>
+                  </div>
+
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="border-2 border-dashed border-primary/30 hover:border-primary p-3 text-center cursor-pointer transition-all bg-white flex items-center justify-center gap-3"
+                      ondragover="adminApp.handleDragOver(event, this)"
+                      ondragleave="adminApp.handleDragLeave(event, this)"
+                      ondrop="adminApp.handleDrop(event, 'cms-catalog')"
+                      onclick="document.getElementById('cms-catalog-file').click()">
+                      <span class="material-symbols-outlined text-2xl text-primary/70">cloud_upload</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-primary">Drop Catalog photo here, or <span class="text-secondary underline">browse files</span></p>
+                        <p class="text-[10px] text-on-surface-variant">Recommended: 1920x600 high-res portrait/editorial</p>
+                      </div>
+                      <input type="file" id="cms-catalog-file" accept="image/*" class="hidden" onchange="adminApp.handleFileSelect(event, 'cms-catalog')"/>
+                    </div>
+
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-label-sm block mb-1">Image URL / Path</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" id="cms-img-catalog" value="${(catalogBanner.image || '/assets/hero_campaign_editorial.png').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono flex-1" placeholder="https://... or /assets/..." oninput="adminApp.handleCmsImageUrlChange('cms-catalog', this.value)"/>
+                        <button type="button" onclick="adminApp.resetCmsImage('cms-catalog', '/assets/hero_campaign_editorial.png')" class="btn-secondary text-[11px] py-2 px-3 whitespace-nowrap">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Tagline</label>
+                  <input type="text" id="cms-catalog-tagline" value="${(catalogBanner.tagline || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase block mb-1">Headline Title</label>
+                  <input type="text" id="cms-catalog-title" value="${(catalogBanner.title || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="font-label-sm uppercase block mb-1">Subtext Description</label>
+                  <textarea id="cms-catalog-subtitle" rows="2" class="form-input text-xs">${catalogBanner.subtitle || ''}</textarea>
+                </div>
+              </div>
+              <button onclick="adminApp.savePageBanner(event, 'catalog_banner', 'catalog', '/assets/hero_campaign_editorial.png', 'Master Catalog Banner')" class="btn-primary py-2.5 px-6 text-xs">
+                Save Catalog Banner
               </button>
             </div>
 
@@ -1962,6 +2771,66 @@
         if (saveBtn) {
           saveBtn.disabled = false;
           saveBtn.innerHTML = origText || 'Save Hero Banner';
+        }
+      }
+    },
+
+    async savePageBanner(event, bannerKey, prefix, defaultImg, successLabel) {
+      const saveBtn = event?.currentTarget;
+      const origText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-white border-t-transparent animate-spin mr-2"></span>Saving Banner...';
+      }
+      try {
+        const tagline = document.getElementById(`cms-${prefix}-tagline`)?.value ?? '';
+        const title = document.getElementById(`cms-${prefix}-title`)?.value ?? '';
+        const subtitle = document.getElementById(`cms-${prefix}-subtitle`)?.value ?? '';
+        const image = (document.getElementById(`cms-img-${prefix}`)?.value || '').trim() || defaultImg;
+        const enabledCheckbox = document.getElementById(`cms-${prefix}-enabled`);
+        const enabled = enabledCheckbox ? enabledCheckbox.checked : true;
+
+        const existing = this.state.cms?.[bannerKey] || {};
+        const payload = {
+          ...existing,
+          tagline,
+          title,
+          subtitle,
+          image,
+          enabled
+        };
+
+        if (document.getElementById(`cms-${prefix}-badge1`)) {
+          payload.badge1 = document.getElementById(`cms-${prefix}-badge1`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-badge2`)) {
+          payload.badge2 = document.getElementById(`cms-${prefix}-badge2`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-badge3`)) {
+          payload.badge3 = document.getElementById(`cms-${prefix}-badge3`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-ctamen`)) {
+          payload.cta_men_text = document.getElementById(`cms-${prefix}-ctamen`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-ctawomen`)) {
+          payload.cta_women_text = document.getElementById(`cms-${prefix}-ctawomen`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-ctalinkmen`)) {
+          payload.cta_men_link = document.getElementById(`cms-${prefix}-ctalinkmen`).value.trim();
+        }
+        if (document.getElementById(`cms-${prefix}-ctalinkwomen`)) {
+          payload.cta_women_link = document.getElementById(`cms-${prefix}-ctalinkwomen`).value.trim();
+        }
+
+        await EBA_API.admin.updateCMS(bannerKey, payload);
+        if (this.state.cms) this.state.cms[bannerKey] = payload;
+        EBA_API.showToast(`${successLabel} updated successfully!`);
+      } catch (err) {
+        EBA_API.showToast(err.message || 'Failed to update banner', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origText || 'Save Banner';
         }
       }
     },

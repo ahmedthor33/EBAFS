@@ -491,6 +491,83 @@ function seed() {
     enabled: true
   }));
 
+  insertCMS.run('men_banner', JSON.stringify({
+    tagline: "Haute Sartorial Weaves • The Gentleman's Edit",
+    title: "Men's Unstitched Atelier",
+    subtitle: "Timeless Pakistani craft meets modern sartorial precision. Discover 4.5-meter cuts of premium Egyptian Giza 120s cotton, royal pure Boski silk, crisp summer Latha, and seasonal Wash & Wear crafted for distinguished silhouette drapes.",
+    image: '/assets/men_luxury_unstitched.png',
+    badge1: "100% Authentic Thread Counts",
+    badge2: "Mother-of-Pearl Buttons Included",
+    badge3: "Complimentary Nationwide Shipping",
+    enabled: true
+  }));
+
+  insertCMS.run('women_banner', JSON.stringify({
+    tagline: "Couture Edit • Vol. I",
+    title: "Women's Luxury Festive Lawn '25",
+    subtitle: "Sumptuous 3-piece unstitched masterpieces featuring intricate zari marori embroidery, organza cutwork borders, and pure silk & printed chiffon dupattas crafted for celebratory splendor.",
+    image: '/assets/woman_opulent_lawn.png',
+    badge1: "3-Piece Luxury Festive Suites",
+    badge2: "Pure Silk Chiffon Dupattas",
+    badge3: "Bespoke Master Tailoring Available",
+    enabled: true
+  }));
+
+  insertCMS.run('new_arrivals_banner', JSON.stringify({
+    tagline: "Fresh Loom Dispatches • Autumn / Festive ’25",
+    title: "New Unstitched Arrivals",
+    subtitle: "Fresh off the master looms. Hand-curated seasonal releases in ultra-fine Egyptian cotton, embroidered festive lawn, and heritage textured weaves.",
+    image: '/assets/hero_campaign_editorial.png',
+    badge1: "Fresh Loom Dispatches",
+    badge2: "Limited Edition Yardage",
+    badge3: "48-Hour Priority Dispatch",
+    enabled: true
+  }));
+
+  insertCMS.run('sale_banner', JSON.stringify({
+    tagline: "Exclusive Archive Reductions",
+    title: "Seasonal Archive & Sale",
+    subtitle: "Exceptional values on select end-of-edition unstitched luxury fabrics. Complete with authentic selvedge verification and complimentary signature packaging.",
+    image: '/assets/hero_campaign_split.png',
+    badge1: "Privilege Reductions Up to 30%",
+    badge2: "Authentic Yardage Certification",
+    badge3: "Limited Vault Stocks",
+    enabled: true
+  }));
+
+  insertCMS.run('catalog_banner', JSON.stringify({
+    tagline: "The Master Textile Vault",
+    title: "Curated Atelier Catalog",
+    subtitle: "Explore the complete archives of EBA Fashion Studio — from regal winter Karandi and Egyptian cottons to decadent celebratory lawn ensembles.",
+    image: '/assets/hero_campaign_editorial.png',
+    badge1: "Certified Thread Counts",
+    badge2: "Nationwide Express Shipping",
+    badge3: "Master Bespoke Tailoring",
+    enabled: true
+  }));
+
+  insertCMS.run('cart_banner', JSON.stringify({
+    tagline: "Atelier Bag • Haute Couture Dispatch",
+    title: "Your Curated Wardrobe Bag",
+    subtitle: "Every unstitched length is delivered in a climate-sealed monogrammed heirloom box with authentic yardage certification.",
+    image: '/assets/hero_campaign_split.png',
+    badge1: "Climate-Sealed Monogrammed Box",
+    badge2: "Free Shipping Above PKR 5,000",
+    badge3: "Verified Yardage Guarantee",
+    enabled: true
+  }));
+
+  insertCMS.run('checkout_banner', JSON.stringify({
+    tagline: "Verified Checkout Salon",
+    title: "Express Atelier Checkout",
+    subtitle: "256-Bit SSL Encrypted • Real-time SMS & WhatsApp Courier Dispatch Verification",
+    image: '/assets/hero_campaign_editorial.png',
+    badge1: "Live Inventory Locked",
+    badge2: "TCS Nationwide Delivery",
+    badge3: "Encrypted Secure Payment",
+    enabled: true
+  }));
+
   // 8. Seed Store Settings
   const insertSetting = db.prepare('INSERT OR REPLACE INTO store_settings (key, value) VALUES (?, ?)');
 
