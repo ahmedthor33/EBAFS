@@ -1913,11 +1913,15 @@
                       </div>
                     </div>
                     
-                    <div class="flex items-center gap-4">
-                      <label class="flex items-center gap-2 cursor-pointer text-xs bg-surface-container-low px-3 py-1.5 border border-surface-container-high">
+                    <div class="flex items-center gap-3">
+                      <label class="flex items-center gap-2 cursor-pointer text-xs bg-surface-container-low px-3 py-2 border border-surface-container-high">
                         <input type="checkbox" id="cms-${cfg.prefix}-enabled" ${cfg.data.enabled !== false ? 'checked' : ''} class="custom-checkbox"/>
                         <span class="font-label-sm uppercase font-semibold text-primary">Active on Storefront</span>
                       </label>
+                      <button type="button" onclick="adminApp.saveBannerById(event, '${cfg.id}')" class="btn-primary py-2 px-5 text-xs flex items-center gap-2 font-semibold shadow">
+                        <span class="material-symbols-outlined text-[16px]">save</span>
+                        <span>Save Changes</span>
+                      </button>
                     </div>
                   </div>
 
@@ -2000,9 +2004,9 @@
                   <!-- Action Strip -->
                   <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-surface-container-high">
                     <div class="flex items-center gap-2">
-                      <button onclick="adminApp.savePageBanner(event, '${cfg.key}', '${cfg.prefix}', '${cfg.defaultImg}', '${cfg.name}')" class="btn-primary py-2.5 px-6 text-xs flex items-center gap-2">
+                      <button type="button" onclick="adminApp.saveBannerById(event, '${cfg.id}')" class="btn-primary py-2.5 px-6 text-xs flex items-center gap-2 font-semibold shadow">
                         <span class="material-symbols-outlined text-[16px]">save</span>
-                        <span>Save ${cfg.name}</span>
+                        <span>Save Changes</span>
                       </button>
                       <button type="button" onclick="adminApp.resetCmsImage('cms-${cfg.prefix}', '${cfg.defaultImg}')" class="btn-secondary py-2.5 px-3 text-xs">
                         Reset Visual
@@ -2773,6 +2777,26 @@
           saveBtn.innerHTML = origText || 'Save Hero Banner';
         }
       }
+    },
+
+    async saveBannerById(event, bannerId) {
+      const bannerMap = {
+        men: { key: 'men_banner', prefix: 'men', defaultImg: '/assets/men_luxury_unstitched.png', name: "Men's Atelier Banner" },
+        women: { key: 'women_banner', prefix: 'women', defaultImg: '/assets/woman_opulent_lawn.png', name: "Women's Couture Banner" },
+        newarrivals: { key: 'new_arrivals_banner', prefix: 'newarrivals', defaultImg: '/assets/hero_campaign_editorial.png', name: "New Arrivals Banner" },
+        sale: { key: 'sale_banner', prefix: 'sale', defaultImg: '/assets/hero_campaign_split.png', name: "Seasonal Sale Banner" },
+        catalog: { key: 'catalog_banner', prefix: 'catalog', defaultImg: '/assets/hero_campaign_editorial.png', name: "Curated Master Catalog Banner" },
+        cart: { key: 'cart_banner', prefix: 'cart', defaultImg: '/assets/hero_campaign_split.png', name: "Shopping Bag Banner" },
+        checkout: { key: 'checkout_banner', prefix: 'checkout', defaultImg: '/assets/hero_campaign_editorial.png', name: "Checkout Salon Banner" },
+        home: { key: 'hero_banner', prefix: 'hero', defaultImg: '/assets/hero_campaign_editorial.png', name: "Homepage Hero Banner" }
+      };
+
+      const cfg = bannerMap[bannerId];
+      if (!cfg) {
+        return EBA_API.showToast('Invalid banner: ' + bannerId, 'error');
+      }
+
+      return this.savePageBanner(event, cfg.key, cfg.prefix, cfg.defaultImg, cfg.name);
     },
 
     async savePageBanner(event, bannerKey, prefix, defaultImg, successLabel) {
