@@ -13,6 +13,9 @@ const upload = require('./middleware/upload');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable reverse proxy support for custom domain (Hostinger / Nginx / Cloudflare SSL)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
