@@ -198,6 +198,15 @@
       return { zones: active.length > 0 ? active : zones, all_zones: zones };
     }
 
+    if (endpoint.startsWith('/api/store/pixel') || endpoint.startsWith('/api/store/meta-pixel')) {
+      const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
+      const settings = {};
+      (settingRows || []).forEach(r => {
+        try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
+      });
+      return { pixel: settings.meta_pixel || { enabled: false, pixel_id: '', currency: 'PKR' } };
+    }
+
     if (endpoint.startsWith('/api/store')) {
       const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
       const settings = {};
@@ -744,7 +753,8 @@
         const key = subKey || 'payments';
         const body = JSON.parse(options.body || '{}');
         const dataToSave = (key === 'payments' && body.payments !== undefined) ? body.payments
-          : ((key === 'shipping_zones' && body.zones !== undefined) ? body.zones : body);
+          : ((key === 'shipping_zones' && body.zones !== undefined) ? body.zones
+          : (((key === 'meta_pixel' || key === 'meta-pixel') && body.pixel !== undefined) ? body.pixel : body));
         const valStr = typeof dataToSave === 'object' ? JSON.stringify(dataToSave) : String(dataToSave);
         const nowIso = new Date().toISOString();
 
@@ -754,16 +764,16 @@
             headers: {
               'Prefer': 'resolution=merge-duplicates,return=representation'
             },
-            body: JSON.stringify({ key, value: valStr, updated_at: nowIso })
+            body: JSON.stringify({ key: key === 'meta-pixel' ? 'meta_pixel' : key, value: valStr, updated_at: nowIso })
           });
         } catch(e) {
           console.warn('Upsert fallback to PATCH for store_settings:', e.message);
-          await supabaseRest(`store_settings?key=eq.${encodeURIComponent(key)}`, {
+          await supabaseRest(`store_settings?key=eq.${encodeURIComponent(key === 'meta-pixel' ? 'meta_pixel' : key)}`, {
             method: 'PATCH',
             body: JSON.stringify({ value: valStr, updated_at: nowIso })
           }).catch(() => {});
         }
-        return { success: true, message: `Store configuration '${key}' updated successfully`, payments: dataToSave };
+        return { success: true, message: `Store configuration '${key}' updated successfully`, payments: dataToSave, pixel: dataToSave };
       }
 
       if (subKey === 'payments') {
@@ -782,6 +792,15 @@
           try { zoneData = JSON.parse(rows[0].value); } catch(e) { zoneData = rows[0].value; }
         }
         return { zones: zoneData };
+      }
+
+      if (subKey === 'meta-pixel') {
+        const rows = await supabaseRest('store_settings?key=eq.meta_pixel').catch(() => []);
+        let pixelData = { enabled: false };
+        if (rows && rows[0]) {
+          try { pixelData = JSON.parse(rows[0].value); } catch(e) { pixelData = rows[0].value; }
+        }
+        return { pixel: pixelData };
       }
 
       const settingRows = await supabaseRest('store_settings?select=*').catch(() => []);
@@ -1386,6 +1405,40 @@
       async savePaymentGateways(payments) {
         try { localStorage.setItem('ebafs_cached_payments', JSON.stringify(payments)); } catch(e) {}
         return this.updateSetting('payments', payments);
+      },
+
+      // Meta (Facebook) Pixel
+      async getMetaPixel() {
+        try {
+          const res = await request('/api/admin/settings/meta-pixel', {}, true);
+          if (res && res.pixel) return res.pixel;
+        } catch (e) {}
+        try {
+          const res = await this.getSettings();
+          if (res && res.settings && res.settings.meta_pixel) return res.settings.meta_pixel;
+        } catch (e) {}
+        return {
+          enabled: false,
+          pixel_id: '',
+          test_event_code: '',
+          track_pageview: true,
+          track_view_content: true,
+          track_add_to_cart: true,
+          track_initiate_checkout: true,
+          track_purchase: true,
+          track_search: true,
+          currency: 'PKR'
+        };
+      },
+      async saveMetaPixel(pixel) {
+        try {
+          return await request('/api/admin/settings/meta-pixel', {
+            method: 'PUT',
+            body: JSON.stringify({ pixel })
+          }, true);
+        } catch (e) {
+          return this.updateSetting('meta_pixel', pixel);
+        }
       }
     },
 
@@ -1395,6 +1448,24 @@
       },
       async getShippingZones() {
         return request('/api/store/shipping-zones');
+      },
+      async getPixelSettings() {
+        try {
+          const res = await request('/api/store/pixel');
+          if (res && res.pixel) return res.pixel;
+        } catch (e) {}
+        return {
+          enabled: false,
+          pixel_id: '',
+          test_event_code: '',
+          track_pageview: true,
+          track_view_content: true,
+          track_add_to_cart: true,
+          track_initiate_checkout: true,
+          track_purchase: true,
+          track_search: true,
+          currency: 'PKR'
+        };
       }
     },
 

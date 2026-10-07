@@ -30,9 +30,71 @@
       // 4. Setup Global Listeners
       this.setupGlobalListeners();
 
-      // 5. Initial Route Dispatch
+      // 5. Initialize Meta (Facebook) Pixel Tracking
+      await this.initMetaPixel();
+
+      // 6. Initial Route Dispatch
       this.handleRouting();
       window.addEventListener('hashchange', () => this.handleRouting());
+    },
+
+    async initMetaPixel() {
+      try {
+        const res = await EBA_API.store.getPixelSettings();
+        const pixel = res.pixel || res;
+        this.state.metaPixel = pixel;
+
+        if (pixel && pixel.enabled && pixel.pixel_id) {
+          // Asynchronously inject Meta Pixel base script
+          if (!window.fbq) {
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+          }
+
+          if (typeof window.fbq === 'function') {
+            window.fbq('init', String(pixel.pixel_id));
+            if (pixel.test_event_code) {
+              window.fbq('set', 'test_event_code', pixel.test_event_code);
+            }
+            if (pixel.track_pageview !== false) {
+              window.fbq('track', 'PageView');
+            }
+            console.log(`[EBA Atelier] Meta Pixel activated: ${pixel.pixel_id}`);
+          }
+        }
+      } catch (err) {
+        console.warn('[EBA Atelier] Meta Pixel notice:', err.message);
+      }
+    },
+
+    trackMetaEvent(eventName, params = {}) {
+      try {
+        const pixel = this.state.metaPixel;
+        if (!pixel || !pixel.enabled || !pixel.pixel_id) return;
+        if (typeof window.fbq !== 'function') return;
+
+        // Check if individual event tracking is disabled
+        if (eventName === 'PageView' && pixel.track_pageview === false) return;
+        if (eventName === 'ViewContent' && pixel.track_view_content === false) return;
+        if (eventName === 'AddToCart' && pixel.track_add_to_cart === false) return;
+        if (eventName === 'InitiateCheckout' && pixel.track_initiate_checkout === false) return;
+        if (eventName === 'Purchase' && pixel.track_purchase === false) return;
+        if (eventName === 'Search' && pixel.track_search === false) return;
+
+        if (pixel.test_event_code) {
+          window.fbq('set', 'test_event_code', pixel.test_event_code);
+        }
+
+        window.fbq('track', eventName, params);
+      } catch (e) {
+        console.warn(`[EBA Atelier] Meta Pixel '${eventName}' error:`, e.message);
+      }
     },
 
     async loadCMSAndSettings() {
@@ -84,6 +146,7 @@
           searchTimeout = setTimeout(async () => {
             try {
               const res = await EBA_API.products.list({ q, limit: 5 });
+              this.trackMetaEvent('Search', { search_string: q });
               if (res.products && res.products.length > 0) {
                 previewBox.innerHTML = res.products.map(p => `
                   <a href="#product/${p.slug}" class="flex items-center gap-3 p-3 hover:bg-surface-container-low border-b border-surface-container-high transition-colors">
@@ -202,6 +265,8 @@
       } else {
         await this.renderHome(container);
       }
+
+      this.trackMetaEvent('PageView', { path: path || 'home' });
     },
 
     // ----------------------------------------------------
@@ -904,6 +969,15 @@
           return;
         }
 
+        // Fire Meta Pixel ViewContent event
+        this.trackMetaEvent('ViewContent', {
+          content_name: product.name,
+          content_ids: [String(product.id || product.sku)],
+          content_type: 'product',
+          value: Number(product.sale_price || product.price),
+          currency: this.state.metaPixel?.currency || 'PKR'
+        });
+
         const images = product.images || [{ image_url: '/assets/gul_e_noor_details.png', is_primary: 1 }];
         const primaryImg = images.find(img => img.is_primary) || images[0];
 
@@ -1172,6 +1246,15 @@
         await EBA_API.cart.add(productId, qty, addTailoring, size);
         EBA_API.showToast('Added to your bespoke shopping bag');
         await this.refreshCart();
+
+        // Fire Meta Pixel AddToCart event
+        this.trackMetaEvent('AddToCart', {
+          content_ids: [String(productId)],
+          content_type: 'product',
+          num_items: qty,
+          currency: this.state.metaPixel?.currency || 'PKR'
+        });
+
         this.toggleCartDrawer(true);
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
@@ -1458,6 +1541,14 @@
         window.location.hash = '#cart';
         return;
       }
+
+      // Fire Meta Pixel InitiateCheckout event
+      this.trackMetaEvent('InitiateCheckout', {
+        num_items: cart.itemCount,
+        value: cart.total,
+        currency: this.state.metaPixel?.currency || 'PKR',
+        content_ids: (cart.items || []).map(i => String(i.product_id))
+      });
 
       // Fetch dynamic payment gateways and shipping zones
       let paymentMethods = [];
@@ -1940,6 +2031,17 @@
       try {
         const res = await EBA_API.orders.checkout(orderData);
         EBA_API.showToast('Order confirmed by EBA Atelier!');
+
+        // Fire Meta Pixel Purchase event
+        this.trackMetaEvent('Purchase', {
+          content_ids: (orderData.items || []).map(i => String(i.product_id)),
+          content_type: 'product',
+          value: Number(res.order?.total || 0),
+          currency: this.state.metaPixel?.currency || 'PKR',
+          num_items: (orderData.items || []).length,
+          order_id: res.order?.order_number
+        });
+
         await this.refreshCart();
         this.state.appliedCoupon = null;
         window.location.hash = `#order-confirmation/${res.order.order_number}`;

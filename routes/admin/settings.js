@@ -103,6 +103,50 @@ const saveShippingZonesHandler = (req, res) => {
 router.put('/shipping-zones', requirePermission('settings.manage'), saveShippingZonesHandler);
 router.post('/shipping-zones', requirePermission('settings.manage'), saveShippingZonesHandler);
 
+// Dedicated Meta (Facebook) Pixel endpoint
+router.get('/meta-pixel', requirePermission('settings.manage'), (req, res) => {
+  try {
+    const row = db.prepare("SELECT value FROM store_settings WHERE key = 'meta_pixel'").get();
+    const pixel = row ? JSON.parse(row.value) : {
+      enabled: false,
+      pixel_id: '',
+      test_event_code: '',
+      track_pageview: true,
+      track_view_content: true,
+      track_add_to_cart: true,
+      track_initiate_checkout: true,
+      track_purchase: true,
+      track_search: true,
+      currency: 'PKR'
+    };
+    res.json({ pixel });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch Meta Pixel settings' });
+  }
+});
+
+const saveMetaPixelHandler = (req, res) => {
+  try {
+    const value = req.body.pixel !== undefined ? req.body.pixel : req.body;
+    const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    db.prepare(`
+      INSERT INTO store_settings (key, value, updated_at)
+      VALUES ('meta_pixel', ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(key) DO UPDATE SET
+        value = excluded.value,
+        updated_at = CURRENT_TIMESTAMP
+    `).run(valueStr);
+
+    syncToSupabase('meta_pixel', valueStr);
+
+    res.json({ message: 'Meta Pixel configuration saved successfully', pixel: value });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save Meta Pixel settings' });
+  }
+};
+router.put('/meta-pixel', requirePermission('settings.manage'), saveMetaPixelHandler);
+router.post('/meta-pixel', requirePermission('settings.manage'), saveMetaPixelHandler);
+
 // Update specific setting key
 router.put('/:key', requirePermission('settings.manage'), (req, res) => {
   try {

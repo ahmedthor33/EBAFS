@@ -162,6 +162,10 @@
             <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
             <span>Admin Staff & Roles</span>
           </button>
+          <button onclick="adminApp.navigate('meta-pixel')" data-section="meta-pixel" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">ads_click</span>
+            <span>Meta (FB) Pixel</span>
+          </button>
           <button onclick="adminApp.navigate('settings')" data-section="settings" class="w-full flex items-center gap-3 px-3 py-2 text-left text-white/70 hover:text-white hover:bg-white/5 transition-colors">
             <span class="material-symbols-outlined text-[18px]">settings</span>
             <span>Store Settings</span>
@@ -232,7 +236,7 @@
   <div id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="/js/api.js"></script>
-  <script src="/js/admin.js"></script>
+  <script src="/js/api.js?v=2.0"></script>
+  <script src="/js/admin.js?v=2.0"></script>
 </body>
 </html>

@@ -156,6 +156,10 @@
           titleEl.textContent = 'Admin Staff & Role Permissions';
           await this.renderUsers(area);
           break;
+        case 'meta-pixel':
+          titleEl.textContent = 'Meta (Facebook) Pixel & Marketing Tracking';
+          await this.renderMetaPixel(area);
+          break;
         case 'settings':
           titleEl.textContent = 'Store Configuration & Policies';
           await this.renderSettings(area);
@@ -3214,6 +3218,7 @@
         const gen = settings.general || {};
         const ship = settings.shipping || {};
         const pay = settings.payments || {};
+        const pixel = settings.meta_pixel || {};
 
         area.innerHTML = `
           <div class="space-y-8">
@@ -3258,6 +3263,29 @@
               </div>
             </div>
 
+            <!-- Meta Pixel Quick Configuration Card -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-surface-container-high gap-2">
+                <div>
+                  <h3 class="font-headline-sm uppercase text-primary text-base">Meta (Facebook) Pixel & Conversion Tracking</h3>
+                  <p class="font-body-sm text-on-surface-variant text-xs">Track PageViews, ViewContent, AddToCart, and Purchases for Meta ad campaigns.</p>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 ${pixel.enabled && pixel.pixel_id ? 'bg-emerald-100 text-emerald-800' : 'bg-surface-container-high text-on-surface-variant'} text-xs font-semibold w-fit">
+                  <span class="w-2 h-2 rounded-full ${pixel.enabled && pixel.pixel_id ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}"></span>
+                  ${pixel.enabled && pixel.pixel_id ? `Active (Pixel ID: ${pixel.pixel_id})` : (pixel.pixel_id ? 'Configured (Disabled)' : 'Not Configured')}
+                </span>
+              </div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                <div class="text-xs text-on-surface-variant">
+                  ${pixel.pixel_id ? `Configured Meta Pixel ID: <strong class="text-primary font-mono text-sm">${pixel.pixel_id}</strong>` : 'No Pixel ID assigned yet. Configure your Meta Pixel to track ad conversions and build lookalike audiences.'}
+                </div>
+                <button onclick="adminApp.navigate('meta-pixel')" class="btn-primary py-2 px-5 text-xs flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[16px]">ads_click</span>
+                  <span>Open Meta Pixel Studio &rarr;</span>
+                </button>
+              </div>
+            </div>
+
             <!-- General Settings -->
             <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-4">
               <h3 class="font-headline-sm uppercase text-primary text-base pb-3 border-b border-surface-container-high">General Atelier Information</h3>
@@ -3299,6 +3327,7 @@
             </div>
           </div>
         `;
+
       } catch (err) {
         console.error('Render settings error:', err);
       }
@@ -3328,6 +3357,513 @@
         EBA_API.showToast('Shipping settings saved');
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
+      }
+    },
+
+    // ----------------------------------------------------
+    // META (FACEBOOK) PIXEL & MARKETING TRACKING STUDIO
+    // ----------------------------------------------------
+    async renderMetaPixel(area) {
+      try {
+        const pixel = await EBA_API.admin.getMetaPixel();
+        const isEnabled = pixel.enabled === true;
+        const pixelId = pixel.pixel_id || '';
+        const testCode = pixel.test_event_code || '';
+        const currency = pixel.currency || 'PKR';
+
+        area.innerHTML = `
+          <div class="space-y-8 max-w-5xl">
+            <!-- Top Hero Banner / Meta Status -->
+            <div class="bg-gradient-to-r from-primary via-primary-container to-secondary text-white p-6 md:p-8 shadow-lg border border-white/10 relative overflow-hidden">
+              <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                      <span class="material-symbols-outlined text-2xl text-secondary-fixed">ads_click</span>
+                    </div>
+                    <div>
+                      <span class="font-label-sm uppercase tracking-widest text-secondary-fixed text-[10px]">Marketing & Growth Suite</span>
+                      <h3 class="font-display-lg uppercase text-2xl tracking-wide">Meta Pixel Integration</h3>
+                    </div>
+                  </div>
+                  <p class="text-white/80 text-xs max-w-xl leading-relaxed">
+                    Connect your Meta (Facebook & Instagram) advertising directly with EBA Fashion Studio. Measure Return on Ad Spend (ROAS), track patron purchase conversions, and unlock dynamic catalog retargeting.
+                  </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row md:flex-col items-start md:items-end gap-3 shrink-0">
+                  <div id="meta-status-pill" class="inline-flex items-center gap-2 px-4 py-2 rounded-full ${isEnabled && pixelId ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (pixelId ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/10 text-white/70 border border-white/20')} text-xs font-semibold backdrop-blur-sm">
+                    <span class="w-2.5 h-2.5 rounded-full ${isEnabled && pixelId ? 'bg-emerald-400 animate-pulse' : (pixelId ? 'bg-amber-400' : 'bg-gray-400')}"></span>
+                    <span id="meta-status-text">${isEnabled && pixelId ? 'Tracking Active' : (pixelId ? 'Pixel Paused (Disabled)' : 'Not Configured')}</span>
+                  </div>
+                  <a href="https://eventsmanager.facebook.com" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-secondary-fixed hover:text-white underline underline-offset-4">
+                    <span>Meta Events Manager</span>
+                    <span class="material-symbols-outlined text-[14px]">launch</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Credentials Card -->
+            <div class="bg-surface-container-lowest p-6 md:p-8 border border-surface-container-high space-y-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-container-high gap-4">
+                <div>
+                  <h4 class="font-headline-sm uppercase text-primary text-base">Pixel Credentials & Core Setup</h4>
+                  <p class="font-body-sm text-on-surface-variant text-xs">Enter your Meta Dataset / Pixel ID from Facebook Business Suite.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-label-sm uppercase text-xs text-on-surface-variant font-medium">Activate Pixel:</span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="pixel-enabled-toggle" ${isEnabled ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <!-- Pixel ID -->
+                <div class="space-y-1 md:col-span-1">
+                  <label class="font-label-sm uppercase block font-semibold text-primary">
+                    Meta Pixel ID (Dataset ID) *
+                  </label>
+                  <div class="relative">
+                    <input type="text" id="pixel-id-input" value="${pixelId}" placeholder="e.g. 104928472918234"
+                      oninput="adminApp.handlePixelIdInput(event)"
+                      class="form-input text-xs font-mono tracking-wider pl-9 pr-24 py-2.5"/>
+                    <span class="material-symbols-outlined absolute left-2.5 top-2.5 text-on-surface-variant text-[18px]">fingerprint</span>
+                    <button type="button" onclick="adminApp.pastePixelId()" class="absolute right-2 top-2 px-2.5 py-1 bg-surface-container-low hover:bg-surface-container text-[10px] uppercase font-semibold text-primary border border-surface-container-high transition-colors">Paste</button>
+                  </div>
+                  <div id="pixel-id-validation" class="text-[11px] text-on-surface-variant pt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px] text-secondary">info</span>
+                    <span>Standard Meta Pixel IDs are 15 to 16 digits numeric.</span>
+                  </div>
+                </div>
+
+                <!-- Currency -->
+                <div class="space-y-1">
+                  <label class="font-label-sm uppercase block font-semibold text-primary">
+                    Default Currency for Purchase & Cart Values
+                  </label>
+                  <select id="pixel-currency-select" onchange="adminApp.updatePixelPreview()" class="form-input text-xs py-2.5">
+                    <option value="PKR" ${currency === 'PKR' ? 'selected' : ''}>PKR - Pakistani Rupee (Default)</option>
+                    <option value="USD" ${currency === 'USD' ? 'selected' : ''}>USD - United States Dollar</option>
+                    <option value="AED" ${currency === 'AED' ? 'selected' : ''}>AED - United Arab Emirates Dirham</option>
+                    <option value="GBP" ${currency === 'GBP' ? 'selected' : ''}>GBP - British Pound Sterling</option>
+                    <option value="EUR" ${currency === 'EUR' ? 'selected' : ''}>EUR - Euro</option>
+                  </select>
+                  <p class="text-[11px] text-on-surface-variant">Matches product catalog prices and order totals transmitted to Meta.</p>
+                </div>
+
+                <!-- Test Event Code -->
+                <div class="space-y-1 md:col-span-2">
+                  <label class="font-label-sm uppercase block font-semibold text-primary">
+                    Test Event Code (Optional Meta Debugger Parameter)
+                  </label>
+                  <input type="text" id="pixel-test-code-input" value="${testCode}" placeholder="e.g. TEST12345 (Leave blank for normal production mode)"
+                    oninput="adminApp.updatePixelPreview()"
+                    class="form-input text-xs font-mono py-2.5"/>
+                  <p class="text-[11px] text-on-surface-variant">
+                    Found in Meta Events Manager &gt; Test Events tab. Used to verify live tracking payloads in real time without mixing with historical audience numbers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Standard Funnel Events Toggles -->
+            <div class="bg-surface-container-lowest p-6 md:p-8 border border-surface-container-high space-y-6">
+              <div class="pb-3 border-b border-surface-container-high">
+                <h4 class="font-headline-sm uppercase text-primary text-base">Standard eCommerce Funnel Events</h4>
+                <p class="font-body-sm text-on-surface-variant text-xs">Choose which buyer journey milestones transmit to Meta fbevents.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- PageView -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">visibility</span>
+                      <span class="font-semibold text-xs text-primary font-mono">PageView</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant uppercase font-medium">Core</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires automatically on every customer page load and hashtag route navigation.</p>
+                  </div>
+                  <input type="checkbox" id="track-pageview" ${pixel.track_pageview !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+
+                <!-- ViewContent -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">inventory_2</span>
+                      <span class="font-semibold text-xs text-primary font-mono">ViewContent</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant uppercase font-medium">Product</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires when patron views a luxury lawn or silk suit detail page (transmits SKU, name & price).</p>
+                  </div>
+                  <input type="checkbox" id="track-viewcontent" ${pixel.track_view_content !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+
+                <!-- AddToCart -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">shopping_bag</span>
+                      <span class="font-semibold text-xs text-primary font-mono">AddToCart</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant uppercase font-medium">Intent</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires when customer adds unstitched fabrics or tailored cuts to their shopping bag.</p>
+                  </div>
+                  <input type="checkbox" id="track-addtocart" ${pixel.track_add_to_cart !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+
+                <!-- InitiateCheckout -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">credit_card</span>
+                      <span class="font-semibold text-xs text-primary font-mono">InitiateCheckout</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant uppercase font-medium">Funnel</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires when patron proceeds to express checkout and selects payment corridor.</p>
+                  </div>
+                  <input type="checkbox" id="track-initiatecheckout" ${pixel.track_initiate_checkout !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+
+                <!-- Purchase -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+                      <span class="font-semibold text-xs text-primary font-mono">Purchase</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 uppercase font-semibold">High Value</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires upon confirmed order (transmits total invoice PKR, order docket #, and item count).</p>
+                  </div>
+                  <input type="checkbox" id="track-purchase" ${pixel.track_purchase !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+
+                <!-- Search -->
+                <div class="p-4 bg-surface-container-low border border-surface-container-high flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">search</span>
+                      <span class="font-semibold text-xs text-primary font-mono">Search</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant uppercase font-medium">Discovery</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Fires when patron executes catalog searches across fabrics, seasons, or colorways.</p>
+                  </div>
+                  <input type="checkbox" id="track-search" ${pixel.track_search !== false ? 'checked' : ''} onchange="adminApp.updatePixelPreview()" class="mt-1 h-4 w-4 accent-primary"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Verification & Test Simulator Card -->
+            <div class="bg-surface-container-lowest p-6 md:p-8 border border-surface-container-high space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-surface-container-high gap-2">
+                <div>
+                  <h4 class="font-headline-sm uppercase text-primary text-base">Live Diagnostic & Test Event Dispatcher</h4>
+                  <p class="font-body-sm text-on-surface-variant text-xs">Dispatch a live test beacon directly from this console to confirm your Events Manager stream.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <select id="test-event-type" class="form-input text-xs py-1.5 px-3">
+                    <option value="PageView">PageView</option>
+                    <option value="ViewContent">ViewContent (Simulate Gul-e-Noor Lawn)</option>
+                    <option value="AddToCart">AddToCart (Simulate Lawn Ensemble)</option>
+                    <option value="InitiateCheckout">InitiateCheckout</option>
+                    <option value="Purchase">Purchase (Simulate Order PKR 28,600)</option>
+                  </select>
+                  <button type="button" onclick="adminApp.sendTestPixelEvent()" class="btn-secondary py-1.5 px-4 text-xs flex items-center gap-1.5 whitespace-nowrap bg-white">
+                    <span class="material-symbols-outlined text-[16px] text-secondary">send</span>
+                    <span>Send Beacon</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Test Console Output -->
+              <div class="bg-[#121212] text-emerald-400 p-4 font-mono text-xs rounded border border-surface-container-high/20 space-y-2">
+                <div class="flex items-center justify-between text-white/50 text-[11px] pb-1 border-b border-white/10">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Diagnostic Stream Output</span>
+                  </span>
+                  <button type="button" onclick="document.getElementById('pixel-test-output').textContent = '// Ready to test. Click &quot;Send Beacon&quot; above to dispatch an event payload.'" class="text-white/40 hover:text-white">Clear</button>
+                </div>
+                <pre id="pixel-test-output" class="whitespace-pre-wrap overflow-x-auto max-h-48 text-[11px] leading-relaxed">// Ready to test. Click "Send Beacon" above to dispatch an event payload to Meta fbevents.</pre>
+              </div>
+            </div>
+
+            <!-- Code Preview Box -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-primary uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px] text-secondary">code</span>
+                  <span>Generated Injection Script</span>
+                </span>
+                <button type="button" onclick="adminApp.copyPixelCode()" class="text-secondary hover:text-primary font-semibold flex items-center gap-1 text-[11px]">
+                  <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                  <span id="copy-btn-text">Copy Script</span>
+                </button>
+              </div>
+              <pre id="pixel-code-preview" class="p-4 bg-surface-container-low font-mono text-[11px] text-on-surface-variant overflow-x-auto border border-surface-container-high leading-relaxed"></pre>
+            </div>
+
+            <!-- Sticky Save Bar -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 shadow-xl z-20">
+              <div class="text-xs text-on-surface-variant flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-[18px]">cloud_sync</span>
+                <span>Configured Pixel synchronizes automatically across Storefront and Supabase Cloud.</span>
+              </div>
+              <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button type="button" onclick="adminApp.saveMetaPixelSettings()" id="save-pixel-btn" class="btn-primary py-3 px-8 text-xs flex items-center justify-center gap-2 w-full sm:w-auto shadow-md">
+                  <span class="material-symbols-outlined text-[16px]">save</span>
+                  <span>Save Meta Pixel Settings</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        this.updatePixelPreview();
+      } catch (err) {
+        console.error('Render meta pixel error:', err);
+        area.innerHTML = `<div class="p-6 text-red-600 bg-red-50 border border-red-200 text-xs">Failed to load Meta Pixel settings: ${err.message}</div>`;
+      }
+    },
+
+    handlePixelIdInput(e) {
+      const input = e.target;
+      input.value = input.value.replace(/[^0-9]/g, '');
+      this.updatePixelPreview();
+    },
+
+    pastePixelId() {
+      navigator.clipboard.readText().then(text => {
+        const clean = text.replace(/[^0-9]/g, '');
+        if (clean) {
+          document.getElementById('pixel-id-input').value = clean;
+          this.updatePixelPreview();
+          EBA_API.showToast('Pasted Pixel ID: ' + clean);
+        } else {
+          EBA_API.showToast('Clipboard does not contain a numeric ID', 'error');
+        }
+      }).catch(() => {
+        const manual = prompt('Paste your numeric Meta Pixel ID:');
+        if (manual) {
+          const clean = manual.replace(/[^0-9]/g, '');
+          document.getElementById('pixel-id-input').value = clean;
+          this.updatePixelPreview();
+        }
+      });
+    },
+
+    updatePixelPreview() {
+      const enabled = document.getElementById('pixel-enabled-toggle')?.checked || false;
+      const pixelId = document.getElementById('pixel-id-input')?.value.trim() || '';
+      const testCode = document.getElementById('pixel-test-code-input')?.value.trim() || '';
+      const currency = document.getElementById('pixel-currency-select')?.value || 'PKR';
+
+      // Update validation message
+      const valEl = document.getElementById('pixel-id-validation');
+      if (valEl) {
+        if (!pixelId) {
+          valEl.innerHTML = `<span class="material-symbols-outlined text-[13px] text-secondary">info</span><span>Please enter your 15-16 digit Meta Pixel ID.</span>`;
+          valEl.className = 'text-[11px] text-on-surface-variant pt-1 flex items-center gap-1';
+        } else if (pixelId.length < 10) {
+          valEl.innerHTML = `<span class="material-symbols-outlined text-[13px] text-amber-600">warning</span><span class="text-amber-700 font-medium">Pixel ID looks too short (${pixelId.length} digits, typically 15-16).</span>`;
+          valEl.className = 'text-[11px] text-amber-700 pt-1 flex items-center gap-1';
+        } else {
+          valEl.innerHTML = `<span class="material-symbols-outlined text-[13px] text-emerald-600">check_circle</span><span class="text-emerald-700 font-medium">Valid Meta Pixel ID format (${pixelId.length} digits).</span>`;
+          valEl.className = 'text-[11px] text-emerald-700 pt-1 flex items-center gap-1';
+        }
+      }
+
+      // Update Status Pill
+      const statusPill = document.getElementById('meta-status-pill');
+      const statusText = document.getElementById('meta-status-text');
+      if (statusPill && statusText) {
+        if (enabled && pixelId) {
+          statusPill.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold backdrop-blur-sm';
+          statusPill.firstElementChild.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+          statusText.textContent = `Tracking Active (${pixelId})`;
+        } else if (pixelId) {
+          statusPill.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold backdrop-blur-sm';
+          statusPill.firstElementChild.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+          statusText.textContent = 'Pixel Configured (Tracking Paused)';
+        } else {
+          statusPill.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/70 border border-white/20 text-xs font-semibold backdrop-blur-sm';
+          statusPill.firstElementChild.className = 'w-2.5 h-2.5 rounded-full bg-gray-400';
+          statusText.textContent = 'Not Configured';
+        }
+      }
+
+      // Update Code Snippet
+      const previewEl = document.getElementById('pixel-code-preview');
+      if (previewEl) {
+        const idToDisplay = pixelId || 'YOUR_PIXEL_ID';
+        const testCodeSnippet = testCode ? `\nfbq('set', 'test_event_code', '${testCode}');` : '';
+        previewEl.textContent = `<!-- Meta Pixel Code for EBA Fashion Studio -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${idToDisplay}');${testCodeSnippet}
+fbq('track', 'PageView');
+<\/script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=${idToDisplay}&ev=PageView&noscript=1"/></noscript>`;
+      }
+    },
+
+    copyPixelCode() {
+      const code = document.getElementById('pixel-code-preview')?.textContent || '';
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const btnText = document.getElementById('copy-btn-text');
+        if (btnText) {
+          btnText.textContent = 'Copied!';
+          setTimeout(() => btnText.textContent = 'Copy Script', 2000);
+        }
+        EBA_API.showToast('Meta Pixel code copied to clipboard');
+      }).catch(() => {
+        EBA_API.showToast('Copied script snippet');
+      });
+    },
+
+    sendTestPixelEvent() {
+      const pixelId = document.getElementById('pixel-id-input')?.value.trim();
+      const testCode = document.getElementById('pixel-test-code-input')?.value.trim();
+      const currency = document.getElementById('pixel-currency-select')?.value || 'PKR';
+      const eventType = document.getElementById('test-event-type')?.value || 'PageView';
+      const outputEl = document.getElementById('pixel-test-output');
+
+      if (!pixelId) {
+        EBA_API.showToast('Please enter a Pixel ID before testing', 'error');
+        if (outputEl) {
+          outputEl.textContent = `[ERROR ${new Date().toLocaleTimeString()}] Cannot fire beacon: Meta Pixel ID is empty.`;
+        }
+        return;
+      }
+
+      let eventData = {};
+      if (eventType === 'ViewContent') {
+        eventData = {
+          content_name: 'Gul-e-Noor 3-Piece Festive Lawn',
+          content_category: "Women's Unstitched",
+          content_ids: ['EBA-W-25-01'],
+          content_type: 'product',
+          value: 15800,
+          currency: currency
+        };
+      } else if (eventType === 'AddToCart') {
+        eventData = {
+          content_name: 'Gul-e-Noor 3-Piece Festive Lawn',
+          content_ids: ['EBA-W-25-01'],
+          content_type: 'product',
+          value: 15800,
+          currency: currency
+        };
+      } else if (eventType === 'InitiateCheckout') {
+        eventData = {
+          num_items: 2,
+          value: 28600,
+          currency: currency
+        };
+      } else if (eventType === 'Purchase') {
+        eventData = {
+          content_ids: ['EBA-W-25-01', 'EBA-M-25-01'],
+          content_type: 'product',
+          value: 28600,
+          currency: currency,
+          order_id: 'EBA-TEST-' + Math.floor(10000 + Math.random() * 90000)
+        };
+      }
+
+      // Check if fbq exists in window or if script can be initialized
+      let fbqStatus = 'Active in Session';
+      try {
+        if (typeof window.fbq === 'function') {
+          if (testCode) window.fbq('set', 'test_event_code', testCode);
+          window.fbq('track', eventType, eventData);
+          fbqStatus = 'Dispatched via window.fbq';
+        } else {
+          // Initialize simulated or in-session fbq
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          window.fbq('init', pixelId);
+          if (testCode) window.fbq('set', 'test_event_code', testCode);
+          window.fbq('track', eventType, eventData);
+          fbqStatus = 'Initialized & Dispatched to Meta Events Manager';
+        }
+      } catch (e) {
+        fbqStatus = 'Beacon logged (Simulated / Browser Network Filter Active: ' + e.message + ')';
+      }
+
+      const logEntry = `[${new Date().toLocaleTimeString()}] ✅ META BEACON DISPATCHED:
+--------------------------------------------------
+Event Name     : ${eventType}
+Pixel ID       : ${pixelId}
+Test Event Code: ${testCode || '(None / Live)'}
+Status         : ${fbqStatus}
+Payload        : ${JSON.stringify(eventData, null, 2)}
+--------------------------------------------------
+Meta Events Manager URL:
+https://eventsmanager.facebook.com/events/overview?pixel_id=${pixelId}
+`;
+
+      if (outputEl) {
+        outputEl.textContent = logEntry;
+      }
+      EBA_API.showToast(`Test ${eventType} beacon sent! Check Events Manager.`);
+    },
+
+    async saveMetaPixelSettings() {
+      const btn = document.getElementById('save-pixel-btn');
+      const enabled = document.getElementById('pixel-enabled-toggle')?.checked || false;
+      const pixelId = document.getElementById('pixel-id-input')?.value.trim() || '';
+      const testCode = document.getElementById('pixel-test-code-input')?.value.trim() || '';
+      const currency = document.getElementById('pixel-currency-select')?.value || 'PKR';
+
+      if (enabled && !pixelId) {
+        EBA_API.showToast('Please enter your numeric Meta Pixel ID before enabling tracking', 'error');
+        document.getElementById('pixel-id-input')?.focus();
+        return;
+      }
+
+      const pixelData = {
+        enabled: enabled,
+        pixel_id: pixelId,
+        test_event_code: testCode,
+        currency: currency,
+        track_pageview: document.getElementById('track-pageview')?.checked ?? true,
+        track_view_content: document.getElementById('track-viewcontent')?.checked ?? true,
+        track_add_to_cart: document.getElementById('track-addtocart')?.checked ?? true,
+        track_initiate_checkout: document.getElementById('track-initiatecheckout')?.checked ?? true,
+        track_purchase: document.getElementById('track-purchase')?.checked ?? true,
+        track_search: document.getElementById('track-search')?.checked ?? true,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span><span>Saving Meta Pixel...</span>`;
+        }
+
+        await EBA_API.admin.saveMetaPixel(pixelData);
+        EBA_API.showToast('Meta Pixel configuration saved and synchronized!');
+        this.updatePixelPreview();
+      } catch (err) {
+        console.error('Save meta pixel error:', err);
+        EBA_API.showToast(err.message || 'Failed to save Meta Pixel settings', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Save Meta Pixel Settings</span>`;
+        }
       }
     },
 

@@ -80,6 +80,19 @@ const defaultShippingZones = [
   }
 ];
 
+const defaultMetaPixel = {
+  enabled: false,
+  pixel_id: '',
+  test_event_code: '',
+  track_pageview: true,
+  track_view_content: true,
+  track_add_to_cart: true,
+  track_initiate_checkout: true,
+  track_purchase: true,
+  track_search: true,
+  currency: 'PKR'
+};
+
 // Save in SQLite
 db.prepare(`
   INSERT INTO store_settings (key, value, updated_at)
@@ -93,7 +106,13 @@ db.prepare(`
   ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
 `).run(JSON.stringify(defaultShippingZones));
 
-console.log('Advanced Settings (Payments & Shipping Zones) initialized in SQLite!');
+db.prepare(`
+  INSERT INTO store_settings (key, value, updated_at)
+  VALUES ('meta_pixel', ?, CURRENT_TIMESTAMP)
+  ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+`).run(JSON.stringify(defaultMetaPixel));
+
+console.log('Advanced Settings (Payments, Shipping Zones & Meta Pixel) initialized in SQLite!');
 
 // Also sync to Supabase if connected
 (async () => {
@@ -109,6 +128,12 @@ console.log('Advanced Settings (Payments & Shipping Zones) initialized in SQLite
       value: JSON.stringify(defaultShippingZones)
     }, { onConflict: 'key' });
     if (sErr) console.warn('Supabase shipping_zones sync note:', sErr.message);
+
+    const { error: mErr } = await supabase.from('store_settings').upsert({
+      key: 'meta_pixel',
+      value: JSON.stringify(defaultMetaPixel)
+    }, { onConflict: 'key' });
+    if (mErr) console.warn('Supabase meta_pixel sync note:', mErr.message);
 
     console.log('Advanced Settings also synced to Supabase Cloud!');
   } catch (e) {

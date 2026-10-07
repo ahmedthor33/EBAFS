@@ -21,12 +21,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static frontend assets (supports Vite dist/ build and fallback to public/)
-const distPath = path.join(__dirname, 'dist');
-const hasDist = fs.existsSync(distPath);
-const staticPath = hasDist ? distPath : path.join(__dirname, 'public');
-
-app.use(express.static(staticPath));
+// Serve static frontend assets (primary public/ directory, with fallback to dist/)
+app.use(express.static(path.join(__dirname, 'public')));
+if (fs.existsSync(path.join(__dirname, 'dist'))) {
+  app.use(express.static(path.join(__dirname, 'dist')));
+}
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
@@ -76,9 +75,9 @@ app.use('/api/admin/users', authenticateToken, requireAdmin, require('./routes/a
 app.use('/admin', (req, res, next) => {
   if (req.method === 'GET') {
     const adminPath = [
-      path.join(__dirname, 'dist', 'admin.html'),
+      path.join(__dirname, 'public', 'admin.html'),
       path.join(__dirname, 'admin.html'),
-      path.join(__dirname, 'public', 'admin.html')
+      path.join(__dirname, 'dist', 'admin.html')
     ].find(p => fs.existsSync(p));
     return res.sendFile(adminPath);
   }
@@ -92,9 +91,9 @@ app.use((req, res, next) => {
   }
   if (req.method === 'GET') {
     const indexPath = [
-      path.join(__dirname, 'dist', 'index.html'),
+      path.join(__dirname, 'public', 'index.html'),
       path.join(__dirname, 'index.html'),
-      path.join(__dirname, 'public', 'index.html')
+      path.join(__dirname, 'dist', 'index.html')
     ].find(p => fs.existsSync(p));
     return res.sendFile(indexPath);
   }

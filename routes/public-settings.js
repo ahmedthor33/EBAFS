@@ -78,4 +78,38 @@ router.get('/shipping-zones', (req, res) => {
   }
 });
 
+// Public endpoint for Meta Pixel configuration
+router.get('/pixel', (req, res) => {
+  try {
+    const row = db.prepare("SELECT value FROM store_settings WHERE key = 'meta_pixel'").get();
+    if (!row) {
+      return res.json({
+        pixel: {
+          enabled: false,
+          pixel_id: '',
+          test_event_code: '',
+          track_pageview: true,
+          track_view_content: true,
+          track_add_to_cart: true,
+          track_initiate_checkout: true,
+          track_purchase: true,
+          track_search: true,
+          currency: 'PKR'
+        }
+      });
+    }
+    const pixel = JSON.parse(row.value);
+    res.json({ pixel });
+  } catch (err) {
+    console.error('Fetch Meta Pixel config error:', err);
+    res.status(500).json({ error: 'Failed to fetch Meta Pixel settings' });
+  }
+});
+router.get('/meta-pixel', (req, res) => {
+  const row = db.prepare("SELECT value FROM store_settings WHERE key = 'meta_pixel'").get();
+  const pixel = row ? JSON.parse(row.value) : { enabled: false };
+  res.json({ pixel });
+});
+
 module.exports = router;
+
