@@ -251,6 +251,7 @@
       } else if (path.startsWith('product/')) {
         const slug = path.replace('product/', '');
         await this.renderProductDetails(container, slug);
+        window.scrollTo({ top: 0, behavior: 'instant' });
       } else if (path === 'cart') {
         await this.renderCartPage(container);
       } else if (path === 'checkout') {
@@ -722,7 +723,7 @@
           </section>
 
           <!-- Interactive Quick Filter Ribbon & Sorting Bar -->
-          <div class="w-full bg-surface-container-lowest border-b border-surface-container-high px-margin-mobile md:px-margin py-3.5 shadow-sm sticky top-20 z-20">
+          <div class="w-full bg-surface-container-lowest border-b border-surface-container-high px-margin-mobile md:px-margin py-3.5 shadow-sm sticky top-0 z-20">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               <!-- Quick Filter Pills -->
               <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -1019,30 +1020,30 @@
           </div>
 
           <!-- Product Details Grid -->
-          <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-12">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-6 md:py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
               
               <!-- Left Gallery (7 cols) -->
               <div class="lg:col-span-7 flex flex-col md:flex-row gap-4">
                 <!-- Vertical Thumbnails -->
-                <div class="flex md:flex-col gap-3 order-2 md:order-1 overflow-x-auto md:overflow-visible shrink-0">
+                <div class="flex md:flex-col gap-3 order-2 md:order-1 overflow-x-auto md:overflow-visible shrink-0 no-scrollbar">
                   ${images.map((img, idx) => `
                     <button onclick="app.switchProductDetailImage('${img.image_url}', this)" class="w-16 h-20 md:w-20 md:h-28 overflow-hidden border ${idx === 0 ? 'border-primary' : 'border-surface-container-high'} shrink-0 group">
-                      <img src="${img.image_url}" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform"/>
+                      <img src="${img.image_url}" alt="Thumbnail" draggable="false" class="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none select-none"/>
                     </button>
                   `).join('')}
                 </div>
 
-                <!-- Main Featured High-Res View -->
-                <div class="flex-1 aspect-[3/4] bg-surface-container-high relative overflow-hidden border border-surface-container-high order-1 md:order-2 group">
-                  <img id="detail-main-img" src="${primaryImg.image_url}" alt="${product.name}" class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"/>
+                <!-- Main Featured High-Res View (Touch-scroll enabled for mobile) -->
+                <div class="flex-1 aspect-[3/4] bg-surface-container-high relative overflow-hidden border border-surface-container-high order-1 md:order-2 group touch-pan-y select-none">
+                  <img id="detail-main-img" src="${primaryImg.image_url}" alt="${product.name}" draggable="false" class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105 pointer-events-none select-none touch-pan-y"/>
                   
-                  <div class="absolute top-4 left-4 flex flex-col gap-2">
+                  <div class="absolute top-4 left-4 flex flex-col gap-2 pointer-events-auto">
                     ${product.is_sale ? `<span class="badge-status badge-gold">Seasonal Sale</span>` : ''}
                     ${product.is_featured ? `<span class="badge-status badge-dark">Atelier Drop</span>` : ''}
                   </div>
 
-                  <button onclick="app.toggleWishlist(${product.id})" class="wishlist-btn ${this.isWishlisted(product.id) ? 'active' : ''}">
+                  <button onclick="app.toggleWishlist(${product.id})" class="wishlist-btn ${this.isWishlisted(product.id) ? 'active' : ''} pointer-events-auto">
                     <span class="material-symbols-outlined text-[20px]">favorite</span>
                   </button>
                 </div>

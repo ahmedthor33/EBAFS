@@ -549,3 +549,21 @@ body {
     width: 100% !important;
   }
 }
+
+/* Touch-friendly Drag & Scrolling for Mobile */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
+#detail-main-img {
+  touch-action: pan-y !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  pointer-events: none;
+}
+

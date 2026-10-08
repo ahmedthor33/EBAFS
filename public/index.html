@@ -119,19 +119,15 @@
     </div>
   </aside>
 
-  <!-- PRIMARY NAVIGATION HEADER (Static on mobile for unobstructed image viewing, sticky on desktop) -->
-  <header class="relative lg:sticky lg:top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high transition-all duration-300">
+  <!-- PRIMARY NAVIGATION HEADER (Static on all viewports for unobstructed product viewing and smooth scrolling) -->
+  <header class="relative z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high transition-all duration-300">
     <div class="h-20 w-full px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-6 whitespace-nowrap">
       
       <!-- Left: Logo & Navigation in One Clean Row -->
       <div class="flex items-center gap-8 xl:gap-12 shrink-0">
-        <!-- Brand Logo Wordmark: Single horizontal line, no up/down words, on the left side of page -->
+        <!-- Brand Logo Wordmark -->
         <a href="#home" class="flex items-center shrink-0 group py-1 whitespace-nowrap" aria-label="EBA Fashion Studio Home">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 36" class="h-8 md:h-9 w-auto transition-transform group-hover:scale-[1.02]" fill="none">
-            <text x="0" y="27" font-family="'Bodoni Moda', 'Playfair Display', serif" font-size="28" font-weight="700" letter-spacing="0.18em" fill="#111111">EBA</text>
-            <line x1="88" y1="8" x2="88" y2="28" stroke="#C5A880" stroke-width="1.5" stroke-opacity="0.9"/>
-            <text x="102" y="24" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-size="11.5" font-weight="600" letter-spacing="0.32em" fill="#444748">FASHION STUDIO</text>
-          </svg>
+          <img src="/assets/logo.png" alt="EBA Fashion Studio" class="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform group-hover:scale-[1.02]"/>
         </a>
 
         <!-- Desktop Navigation Links (All in one single line, no wrapping) -->
@@ -253,9 +249,9 @@
     <div class="py-16 px-margin-mobile md:px-margin max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
       <!-- Col 1: Brand & Heritage (4 cols) -->
       <div class="md:col-span-4 flex flex-col gap-5">
-        <div class="flex items-center gap-3">
-          <span class="font-serif text-2xl uppercase tracking-wider text-surface-container-lowest">EBA Fashion Studio</span>
-        </div>
+        <a href="#home" class="inline-block" aria-label="EBA Fashion Studio Home">
+          <img src="/assets/logo-white.png" alt="EBA Fashion Studio" class="h-9 w-auto object-contain"/>
+        </a>
         <p class="font-body-sm text-surface-dim leading-relaxed max-w-sm">
           Pioneering architectural unstitched couture since 1988. Dedicated to the tactile luxury and timeless heritage of fine Pakistani textiles.
         </p>
