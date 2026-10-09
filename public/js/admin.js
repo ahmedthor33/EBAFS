@@ -103,69 +103,86 @@
         </div>
       `;
 
-      switch (section) {
-        case 'dashboard':
-          titleEl.textContent = 'Dashboard & Overview';
-          await this.renderDashboard(area);
-          break;
-        case 'products':
-          titleEl.textContent = 'Product Catalog & Weaves';
-          await this.renderProducts(area);
-          break;
-        case 'categories':
-          titleEl.textContent = 'Categories & Brands Hierarchy';
-          await this.renderCategories(area);
-          break;
-        case 'inventory':
-          titleEl.textContent = 'Inventory Health & Stock Ledger';
-          await this.renderInventory(area);
-          break;
-        case 'orders':
-          titleEl.textContent = 'Customer Orders & Logistics Dispatch';
-          await this.renderOrders(area);
-          break;
-        case 'coupons':
-          titleEl.textContent = 'Promotional Vouchers & Coupons';
-          await this.renderCoupons(area);
-          break;
-        case 'customers':
-          titleEl.textContent = 'Client Directory & Spending Ledgers';
-          await this.renderCustomers(area);
-          break;
-        case 'page-banners':
-          titleEl.textContent = 'All Page Hero Banners & Campaign Headers';
-          await this.renderPageBanners(area);
-          break;
-        case 'cms':
-          titleEl.textContent = 'Homepage CMS & Editorial Content';
-          await this.renderCMS(area);
-          break;
-        case 'reports':
-          titleEl.textContent = 'Financial Reporting & Intelligence';
-          await this.renderReports(area);
-          break;
-        case 'shipping-zones':
-          titleEl.textContent = 'Shipping & Logistics Zones';
-          await this.renderShippingZones(area);
-          break;
-        case 'payments':
-          titleEl.textContent = 'Pakistani Payment Gateways';
-          await this.renderPayments(area);
-          break;
-        case 'users':
-          titleEl.textContent = 'Admin Staff & Role Permissions';
-          await this.renderUsers(area);
-          break;
-        case 'meta-pixel':
-          titleEl.textContent = 'Meta (Facebook) Pixel & Marketing Tracking';
-          await this.renderMetaPixel(area);
-          break;
-        case 'settings':
-          titleEl.textContent = 'Store Configuration & Policies';
-          await this.renderSettings(area);
-          break;
-        default:
-          await this.renderDashboard(area);
+      try {
+        switch (section) {
+          case 'dashboard':
+            titleEl.textContent = 'Dashboard & Overview';
+            await this.renderDashboard(area);
+            break;
+          case 'products':
+            titleEl.textContent = 'Product Catalog & Weaves';
+            await this.renderProducts(area);
+            break;
+          case 'categories':
+            titleEl.textContent = 'Categories & Brands Hierarchy';
+            await this.renderCategories(area);
+            break;
+          case 'inventory':
+            titleEl.textContent = 'Inventory Health & Stock Ledger';
+            await this.renderInventory(area);
+            break;
+          case 'orders':
+            titleEl.textContent = 'Customer Orders & Logistics Dispatch';
+            await this.renderOrders(area);
+            break;
+          case 'coupons':
+            titleEl.textContent = 'Promotional Vouchers & Coupons';
+            await this.renderCoupons(area);
+            break;
+          case 'customers':
+            titleEl.textContent = 'Client Directory & Spending Ledgers';
+            await this.renderCustomers(area);
+            break;
+          case 'page-banners':
+            titleEl.textContent = 'All Page Hero Banners & Campaign Headers';
+            await this.renderPageBanners(area);
+            break;
+          case 'cms':
+            titleEl.textContent = 'Homepage CMS & Editorial Content';
+            await this.renderCMS(area);
+            break;
+          case 'reports':
+            titleEl.textContent = 'Financial Reporting & Intelligence';
+            await this.renderReports(area);
+            break;
+          case 'shipping-zones':
+            titleEl.textContent = 'Shipping & Logistics Zones';
+            await this.renderShippingZones(area);
+            break;
+          case 'payments':
+            titleEl.textContent = 'Pakistani Payment Gateways';
+            await this.renderPayments(area);
+            break;
+          case 'users':
+            titleEl.textContent = 'Admin Staff & Role Permissions';
+            await this.renderUsers(area);
+            break;
+          case 'meta-pixel':
+            titleEl.textContent = 'Meta (Facebook) Pixel & Marketing Tracking';
+            await this.renderMetaPixel(area);
+            break;
+          case 'settings':
+            titleEl.textContent = 'Store Configuration & Policies';
+            await this.renderSettings(area);
+            break;
+          default:
+            await this.renderDashboard(area);
+        }
+      } catch (navErr) {
+        console.error(`Navigation error for section "${section}":`, navErr);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">warning</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Atelier Section Notice</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${navErr?.message || 'Failed to render section records.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('${section}')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Load</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -174,8 +191,8 @@
     // ----------------------------------------------------
     async renderDashboard(area) {
       try {
-        const reports = await EBA_API.admin.getReports('30d');
-        const ordersRes = await EBA_API.admin.getOrders({ limit: 5 });
+        const reports = await EBA_API.admin.getReports('30d') || {};
+        const ordersRes = await EBA_API.admin.getOrders({ limit: 5 }) || {};
         const summary = reports.summary || {};
         const recentOrders = ordersRes.orders || [];
 
@@ -185,31 +202,31 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div class="bg-surface-container-lowest p-5 border border-surface-container-high space-y-1">
                 <span class="font-label-sm uppercase tracking-wider text-secondary">Gross Revenue (30d)</span>
-                <p class="font-headline-sm text-2xl text-primary font-semibold">PKR ${(summary.total_revenue || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-2xl text-primary font-semibold">PKR ${(Number(summary.total_revenue) || 0).toLocaleString()}</p>
                 <span class="font-body-sm text-[11px] text-emerald-700">From verified orders</span>
               </div>
 
               <div class="bg-surface-container-lowest p-5 border border-surface-container-high space-y-1">
                 <span class="font-label-sm uppercase tracking-wider text-secondary">Total Orders</span>
-                <p class="font-headline-sm text-2xl text-primary font-semibold">${summary.total_orders || 0}</p>
+                <p class="font-headline-sm text-2xl text-primary font-semibold">${Number(summary.total_orders) || 0}</p>
                 <span class="font-body-sm text-[11px] text-on-surface-variant">Active & completed</span>
               </div>
 
               <div class="bg-surface-container-lowest p-5 border border-surface-container-high space-y-1">
                 <span class="font-label-sm uppercase tracking-wider text-secondary">Average Order Value</span>
-                <p class="font-headline-sm text-2xl text-primary font-semibold">PKR ${(summary.aov || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-2xl text-primary font-semibold">PKR ${(Number(summary.aov) || 0).toLocaleString()}</p>
                 <span class="font-body-sm text-[11px] text-on-surface-variant">Per transaction</span>
               </div>
 
               <div class="bg-surface-container-lowest p-5 border border-surface-container-high space-y-1">
                 <span class="font-label-sm uppercase tracking-wider text-secondary">Units Dispatched</span>
-                <p class="font-headline-sm text-2xl text-primary font-semibold">${summary.total_units_sold || 0}</p>
+                <p class="font-headline-sm text-2xl text-primary font-semibold">${Number(summary.total_units_sold) || 0}</p>
                 <span class="font-body-sm text-[11px] text-on-surface-variant">Unstitched cuts sold</span>
               </div>
 
               <div class="bg-surface-container-lowest p-5 border border-surface-container-high space-y-1">
                 <span class="font-label-sm uppercase tracking-wider text-secondary">Registered Patrons</span>
-                <p class="font-headline-sm text-2xl text-primary font-semibold">${summary.total_customers || 0}</p>
+                <p class="font-headline-sm text-2xl text-primary font-semibold">${Number(summary.total_customers) || 0}</p>
                 <span class="font-body-sm text-[11px] text-on-surface-variant">Active member accounts</span>
               </div>
             </div>
@@ -257,19 +274,23 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-surface-container-high">
-                      ${recentOrders.map(o => `
+                      ${recentOrders.length === 0 ? `
+                        <tr>
+                          <td colspan="6" class="py-8 text-center text-on-surface-variant">No client orders recorded yet in store ledger.</td>
+                        </tr>
+                      ` : recentOrders.map(o => `
                         <tr class="hover:bg-surface-container-low transition-colors">
-                          <td class="py-3 font-mono font-semibold text-primary">#${o.order_number}</td>
-                          <td class="py-3">${o.customer_name}</td>
-                          <td class="py-3 text-on-surface-variant">${o.city}</td>
-                          <td class="py-3 font-semibold text-primary">PKR ${o.total.toLocaleString()}</td>
+                          <td class="py-3 font-mono font-semibold text-primary">#${o.order_number || o.id || 'N/A'}</td>
+                          <td class="py-3">${o.customer_name || 'Guest Patron'}</td>
+                          <td class="py-3 text-on-surface-variant">${o.city || 'Pakistan'}</td>
+                          <td class="py-3 font-semibold text-primary">PKR ${(Number(o.total) || 0).toLocaleString()}</td>
                           <td class="py-3">
                             <span class="badge-status ${o.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' : (o.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' : 'badge-gold')}">
-                              ${o.order_status}
+                              ${o.order_status || 'pending'}
                             </span>
                           </td>
                           <td class="py-3 text-right">
-                            <button onclick="adminApp.openOrderDetailsModal(${o.id})" class="text-secondary hover:text-primary font-semibold underline">
+                            <button onclick="adminApp.openOrderDetailsModal('${o.id}')" class="text-secondary hover:text-primary font-semibold underline">
                               Review
                             </button>
                           </td>
@@ -284,15 +305,17 @@
               <div class="lg:col-span-4 bg-surface-container-lowest border border-surface-container-high p-6 space-y-4">
                 <h3 class="font-headline-sm uppercase text-primary text-lg pb-3 border-b border-surface-container-high">Top Selling Pieces</h3>
                 <div class="space-y-3">
-                  ${(reports.topProducts || []).map(tp => `
+                  ${(reports.topProducts || []).length === 0 ? `
+                    <p class="py-6 text-center text-on-surface-variant text-xs">Catalog pieces will rank here once orders are processed.</p>
+                  ` : (reports.topProducts || []).map(tp => `
                     <div class="flex items-center justify-between text-xs pb-3 border-b border-surface-container-high last:border-b-0">
                       <div class="min-w-0 flex-1 pr-2">
-                        <p class="font-semibold text-primary truncate">${tp.product_name}</p>
-                        <p class="text-on-surface-variant font-mono text-[10px]">${tp.sku}</p>
+                        <p class="font-semibold text-primary truncate">${tp.product_name || tp.name || 'Piece'}</p>
+                        <p class="text-on-surface-variant font-mono text-[10px]">${tp.sku || ''}</p>
                       </div>
                       <div class="text-right shrink-0">
-                        <span class="font-semibold text-secondary block">${tp.units_sold} Sold</span>
-                        <span class="text-on-surface-variant text-[11px]">PKR ${tp.gross_revenue.toLocaleString()}</span>
+                        <span class="font-semibold text-secondary block">${tp.units_sold || 0} Sold</span>
+                        <span class="text-on-surface-variant text-[11px]">PKR ${(Number(tp.gross_revenue ?? tp.revenue) || 0).toLocaleString()}</span>
                       </div>
                     </div>
                   `).join('')}
@@ -304,6 +327,19 @@
         `;
       } catch (err) {
         console.error('Render dashboard error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load dashboard records</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Communication error with store records.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('dashboard')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Atelier Records</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -347,14 +383,18 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-container-high">
-                  ${products.map(p => `
+                  ${products.length === 0 ? `
+                    <tr>
+                      <td colspan="8" class="p-8 text-center text-on-surface-variant">No products found in the atelier catalog. Click "Create Product" to add your first luxury piece.</td>
+                    </tr>
+                  ` : products.map(p => `
                     <tr class="hover:bg-surface-container-low transition-colors">
                       <td class="p-4 w-14">
-                        <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name}" class="w-10 h-14 object-cover bg-surface-container"/>
+                        <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name || 'Product'}" class="w-10 h-14 object-cover bg-surface-container"/>
                       </td>
                       <td class="p-4 min-w-[200px]">
-                        <span class="font-semibold text-primary block text-sm">${p.name}</span>
-                        <span class="font-mono text-secondary text-[11px]">${p.sku}</span>
+                        <span class="font-semibold text-primary block text-sm">${p.name || 'Untitled Piece'}</span>
+                        <span class="font-mono text-secondary text-[11px]">${p.sku || ''}</span>
                         <span class="text-on-surface-variant text-[11px] block">${p.fabric || ''}</span>
                       </td>
                       <td class="p-4 text-on-surface-variant">
@@ -362,20 +402,20 @@
                         ${p.subcategory_name ? `<span class="block text-[10px] text-secondary">${p.subcategory_name}</span>` : ''}
                       </td>
                       <td class="p-4">
-                        <span class="font-semibold text-primary block">PKR ${p.price.toLocaleString()}</span>
-                        ${p.sale_price ? `<span class="text-[11px] text-red-700">Sale: PKR ${p.sale_price.toLocaleString()}</span>` : ''}
+                        <span class="font-semibold text-primary block">PKR ${(Number(p.price) || 0).toLocaleString()}</span>
+                        ${p.sale_price ? `<span class="text-[11px] text-red-700">Sale: PKR ${(Number(p.sale_price) || 0).toLocaleString()}</span>` : ''}
                       </td>
                       <td class="p-4">
-                        <span class="font-semibold ${p.stock_quantity <= p.low_stock_threshold ? 'text-red-700 font-bold' : 'text-primary'}">
-                          ${p.stock_quantity} units
+                        <span class="font-semibold ${Number(p.stock_quantity || 0) <= Number(p.low_stock_threshold || 5) ? 'text-red-700 font-bold' : 'text-primary'}">
+                          ${p.stock_quantity ?? 0} units
                         </span>
                       </td>
                       <td class="p-4">
                         <input type="checkbox" onchange="adminApp.toggleProductFlag(${p.id}, 'is_featured', this.checked)" ${p.is_featured ? 'checked' : ''} class="custom-checkbox"/>
                       </td>
                       <td class="p-4">
-                        <button onclick="adminApp.toggleProductStatus(${p.id}, '${p.status}')" class="badge-status ${p.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-200 text-neutral-800'}">
-                          ${p.status}
+                        <button onclick="adminApp.toggleProductStatus(${p.id}, '${p.status || 'published'}')" class="badge-status ${p.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-200 text-neutral-800'}">
+                          ${p.status || 'published'}
                         </button>
                       </td>
                       <td class="p-4 text-right">
@@ -400,6 +440,19 @@
         `;
       } catch (err) {
         console.error('Render products error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load product catalog</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('products')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Products</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -1163,30 +1216,34 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-container-high">
-                  ${orders.map(o => `
-                    <tr class="hover:bg-surface-container-low transition-colors" data-status="${o.order_status}">
-                      <td class="p-4 font-mono font-semibold text-primary">#${o.order_number}</td>
+                  ${orders.length === 0 ? `
+                    <tr>
+                      <td colspan="8" class="p-8 text-center text-on-surface-variant">No customer orders recorded yet. Fresh dockets will display here immediately upon placement.</td>
+                    </tr>
+                  ` : orders.map(o => `
+                    <tr class="hover:bg-surface-container-low transition-colors" data-status="${o.order_status || 'pending'}">
+                      <td class="p-4 font-mono font-semibold text-primary">#${o.order_number || o.id || 'N/A'}</td>
                       <td class="p-4">
-                        <span class="font-semibold text-primary block">${o.customer_name}</span>
-                        <span class="text-on-surface-variant text-[11px] block">${o.customer_phone}</span>
+                        <span class="font-semibold text-primary block">${o.customer_name || 'Guest Patron'}</span>
+                        <span class="text-on-surface-variant text-[11px] block">${o.customer_phone || '-'}</span>
                       </td>
-                      <td class="p-4 text-on-surface-variant">${o.city}, ${o.province}</td>
-                      <td class="p-4 font-semibold text-primary">PKR ${o.total.toLocaleString()}</td>
+                      <td class="p-4 text-on-surface-variant">${o.city || 'Pakistan'}${o.province ? `, ${o.province}` : ''}</td>
+                      <td class="p-4 font-semibold text-primary">PKR ${(Number(o.total) || 0).toLocaleString()}</td>
                       <td class="p-4">
                         <span class="badge-status ${o.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'badge-gold'}">
-                          ${o.payment_method.toUpperCase()} • ${o.payment_status}
+                          ${(o.payment_method || 'cod').toUpperCase()} • ${o.payment_status || 'pending'}
                         </span>
                       </td>
                       <td class="p-4">
                         <span class="badge-status ${o.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' : (o.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' : 'badge-dark')}">
-                          ${o.order_status}
+                          ${o.order_status || 'pending'}
                         </span>
                       </td>
                       <td class="p-4 font-mono text-[11px] text-secondary font-semibold">
                         ${o.tracking_number || 'Unassigned'}
                       </td>
                       <td class="p-4 text-right">
-                        <button onclick="adminApp.openOrderDetailsModal(${o.id})" class="btn-secondary py-1.5 px-3 text-xs bg-white">
+                        <button onclick="adminApp.openOrderDetailsModal('${o.id}')" class="btn-secondary py-1.5 px-3 text-xs bg-white">
                           Manage
                         </button>
                       </td>
@@ -1199,6 +1256,19 @@
         `;
       } catch (err) {
         console.error('Render orders error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load orders ledger</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('orders')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Orders</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -1214,15 +1284,15 @@
     async openOrderDetailsModal(orderId) {
       try {
         const res = await EBA_API.admin.getOrder(orderId);
-        const order = res.order;
-        const items = res.items || [];
+        const order = res?.order || res || {};
+        const items = res?.items || order.items || [];
 
         const modalContent = document.getElementById('admin-modal-content');
         modalContent.innerHTML = `
           <div class="flex items-center justify-between pb-3 border-b border-surface-container-high mb-6">
             <div>
               <span class="font-label-sm uppercase tracking-widest text-secondary">Order Docket Management</span>
-              <h2 class="font-headline-sm uppercase text-primary text-xl">Order #${order.order_number}</h2>
+              <h2 class="font-headline-sm uppercase text-primary text-xl">Order #${order.order_number || order.id || 'N/A'}</h2>
             </div>
             <button onclick="adminApp.closeModal()"><span class="material-symbols-outlined">close</span></button>
           </div>
@@ -1232,14 +1302,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-surface-container-low border border-surface-container-high">
               <div>
                 <span class="font-label-sm uppercase tracking-wider text-secondary block mb-1">Customer Details</span>
-                <p class="font-semibold text-primary text-sm">${order.customer_name}</p>
-                <p class="text-on-surface-variant">${order.customer_email}</p>
-                <p class="text-on-surface-variant">${order.customer_phone}</p>
+                <p class="font-semibold text-primary text-sm">${order.customer_name || 'Guest Patron'}</p>
+                <p class="text-on-surface-variant">${order.customer_email || '-'}</p>
+                <p class="text-on-surface-variant">${order.customer_phone || '-'}</p>
               </div>
               <div>
                 <span class="font-label-sm uppercase tracking-wider text-secondary block mb-1">Shipping Address</span>
-                <p class="text-on-surface-variant">${order.shipping_address}, ${order.area || ''}</p>
-                <p class="text-on-surface-variant">${order.city}, ${order.province} ${order.postal_code || ''}</p>
+                <p class="text-on-surface-variant">${order.shipping_address || 'Standard Delivery'}, ${order.area || ''}</p>
+                <p class="text-on-surface-variant">${order.city || 'Pakistan'}, ${order.province || ''} ${order.postal_code || ''}</p>
               </div>
             </div>
 
@@ -1247,17 +1317,19 @@
             <div class="space-y-2">
               <span class="font-label-sm uppercase tracking-wider text-secondary block">Purchased Unstitched Weaves</span>
               <div class="border border-surface-container-high divide-y divide-surface-container-high">
-                ${items.map(item => `
+                ${items.length === 0 ? `
+                  <p class="p-4 text-center text-on-surface-variant">Order line items ledger empty.</p>
+                ` : items.map(item => `
                   <div class="p-3 flex items-center justify-between bg-white">
                     <div class="flex items-center gap-3">
-                      <img src="${item.image_url}" alt="${item.product_name}" class="w-10 h-14 object-cover bg-surface-container"/>
+                      <img src="${item.image_url || '/assets/gul_e_noor_details.png'}" alt="${item.product_name || 'Product'}" class="w-10 h-14 object-cover bg-surface-container"/>
                       <div>
-                        <span class="font-semibold text-primary block">${item.product_name}</span>
-                        <span class="font-mono text-on-surface-variant text-[11px]">${item.sku} • Qty: ${item.quantity}</span>
+                        <span class="font-semibold text-primary block">${item.product_name || 'Unstitched Fabric'}</span>
+                        <span class="font-mono text-on-surface-variant text-[11px]">${item.sku || ''} • Qty: ${item.quantity || 1}</span>
                         ${item.tailoring_selected ? `<span class="text-secondary font-semibold font-label-sm block">+ Master Tailoring Service</span>` : ''}
                       </div>
                     </div>
-                    <span class="font-semibold text-primary">PKR ${item.total_price.toLocaleString()}</span>
+                    <span class="font-semibold text-primary">PKR ${(Number(item.total_price) || 0).toLocaleString()}</span>
                   </div>
                 `).join('')}
               </div>
@@ -1303,7 +1375,7 @@
               </div>
 
               <div class="pt-2 flex justify-end gap-3">
-                <button type="button" onclick="adminApp.saveOrderUpdates(${order.id})" class="btn-primary py-2 px-6">
+                <button type="button" onclick="adminApp.saveOrderUpdates('${order.id || orderId}')" class="btn-primary py-2 px-6">
                   Save Order Docket Updates
                 </button>
               </div>
@@ -1508,21 +1580,25 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-container-high">
-                  ${customers.map(c => `
+                  ${customers.length === 0 ? `
+                    <tr>
+                      <td colspan="8" class="p-8 text-center text-on-surface-variant">No client patrons registered in store database yet.</td>
+                    </tr>
+                  ` : customers.map(c => `
                     <tr class="hover:bg-surface-container-low transition-colors">
-                      <td class="p-4 font-semibold text-primary">${c.name}</td>
-                      <td class="p-4 text-on-surface-variant">${c.email}</td>
+                      <td class="p-4 font-semibold text-primary">${c.name || 'Patron'}</td>
+                      <td class="p-4 text-on-surface-variant">${c.email || '-'}</td>
                       <td class="p-4">${c.phone || '-'}</td>
-                      <td class="p-4 text-on-surface-variant">${c.city || 'Islamabad'}</td>
-                      <td class="p-4 font-semibold text-secondary">PKR ${(c.total_spent || 0).toLocaleString()}</td>
+                      <td class="p-4 text-on-surface-variant">${c.city || 'Pakistan'}</td>
+                      <td class="p-4 font-semibold text-secondary">PKR ${(Number(c.total_spent) || 0).toLocaleString()}</td>
                       <td class="p-4">${c.orders_count || 0}</td>
                       <td class="p-4">
-                        <button onclick="adminApp.toggleCustomerStatus(${c.id}, '${c.status}')" class="badge-status ${c.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-                          ${c.status}
+                        <button onclick="adminApp.toggleCustomerStatus('${c.id}', '${c.status || 'active'}')" class="badge-status ${c.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                          ${c.status || 'active'}
                         </button>
                       </td>
                       <td class="p-4 text-right">
-                        <button onclick="adminApp.openCustomerDetailsModal(${c.id})" class="text-secondary hover:text-primary underline font-semibold">
+                        <button onclick="adminApp.openCustomerDetailsModal('${c.id}')" class="text-secondary hover:text-primary underline font-semibold">
                           Profile
                         </button>
                       </td>
@@ -1535,6 +1611,19 @@
         `;
       } catch (err) {
         console.error('Render customers error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load patron records</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('customers')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Patrons</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -1552,28 +1641,28 @@
     async openCustomerDetailsModal(id) {
       try {
         const res = await EBA_API.admin.getCustomer(id);
-        const c = res.customer;
-        const profile = res.profile || {};
-        const orders = res.orders || [];
+        const c = res?.customer || res || {};
+        const profile = res?.profile || {};
+        const orders = res?.orders || [];
 
         const modalContent = document.getElementById('admin-modal-content');
         modalContent.innerHTML = `
           <div class="flex items-center justify-between pb-3 border-b border-surface-container-high mb-6">
             <div>
               <span class="font-label-sm uppercase tracking-widest text-secondary">VIP Salon Patron</span>
-              <h2 class="font-headline-sm uppercase text-primary text-xl">${c.name}</h2>
+              <h2 class="font-headline-sm uppercase text-primary text-xl">${c.name || 'Patron'}</h2>
             </div>
             <button onclick="adminApp.closeModal()"><span class="material-symbols-outlined">close</span></button>
           </div>
           <div class="space-y-4 text-xs">
             <div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low">
               <div>
-                <p><strong>Email:</strong> ${c.email}</p>
+                <p><strong>Email:</strong> ${c.email || '-'}</p>
                 <p><strong>Phone:</strong> ${c.phone || '-'}</p>
-                <p><strong>Status:</strong> ${c.status}</p>
+                <p><strong>Status:</strong> ${c.status || 'active'}</p>
               </div>
               <div>
-                <p><strong>Total Spent:</strong> PKR ${(profile.total_spent || 0).toLocaleString()}</p>
+                <p><strong>Total Spent:</strong> PKR ${(Number(profile.total_spent) || 0).toLocaleString()}</p>
                 <p><strong>Total Orders:</strong> ${orders.length}</p>
                 <p><strong>Notes:</strong> ${profile.notes || 'None'}</p>
               </div>
@@ -1581,10 +1670,12 @@
             <div>
               <span class="font-label-sm uppercase tracking-wider block mb-2">Order History</span>
               <div class="space-y-2 max-h-48 overflow-y-auto">
-                ${orders.map(o => `
+                ${orders.length === 0 ? `
+                  <p class="p-3 text-center text-on-surface-variant bg-white border border-surface-container-high">No orders placed by this patron yet.</p>
+                ` : orders.map(o => `
                   <div class="p-2.5 bg-white border border-surface-container-high flex justify-between">
-                    <span>#${o.order_number} (${new Date(o.created_at).toLocaleDateString()})</span>
-                    <span class="font-semibold text-primary">PKR ${o.total.toLocaleString()} [${o.order_status}]</span>
+                    <span>#${o.order_number || o.id} (${new Date(o.created_at || Date.now()).toLocaleDateString()})</span>
+                    <span class="font-semibold text-primary">PKR ${(Number(o.total) || 0).toLocaleString()} [${o.order_status || 'pending'}]</span>
                   </div>
                 `).join('')}
               </div>
@@ -3001,25 +3092,25 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-1">
                 <span class="font-label-sm text-secondary uppercase">Gross Sales Revenue</span>
-                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(summary.total_revenue || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(Number(summary.total_revenue) || 0).toLocaleString()}</p>
                 <span class="text-[11px] text-on-surface-variant">Total net realized volume</span>
               </div>
 
               <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-1">
                 <span class="font-label-sm text-secondary uppercase">Average Order Value</span>
-                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(summary.aov || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(Number(summary.aov) || 0).toLocaleString()}</p>
                 <span class="text-[11px] text-on-surface-variant">Average spend per client</span>
               </div>
 
               <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-1">
                 <span class="font-label-sm text-secondary uppercase">Warehouse Retail Valuation</span>
-                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(inv.inventory_retail_value || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(Number(inv.inventory_retail_value) || 0).toLocaleString()}</p>
                 <span class="text-[11px] text-on-surface-variant">Gross retail stock worth</span>
               </div>
 
               <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-1">
                 <span class="font-label-sm text-secondary uppercase">Estimated Inventory Cost</span>
-                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(inv.inventory_cost_value || 0).toLocaleString()}</p>
+                <p class="font-headline-sm text-3xl text-primary font-bold">PKR ${(Number(inv.inventory_cost_value) || 0).toLocaleString()}</p>
                 <span class="text-[11px] text-on-surface-variant">Wholesale loom investment</span>
               </div>
             </div>
@@ -3038,12 +3129,16 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-surface-container-high">
-                    ${topProducts.map(tp => `
+                    ${topProducts.length === 0 ? `
+                      <tr>
+                        <td colspan="4" class="py-6 text-center text-on-surface-variant">No product sales transactions recorded for this period.</td>
+                      </tr>
+                    ` : topProducts.map(tp => `
                       <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="py-3 font-semibold text-primary">${tp.product_name}</td>
-                        <td class="py-3 font-mono text-on-surface-variant">${tp.sku}</td>
-                        <td class="py-3 font-semibold text-secondary">${tp.units_sold} cuts</td>
-                        <td class="py-3 text-right font-bold text-primary">PKR ${tp.gross_revenue.toLocaleString()}</td>
+                        <td class="py-3 font-semibold text-primary">${tp.product_name || tp.name || 'Piece'}</td>
+                        <td class="py-3 font-mono text-on-surface-variant">${tp.sku || ''}</td>
+                        <td class="py-3 font-semibold text-secondary">${tp.units_sold || 0} cuts</td>
+                        <td class="py-3 text-right font-bold text-primary">PKR ${(Number(tp.gross_revenue ?? tp.revenue) || 0).toLocaleString()}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -3053,13 +3148,15 @@
               <div class="lg:col-span-4 bg-surface-container-lowest border border-surface-container-high p-6 space-y-4">
                 <h3 class="font-headline-sm uppercase text-primary text-lg pb-3 border-b border-surface-container-high">Payment Channels</h3>
                 <div class="space-y-3">
-                  ${paymentMethods.map(pm => `
+                  ${paymentMethods.length === 0 ? `
+                    <p class="py-4 text-center text-on-surface-variant text-xs">No payment channel figures available.</p>
+                  ` : paymentMethods.map(pm => `
                     <div class="p-3 bg-surface-container-low border border-surface-container-high flex items-center justify-between text-xs">
                       <div>
-                        <span class="font-semibold text-primary block uppercase">${pm.payment_method === 'cod' ? 'Cash on Delivery' : 'Direct Bank Wire'}</span>
-                        <span class="text-on-surface-variant text-[11px]">${pm.order_count} transactions</span>
+                        <span class="font-semibold text-primary block uppercase">${(pm.payment_method || '').toLowerCase() === 'cod' ? 'Cash on Delivery' : 'Direct Bank Wire'}</span>
+                        <span class="text-on-surface-variant text-[11px]">${pm.order_count || 0} transactions</span>
                       </div>
-                      <span class="font-bold text-primary">PKR ${pm.revenue.toLocaleString()}</span>
+                      <span class="font-bold text-primary">PKR ${(Number(pm.revenue) || 0).toLocaleString()}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -3069,6 +3166,19 @@
         `;
       } catch (err) {
         console.error('Render reports error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to generate financial report</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('reports')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Reports</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -3117,22 +3227,26 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-container-high">
-                  ${users.map(u => `
+                  ${users.length === 0 ? `
+                    <tr>
+                      <td colspan="6" class="p-8 text-center text-on-surface-variant">No administrative team records found.</td>
+                    </tr>
+                  ` : users.map(u => `
                     <tr class="hover:bg-surface-container-low transition-colors">
-                      <td class="p-4 font-semibold text-primary">${u.name}</td>
-                      <td class="p-4 text-on-surface-variant">${u.email}</td>
+                      <td class="p-4 font-semibold text-primary">${u.name || 'Staff Member'}</td>
+                      <td class="p-4 text-on-surface-variant">${u.email || '-'}</td>
                       <td class="p-4">
                         <span class="badge-status ${u.role === 'superadmin' ? 'badge-dark' : 'badge-gold'}">
-                          ${u.role}
+                          ${u.role || 'admin'}
                         </span>
                       </td>
                       <td class="p-4">
-                        <span class="badge-status bg-emerald-100 text-emerald-800">${u.status}</span>
+                        <span class="badge-status bg-emerald-100 text-emerald-800">${u.status || 'active'}</span>
                       </td>
-                      <td class="p-4 text-on-surface-variant">${new Date(u.created_at).toLocaleDateString()}</td>
+                      <td class="p-4 text-on-surface-variant">${new Date(u.created_at || Date.now()).toLocaleDateString()}</td>
                       <td class="p-4 text-right">
                         ${u.email !== 'ahmedthor33@gmail.com' ? `
-                          <button onclick="adminApp.deleteAdminUser(${u.id})" class="text-outline hover:text-red-700 p-1">
+                          <button onclick="adminApp.deleteAdminUser('${u.id}')" class="text-outline hover:text-red-700 p-1">
                             <span class="material-symbols-outlined text-[18px]">delete</span>
                           </button>
                         ` : '<span class="text-secondary text-[11px] font-semibold tracking-wider uppercase">Owner & Super Admin</span>'}
@@ -3146,6 +3260,19 @@
         `;
       } catch (err) {
         console.error('Render users error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load admin staff</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('users')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Staff</span>
+            </button>
+          </div>
+        `;
       }
     },
 
@@ -3879,7 +4006,8 @@ https://eventsmanager.facebook.com/events/overview?pixel_id=${pixelId}
     // ----------------------------------------------------
     async renderShippingZones(area) {
       try {
-        const zones = await EBA_API.admin.getShippingZones();
+        const zonesRes = await EBA_API.admin.getShippingZones();
+        const zones = Array.isArray(zonesRes) ? zonesRes : (zonesRes?.zones || []);
 
         area.innerHTML = `
           <div class="space-y-6">
@@ -3894,64 +4022,83 @@ https://eventsmanager.facebook.com/events/overview?pixel_id=${pixelId}
               </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-              ${zones.map(z => `
-                <div class="bg-surface-container-lowest border ${z.is_active !== false ? 'border-surface-container-high' : 'border-red-300 opacity-70'} p-6 space-y-4 flex flex-col justify-between hover:shadow-lg transition-all">
-                  <div>
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                      <span class="font-label-lg uppercase tracking-wider text-primary font-bold text-sm">${z.name}</span>
-                      <span class="badge-status ${z.is_active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-200 text-neutral-700'}">
-                        ${z.is_active !== false ? 'Active' : 'Disabled'}
-                      </span>
-                    </div>
-
-                    <p class="font-label-sm uppercase tracking-widest text-secondary text-[11px] mb-3">
-                      Courier Partner: ${z.courier || 'TCS Express'} • ${z.delivery_time || '2-4 Days'}
-                    </p>
-
-                    <div class="p-3 bg-surface-container-low border border-surface-container-high text-xs space-y-1.5 mb-4">
-                      <div class="flex justify-between">
-                        <span class="text-on-surface-variant">Standard Rate:</span>
-                        <span class="font-bold text-primary">PKR ${(z.rate || 0).toLocaleString()}</span>
-                      </div>
-                      <div class="flex justify-between">
-                        <span class="text-on-surface-variant">Free Delivery Above:</span>
-                        <span class="font-bold text-secondary">PKR ${(z.free_threshold || 5000).toLocaleString()}</span>
-                      </div>
-                    </div>
-
+            ${zones.length === 0 ? `
+              <div class="bg-surface-container-lowest border border-surface-container-high p-8 text-center text-on-surface-variant">
+                No shipping zones configured yet. Click "Create Shipping Zone" to set up city tariffs.
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                ${zones.map(z => `
+                  <div class="bg-surface-container-lowest border ${z.is_active !== false ? 'border-surface-container-high' : 'border-red-300 opacity-70'} p-6 space-y-4 flex flex-col justify-between hover:shadow-lg transition-all">
                     <div>
-                      <span class="font-label-sm uppercase text-[10px] text-on-surface-variant block mb-1 font-semibold">Covered Destinations / Cities:</span>
-                      <div class="flex flex-wrap gap-1.5">
-                        ${(Array.isArray(z.cities) ? z.cities : String(z.cities || '').split(',')).map(c => `
-                          <span class="px-2 py-0.5 bg-surface text-primary border border-surface-container-high text-[11px]">
-                            ${c.trim()}
-                          </span>
-                        `).join('')}
+                      <div class="flex items-start justify-between gap-2 mb-2">
+                        <span class="font-label-lg uppercase tracking-wider text-primary font-bold text-sm">${z.name || 'Zone'}</span>
+                        <span class="badge-status ${z.is_active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-200 text-neutral-700'}">
+                          ${z.is_active !== false ? 'Active' : 'Disabled'}
+                        </span>
+                      </div>
+
+                      <p class="font-label-sm uppercase tracking-widest text-secondary text-[11px] mb-3">
+                        Courier Partner: ${z.courier || 'TCS Express'} • ${z.delivery_time || '2-4 Days'}
+                      </p>
+
+                      <div class="p-3 bg-surface-container-low border border-surface-container-high text-xs space-y-1.5 mb-4">
+                        <div class="flex justify-between">
+                          <span class="text-on-surface-variant">Standard Rate:</span>
+                          <span class="font-bold text-primary">PKR ${(Number(z.rate) || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-on-surface-variant">Free Delivery Above:</span>
+                          <span class="font-bold text-secondary">PKR ${(Number(z.free_threshold) || 5000).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span class="font-label-sm uppercase text-[10px] text-on-surface-variant block mb-1 font-semibold">Covered Destinations / Cities:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                          ${(Array.isArray(z.cities) ? z.cities : String(z.cities || '').split(',')).filter(Boolean).map(c => `
+                            <span class="px-2 py-0.5 bg-surface text-primary border border-surface-container-high text-[11px]">
+                              ${c.trim()}
+                            </span>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-surface-container-high flex items-center justify-between">
+                      <button onclick="adminApp.toggleShippingZoneActive('${z.id}')" class="text-xs font-semibold ${z.is_active !== false ? 'text-amber-700 hover:underline' : 'text-emerald-700 hover:underline'}">
+                        ${z.is_active !== false ? 'Pause Zone' : 'Activate Zone'}
+                      </button>
+                      <div class="flex items-center gap-2">
+                        <button onclick="adminApp.openEditShippingZoneModal('${z.id}')" class="p-1 hover:bg-surface-container rounded" title="Edit Zone">
+                          <span class="material-symbols-outlined text-[18px] text-primary">edit</span>
+                        </button>
+                        <button onclick="adminApp.deleteShippingZone('${z.id}')" class="p-1 hover:bg-surface-container rounded text-red-600" title="Delete Zone">
+                          <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div class="pt-4 border-t border-surface-container-high flex items-center justify-between">
-                    <button onclick="adminApp.toggleShippingZoneActive('${z.id}')" class="text-xs font-semibold ${z.is_active !== false ? 'text-amber-700 hover:underline' : 'text-emerald-700 hover:underline'}">
-                      ${z.is_active !== false ? 'Pause Zone' : 'Activate Zone'}
-                    </button>
-                    <div class="flex items-center gap-2">
-                      <button onclick="adminApp.openEditShippingZoneModal('${z.id}')" class="p-1 hover:bg-surface-container rounded" title="Edit Zone">
-                        <span class="material-symbols-outlined text-[18px] text-primary">edit</span>
-                      </button>
-                      <button onclick="adminApp.deleteShippingZone('${z.id}')" class="p-1 hover:bg-surface-container rounded text-red-600" title="Delete Zone">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
+                `).join('')}
+              </div>
+            `}
           </div>
         `;
       } catch (err) {
         console.error('Render shipping zones error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load shipping zones</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('shipping-zones')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Shipping Zones</span>
+            </button>
+          </div>
+        `;
       }
     },
 
