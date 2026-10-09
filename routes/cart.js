@@ -14,7 +14,17 @@ router.get('/', optionalToken, (req, res) => {
   try {
     const { userId, sessionId } = getCartOwner(req);
     if (!userId && !sessionId) {
-      return res.json({ items: [], subtotal: 0, shipping: 0, discount: 0, total: 0 });
+      return res.json({
+        items: [],
+        itemCount: 0,
+        subtotal: 0,
+        tailoringTotal: 0,
+        shippingFee: 0,
+        discount: 0,
+        freeShippingThreshold: 5000,
+        amountToFreeShipping: 5000,
+        total: 0
+      });
     }
 
     let items;
@@ -60,6 +70,7 @@ router.get('/', optionalToken, (req, res) => {
       return {
         ...item,
         unit_price: unitPrice,
+        price: unitPrice,
         tailoring_fee: itemTailoring,
         line_total: lineTotal,
         image_url: item.primary_image || '/assets/gul_e_noor_details.png'
@@ -156,7 +167,7 @@ router.put('/update/:id', optionalToken, (req, res) => {
     }
 
     const product = db.prepare('SELECT stock_quantity FROM products WHERE id = ?').get(item.product_id);
-    const newQty = parseInt(quantity);
+    const newQty = (quantity !== undefined && quantity !== null) ? parseInt(quantity) : item.quantity;
 
     if (newQty <= 0) {
       db.prepare('DELETE FROM cart_items WHERE id = ?').run(id);

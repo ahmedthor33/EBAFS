@@ -18,24 +18,25 @@
       this.state.user = EBA_API.auth.getUser();
       this.updateHeaderAuthUI();
 
-      // 2. Fetch CMS and Settings
-      await this.loadCMSAndSettings();
-
-      // 3. Fetch Cart & Wishlist
-      await this.refreshCart();
-      if (this.state.user) {
-        await this.refreshWishlist();
-      }
-
-      // 4. Setup Global Listeners
+      // 2. Setup Global Listeners
       this.setupGlobalListeners();
-
-      // 5. Initialize Meta (Facebook) Pixel Tracking
-      await this.initMetaPixel();
-
-      // 6. Initial Route Dispatch
-      this.handleRouting();
       window.addEventListener('hashchange', () => this.handleRouting());
+
+      // 3. Parallel background bootstrap (non-blocking)
+      Promise.allSettled([
+        this.loadCMSAndSettings(),
+        this.refreshCart(),
+        this.state.user ? this.refreshWishlist() : Promise.resolve(),
+        this.initMetaPixel()
+      ]).then(() => {
+        const hash = window.location.hash || '#home';
+        if (hash === '#cart' || hash === '#account') {
+          this.handleRouting();
+        }
+      });
+
+      // 4. Initial Route Dispatch immediately (instant perception of speed)
+      await this.handleRouting();
     },
 
     async initMetaPixel() {
@@ -226,6 +227,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       const container = document.getElementById('app-view');
+      if (!container) return;
+
       container.innerHTML = `
         <div class="w-full py-32 flex flex-col items-center justify-center gap-4">
           <div class="w-8 h-8 border-2 border-primary border-t-transparent animate-spin"></div>
@@ -233,38 +236,53 @@
         </div>
       `;
 
-      if (path === 'home' || path === '') {
-        await this.renderHome(container);
-      } else if (path === 'men') {
-        await this.renderCatalog(container, { category: 'men', pageKey: 'men', title: "Men's Unstitched Atelier" });
-      } else if (path === 'women' || path === 'festive-lawn-25') {
-        await this.renderCatalog(container, { category: 'women', pageKey: 'women', title: "Women's Luxury Festive Lawn '25" });
-      } else if (path === 'new-arrivals') {
-        await this.renderCatalog(container, { is_featured: '1', pageKey: 'new_arrivals', title: 'New Unstitched Arrivals' });
-      } else if (path === 'sale') {
-        await this.renderCatalog(container, { is_sale: '1', pageKey: 'sale', title: 'Seasonal Archive & Sale' });
-      } else if (path === 'catalog') {
-        const cat = params.get('category');
-        const q = params.get('q');
-        const pageKey = cat === 'men' ? 'men' : (cat === 'women' ? 'women' : 'catalog');
-        await this.renderCatalog(container, { category: cat, q, pageKey, title: q ? `Search: "${q}"` : 'Curated Atelier Catalog' });
-      } else if (path.startsWith('product/')) {
-        const slug = path.replace('product/', '');
-        await this.renderProductDetails(container, slug);
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      } else if (path === 'cart') {
-        await this.renderCartPage(container);
-      } else if (path === 'checkout') {
-        await this.renderCheckoutPage(container);
-      } else if (path.startsWith('order-confirmation/')) {
-        const orderNumber = path.replace('order-confirmation/', '');
-        await this.renderOrderConfirmation(container, orderNumber);
-      } else if (path === 'account') {
-        await this.renderAccountPage(container);
-      } else if (path === 'wishlist') {
-        this.showWishlist();
-      } else {
-        await this.renderHome(container);
+      try {
+        if (path === 'home' || path === '') {
+          await this.renderHome(container);
+        } else if (path === 'men') {
+          await this.renderCatalog(container, { category: 'men', pageKey: 'men', title: "Men's Unstitched Atelier" });
+        } else if (path === 'women' || path === 'festive-lawn-25') {
+          await this.renderCatalog(container, { category: 'women', pageKey: 'women', title: "Women's Luxury Festive Lawn '25" });
+        } else if (path === 'new-arrivals') {
+          await this.renderCatalog(container, { is_featured: '1', pageKey: 'new_arrivals', title: 'New Unstitched Arrivals' });
+        } else if (path === 'sale') {
+          await this.renderCatalog(container, { is_sale: '1', pageKey: 'sale', title: 'Seasonal Archive & Sale' });
+        } else if (path === 'catalog') {
+          const cat = params.get('category');
+          const q = params.get('q');
+          const pageKey = cat === 'men' ? 'men' : (cat === 'women' ? 'women' : 'catalog');
+          await this.renderCatalog(container, { category: cat, q, pageKey, title: q ? `Search: "${q}"` : 'Curated Atelier Catalog' });
+        } else if (path.startsWith('product/')) {
+          const slug = path.replace('product/', '');
+          await this.renderProductDetails(container, slug);
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        } else if (path === 'cart') {
+          await this.renderCartPage(container);
+        } else if (path === 'checkout') {
+          await this.renderCheckoutPage(container);
+        } else if (path.startsWith('order-confirmation/')) {
+          const orderNumber = path.replace('order-confirmation/', '');
+          await this.renderOrderConfirmation(container, orderNumber);
+        } else if (path === 'account') {
+          await this.renderAccountPage(container);
+        } else if (path === 'wishlist') {
+          await this.renderWishlistPage(container);
+        } else {
+          await this.renderHome(container);
+        }
+      } catch (err) {
+        console.error('[EBA Atelier Routing Error]:', err);
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto py-24 px-6 text-center space-y-4">
+            <span class="material-symbols-outlined text-5xl text-secondary">error_outline</span>
+            <h2 class="font-headline-sm uppercase text-primary">Atelier Page Unavailable</h2>
+            <p class="font-body-sm text-on-surface-variant">${err.message || 'An unexpected issue occurred while rendering this page.'}</p>
+            <div class="pt-4 flex justify-center gap-4">
+              <a href="#home" class="btn-primary px-6 py-3 text-xs">Return to Home</a>
+              <a href="#catalog" class="btn-secondary px-6 py-3 text-xs">Explore Catalog</a>
+            </div>
+          </div>
+        `;
       }
 
       this.trackMetaEvent('PageView', { path: path || 'home' });
@@ -1280,7 +1298,32 @@
     // ----------------------------------------------------
     async renderCartPage(container) {
       await this.refreshCart();
-      const cart = this.state.cart;
+      const cart = this.state.cart || {
+        items: [],
+        subtotal: 0,
+        tailoringTotal: 0,
+        shippingFee: 0,
+        total: 0,
+        itemCount: 0,
+        amountToFreeShipping: 5000,
+        freeShippingThreshold: 5000
+      };
+      const items = Array.isArray(cart.items) ? cart.items : [];
+      const subtotal = Number(cart.subtotal) || 0;
+      const tailoringTotal = Number(cart.tailoringTotal) || 0;
+      const freeShippingThreshold = Number(cart.freeShippingThreshold) || 5000;
+      const totalBeforeShipping = subtotal + tailoringTotal;
+      const amountToFreeShipping = typeof cart.amountToFreeShipping === 'number'
+        ? cart.amountToFreeShipping
+        : Math.max(0, freeShippingThreshold - totalBeforeShipping);
+      const shippingFee = typeof cart.shippingFee === 'number'
+        ? cart.shippingFee
+        : (totalBeforeShipping >= freeShippingThreshold || items.length === 0 ? 0 : 250);
+      const total = Number(cart.total) || (totalBeforeShipping + shippingFee);
+      const itemCount = typeof cart.itemCount === 'number'
+        ? cart.itemCount
+        : items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+
       const cartBanner = this.state.cms?.cart_banner || {
         tagline: "Atelier Bag • Haute Couture Dispatch",
         title: "Your Curated Wardrobe Bag",
@@ -1291,6 +1334,10 @@
         enabled: true
       };
 
+      const appliedCoupon = this.state.appliedCoupon;
+      const discountAmount = appliedCoupon ? Number(appliedCoupon.discount_amount || appliedCoupon.discount || 0) : 0;
+      const finalPayable = Math.max(0, total - discountAmount);
+
       container.innerHTML = `
         <!-- Delivery Progress Strip -->
         <section class="w-full bg-surface-container-low border-b border-surface-container-high py-3 px-margin-mobile md:px-margin">
@@ -1298,7 +1345,7 @@
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
               <span class="font-label-sm uppercase tracking-widest text-primary font-semibold">
-                ${cart.amountToFreeShipping === 0 ? 'Complimentary Express Delivery Activated' : `Add PKR ${cart.amountToFreeShipping.toLocaleString()} more for Free Express Delivery`}
+                ${amountToFreeShipping <= 0 ? 'Complimentary Express Delivery Activated' : `Add PKR ${(amountToFreeShipping || 0).toLocaleString()} more for Free Express Delivery`}
               </span>
             </div>
             <div class="flex items-center gap-3 text-on-surface-variant font-label-sm uppercase">
@@ -1341,7 +1388,7 @@
         <header class="w-full max-w-7xl mx-auto px-margin-mobile md:px-margin pt-6 pb-4 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
           <div class="flex items-center gap-3">
             <span class="font-headline-sm uppercase text-primary text-xl">Bag Contents</span>
-            <span class="font-body-sm text-on-surface-variant font-normal">(${cart.itemCount} Items)</span>
+            <span class="font-body-sm text-on-surface-variant font-normal">(${itemCount} Items)</span>
           </div>
           <a href="#catalog" class="font-label-sm text-secondary uppercase hover:underline">
             &larr; Continue Curating Wardrobe
@@ -1350,7 +1397,7 @@
 
         <!-- Cart Workspace -->
         <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin pb-20">
-          ${cart.items.length === 0 ? `
+          ${items.length === 0 ? `
             <div class="bg-surface-container-lowest p-16 text-center border border-surface-container-high space-y-4">
               <span class="material-symbols-outlined text-5xl text-outline">shopping_bag</span>
               <h2 class="font-headline-sm uppercase text-primary">Your Shopping Bag is Empty</h2>
@@ -1376,20 +1423,30 @@
 
                 <!-- Items -->
                 <div class="space-y-4">
-                  ${cart.items.map(item => `
+                  ${items.map(item => {
+                    const unitPrice = Number(item.unit_price || item.price || 0);
+                    const qty = Math.max(1, parseInt(item.quantity) || 1);
+                    const lineTotal = unitPrice * qty;
+                    const itemImage = item.image_url || '/assets/gul_e_noor_details.png';
+                    const itemSku = item.sku || `EBA-${item.product_id || item.id}`;
+                    const itemName = item.name || 'Luxury Unstitched Fabric';
+                    const itemSlug = item.slug || 'catalog';
+                    const itemFabric = item.fabric || 'Unstitched Fabric';
+
+                    return `
                     <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex flex-col sm:flex-row gap-6 items-start">
-                      <img src="${item.image_url}" alt="${item.name}" class="w-full sm:w-32 aspect-[3/4] object-cover bg-surface-container shrink-0"/>
+                      <img src="${itemImage}" alt="${itemName}" loading="lazy" decoding="async" class="w-full sm:w-32 aspect-[3/4] object-cover bg-surface-container shrink-0"/>
                       
                       <div class="flex-1 flex flex-col justify-between h-full w-full">
                         <div>
                           <div class="flex justify-between items-start gap-4">
-                            <span class="font-label-sm uppercase tracking-wider text-secondary">${item.sku}</span>
-                            <span class="font-headline-sm text-primary">PKR ${(item.unit_price * item.quantity).toLocaleString()}</span>
+                            <span class="font-label-sm uppercase tracking-wider text-secondary">${itemSku}</span>
+                            <span class="font-headline-sm text-primary">PKR ${lineTotal.toLocaleString()}</span>
                           </div>
                           <h3 class="font-headline-sm uppercase text-primary hover:text-secondary cursor-pointer mt-1">
-                            <a href="#product/${item.slug}">${item.name}</a>
+                            <a href="#product/${itemSlug}">${itemName}</a>
                           </h3>
-                          <p class="font-body-sm text-on-surface-variant mt-1">${item.fabric || 'Unstitched Fabric'}</p>
+                          <p class="font-body-sm text-on-surface-variant mt-1">${itemFabric}</p>
                           
                           <!-- Tailoring Toggle within cart -->
                           <div class="bg-surface-container-low p-3 mt-3 flex items-center justify-between text-xs">
@@ -1403,9 +1460,9 @@
 
                         <div class="flex items-center justify-between pt-4 mt-4 border-t border-surface-container-high">
                           <div class="flex items-center border border-surface-container-high bg-white">
-                            <button onclick="app.updateCartQty(${item.id}, ${item.quantity - 1})" class="px-2.5 py-1 text-sm text-primary hover:bg-surface-container-low">-</button>
-                            <span class="px-3 text-xs font-semibold">${item.quantity}</span>
-                            <button onclick="app.updateCartQty(${item.id}, ${item.quantity + 1})" class="px-2.5 py-1 text-sm text-primary hover:bg-surface-container-low">+</button>
+                            <button onclick="app.updateCartQty(${item.id}, ${qty - 1})" class="px-2.5 py-1 text-sm text-primary hover:bg-surface-container-low">-</button>
+                            <span class="px-3 text-xs font-semibold">${qty}</span>
+                            <button onclick="app.updateCartQty(${item.id}, ${qty + 1})" class="px-2.5 py-1 text-sm text-primary hover:bg-surface-container-low">+</button>
                           </div>
 
                           <button onclick="app.removeCartItem(${item.id})" class="font-label-sm uppercase tracking-wider text-outline hover:text-red-700 flex items-center gap-1 transition-colors">
@@ -1415,7 +1472,8 @@
                         </div>
                       </div>
                     </div>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </div>
               </div>
 
@@ -1427,12 +1485,12 @@
                 <div class="space-y-2">
                   <label class="font-label-sm uppercase tracking-wider text-on-surface-variant block">Promotional Voucher</label>
                   <div class="flex gap-2">
-                    <input type="text" id="cart-coupon-input" placeholder="e.g. WELCOME10" class="form-input text-xs uppercase" value="${this.state.appliedCoupon ? this.state.appliedCoupon.code : ''}"/>
+                    <input type="text" id="cart-coupon-input" placeholder="e.g. WELCOME10" class="form-input text-xs uppercase" value="${appliedCoupon ? (appliedCoupon.code || '') : ''}"/>
                     <button onclick="app.applyCartCoupon()" class="btn-secondary px-4 py-2 text-xs shrink-0">Apply</button>
                   </div>
-                  ${this.state.appliedCoupon ? `
+                  ${appliedCoupon ? `
                     <div class="flex items-center justify-between text-xs text-emerald-800 bg-emerald-50 p-2">
-                      <span>Code <strong>${this.state.appliedCoupon.code}</strong> applied!</span>
+                      <span>Code <strong>${appliedCoupon.code}</strong> applied!</span>
                       <button onclick="app.removeCartCoupon()" class="text-red-600 hover:underline">Remove</button>
                     </div>
                   ` : ''}
@@ -1442,31 +1500,31 @@
                 <div class="space-y-3 pt-3 border-t border-surface-container-high text-xs">
                   <div class="flex justify-between text-on-surface-variant">
                     <span>Fabric Subtotal</span>
-                    <span class="font-semibold text-primary">PKR ${cart.subtotal.toLocaleString()}</span>
+                    <span class="font-semibold text-primary">PKR ${subtotal.toLocaleString()}</span>
                   </div>
-                  ${cart.tailoringTotal > 0 ? `
+                  ${tailoringTotal > 0 ? `
                     <div class="flex justify-between text-on-surface-variant">
                       <span>Bespoke Tailoring Fee</span>
-                      <span class="font-semibold text-primary">PKR ${cart.tailoringTotal.toLocaleString()}</span>
+                      <span class="font-semibold text-primary">PKR ${tailoringTotal.toLocaleString()}</span>
                     </div>
                   ` : ''}
-                  ${this.state.appliedCoupon ? `
+                  ${appliedCoupon && discountAmount > 0 ? `
                     <div class="flex justify-between text-emerald-700 font-semibold">
                       <span>Voucher Discount</span>
-                      <span>-PKR ${this.state.appliedCoupon.discount_amount.toLocaleString()}</span>
+                      <span>-PKR ${discountAmount.toLocaleString()}</span>
                     </div>
                   ` : ''}
                   <div class="flex justify-between text-on-surface-variant">
                     <span>TCS Nationwide Shipping</span>
-                    <span class="font-semibold ${cart.shippingFee === 0 ? 'text-secondary' : 'text-primary'}">
-                      ${cart.shippingFee === 0 ? 'Complimentary' : `PKR ${cart.shippingFee.toLocaleString()}`}
+                    <span class="font-semibold ${shippingFee === 0 ? 'text-secondary' : 'text-primary'}">
+                      ${shippingFee === 0 ? 'Complimentary' : `PKR ${shippingFee.toLocaleString()}`}
                     </span>
                   </div>
 
                   <div class="flex justify-between text-base font-semibold text-primary pt-3 border-t border-surface-container-high">
                     <span>Total Amount</span>
                     <span class="font-headline-sm">
-                      PKR ${(cart.total - (this.state.appliedCoupon ? this.state.appliedCoupon.discount_amount : 0)).toLocaleString()}
+                      PKR ${finalPayable.toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -1489,7 +1547,7 @@
 
       try {
         const res = await EBA_API.cart.validateCoupon(code, this.state.cart.subtotal);
-        this.state.appliedCoupon = res.coupon;
+        this.state.appliedCoupon = res.coupon || { code, discount_amount: res.discount || 0 };
         EBA_API.showToast(res.message);
         await this.renderCartPage(document.getElementById('app-view'));
       } catch (err) {
@@ -1505,7 +1563,10 @@
 
     async updateCartQty(itemId, newQty) {
       try {
-        await EBA_API.cart.update(itemId, newQty);
+        const cart = this.state.cart;
+        const currentItem = (cart?.items || []).find(i => i.id === itemId);
+        const addTailoring = currentItem ? (currentItem.add_tailoring ? 1 : 0) : 0;
+        await EBA_API.cart.update(itemId, newQty, addTailoring);
         await this.refreshCart();
         if (window.location.hash === '#cart') {
           await this.renderCartPage(document.getElementById('app-view'));
@@ -1517,7 +1578,10 @@
 
     async updateCartTailoring(itemId, addTailoring) {
       try {
-        await EBA_API.cart.update(itemId, undefined, addTailoring ? 1 : 0);
+        const cart = this.state.cart;
+        const currentItem = (cart?.items || []).find(i => i.id === itemId);
+        const currentQty = currentItem ? currentItem.quantity : 1;
+        await EBA_API.cart.update(itemId, currentQty, addTailoring ? 1 : 0);
         await this.refreshCart();
         if (window.location.hash === '#cart') {
           await this.renderCartPage(document.getElementById('app-view'));
@@ -2657,14 +2721,15 @@
     renderProductCardHTML(p) {
       const isWish = this.isWishlisted(p.id);
       const isSale = p.is_sale;
-      const price = p.sale_price || p.price;
+      const unitPrice = Number(p.sale_price || p.price || 0);
+      const originalPrice = Number(p.price || 0);
 
       return `
         <article class="product-card group" id="product-card-${p.id}">
           <div class="product-image-container">
-            <a href="#product/${p.slug}" class="block w-full h-full relative" aria-label="View ${p.name}">
-              <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name}" class="product-image-main"/>
-              ${p.hover_image ? `<img src="${p.hover_image}" alt="${p.name} - Alternate View" class="product-image-hover"/>` : ''}
+            <a href="#product/${p.slug}" class="block w-full h-full relative" aria-label="View ${p.name || 'Piece'}">
+              <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name || 'Unstitched Luxury'}" loading="lazy" decoding="async" class="product-image-main"/>
+              ${p.hover_image ? `<img src="${p.hover_image}" alt="${p.name || 'View'} - Alternate View" loading="lazy" decoding="async" class="product-image-hover"/>` : ''}
             </a>
 
             <!-- Floating Badges -->
@@ -2698,14 +2763,14 @@
               </div>
               
               <h3 class="font-headline-sm text-primary text-lg leading-snug line-clamp-1 hover:text-secondary transition-colors cursor-pointer">
-                <a href="#product/${p.slug}">${p.name}</a>
+                <a href="#product/${p.slug}">${p.name || 'Luxury Unstitched Fabric'}</a>
               </h3>
             </div>
 
             <div class="pt-3 mt-3 border-t border-surface-container-high flex items-center justify-between">
               <div class="flex items-baseline gap-2">
-                <span class="font-headline-sm text-primary text-base">PKR ${price.toLocaleString()}</span>
-                ${isSale ? `<span class="text-xs text-on-surface-variant line-through">PKR ${p.price.toLocaleString()}</span>` : ''}
+                <span class="font-headline-sm text-primary text-base">PKR ${unitPrice.toLocaleString()}</span>
+                ${isSale && originalPrice > 0 ? `<span class="text-xs text-on-surface-variant line-through">PKR ${originalPrice.toLocaleString()}</span>` : ''}
               </div>
 
               <!-- Colorway Swatch Dot -->
@@ -2722,24 +2787,65 @@
     async refreshCart() {
       try {
         const cart = await EBA_API.cart.get();
-        this.state.cart = cart;
+        if (cart && typeof cart === 'object') {
+          const items = Array.isArray(cart.items) ? cart.items : [];
+          const subtotal = Number(cart.subtotal) || 0;
+          const tailoringTotal = Number(cart.tailoringTotal) || 0;
+          const freeShippingThreshold = Number(cart.freeShippingThreshold) || 5000;
+          const totalBeforeShipping = subtotal + tailoringTotal;
+          const amountToFreeShipping = typeof cart.amountToFreeShipping === 'number'
+            ? cart.amountToFreeShipping
+            : Math.max(0, freeShippingThreshold - totalBeforeShipping);
+          const shippingFee = typeof cart.shippingFee === 'number'
+            ? cart.shippingFee
+            : (totalBeforeShipping >= freeShippingThreshold || items.length === 0 ? 0 : 250);
+          const total = Number(cart.total) || (totalBeforeShipping + shippingFee);
+          const itemCount = typeof cart.itemCount === 'number'
+            ? cart.itemCount
+            : items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
-        // Update header badges
-        const badge = document.getElementById('cart-badge');
-        if (badge) {
-          if (cart.itemCount > 0) {
-            badge.textContent = cart.itemCount;
-            badge.classList.remove('hidden');
-          } else {
-            badge.classList.add('hidden');
-          }
+          this.state.cart = {
+            ...cart,
+            items,
+            subtotal,
+            tailoringTotal,
+            shippingFee,
+            freeShippingThreshold,
+            amountToFreeShipping,
+            total,
+            itemCount
+          };
         }
-
-        // Update Drawer UI
-        this.renderCartDrawer();
       } catch (err) {
         console.warn('Refresh cart failed:', err);
       }
+
+      if (!this.state.cart) {
+        this.state.cart = {
+          items: [],
+          itemCount: 0,
+          subtotal: 0,
+          tailoringTotal: 0,
+          shippingFee: 0,
+          freeShippingThreshold: 5000,
+          amountToFreeShipping: 5000,
+          total: 0
+        };
+      }
+
+      // Update header badges
+      const badge = document.getElementById('cart-badge');
+      if (badge) {
+        if (this.state.cart.itemCount > 0) {
+          badge.textContent = this.state.cart.itemCount;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      // Update Drawer UI
+      this.renderCartDrawer();
     },
 
     renderCartDrawer() {
@@ -2753,33 +2859,43 @@
       const shippingMsg = document.getElementById('drawer-shipping-msg');
       const shippingProgress = document.getElementById('drawer-shipping-progress');
 
-      const cart = this.state.cart;
+      const cart = this.state.cart || { items: [], subtotal: 0, tailoringTotal: 0, shippingFee: 0, total: 0, itemCount: 0, amountToFreeShipping: 5000, freeShippingThreshold: 5000 };
       if (!list) return;
 
-      count.textContent = `(${cart.itemCount})`;
-      subtotal.textContent = `PKR ${cart.subtotal.toLocaleString()}`;
-      total.textContent = `PKR ${cart.total.toLocaleString()}`;
+      if (count) count.textContent = `(${cart.itemCount || 0})`;
+      if (subtotal) subtotal.textContent = `PKR ${(cart.subtotal || 0).toLocaleString()}`;
+      if (total) total.textContent = `PKR ${(cart.total || 0).toLocaleString()}`;
 
-      if (cart.tailoringTotal > 0) {
-        tailoringRow.classList.remove('hidden');
-        tailoring.textContent = `PKR ${cart.tailoringTotal.toLocaleString()}`;
-      } else {
-        tailoringRow.classList.add('hidden');
+      if (tailoringRow && tailoring) {
+        if ((cart.tailoringTotal || 0) > 0) {
+          tailoringRow.classList.remove('hidden');
+          tailoring.textContent = `PKR ${(cart.tailoringTotal || 0).toLocaleString()}`;
+        } else {
+          tailoringRow.classList.add('hidden');
+        }
       }
 
-      shipping.textContent = cart.shippingFee === 0 ? 'Complimentary' : `PKR ${cart.shippingFee.toLocaleString()}`;
+      if (shipping) {
+        shipping.textContent = cart.shippingFee === 0 ? 'Complimentary' : `PKR ${(cart.shippingFee || 0).toLocaleString()}`;
+      }
 
       // Progress bar towards Free shipping
-      if (cart.amountToFreeShipping === 0) {
-        shippingMsg.textContent = 'Complimentary Express Delivery Activated';
-        shippingProgress.style.width = '100%';
-      } else {
-        const pct = Math.min(100, Math.round(((cart.freeShippingThreshold - cart.amountToFreeShipping) / cart.freeShippingThreshold) * 100));
-        shippingMsg.textContent = `Add PKR ${cart.amountToFreeShipping.toLocaleString()} for Free Express Delivery`;
-        shippingProgress.style.width = `${pct}%`;
+      if (shippingMsg && shippingProgress) {
+        const threshold = Number(cart.freeShippingThreshold) || 5000;
+        const amtNeeded = typeof cart.amountToFreeShipping === 'number'
+          ? cart.amountToFreeShipping
+          : Math.max(0, threshold - ((cart.subtotal || 0) + (cart.tailoringTotal || 0)));
+        if (amtNeeded <= 0) {
+          shippingMsg.textContent = 'Complimentary Express Delivery Activated';
+          shippingProgress.style.width = '100%';
+        } else {
+          const pct = Math.min(100, Math.max(0, Math.round(((threshold - amtNeeded) / threshold) * 100)));
+          shippingMsg.textContent = `Add PKR ${(amtNeeded || 0).toLocaleString()} for Free Express Delivery`;
+          shippingProgress.style.width = `${pct}%`;
+        }
       }
 
-      if (cart.items.length === 0) {
+      if (!cart.items || cart.items.length === 0) {
         list.innerHTML = `
           <div class="py-16 text-center text-on-surface-variant font-body-sm space-y-3">
             <span class="material-symbols-outlined text-4xl text-outline">shopping_bag</span>
@@ -2791,14 +2907,14 @@
 
       list.innerHTML = cart.items.map(item => `
         <div class="flex gap-4 p-3 bg-surface-container-lowest border border-surface-container-high text-xs">
-          <img src="${item.image_url}" alt="${item.name}" class="w-16 h-20 object-cover bg-surface-container shrink-0"/>
+          <img src="${item.image_url || '/assets/gul_e_noor_details.png'}" alt="${item.name || 'Fabric'}" loading="lazy" decoding="async" class="w-16 h-20 object-cover bg-surface-container shrink-0"/>
           <div class="flex-1 flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-start">
-                <span class="font-semibold text-primary line-clamp-1">${item.name}</span>
+                <span class="font-semibold text-primary line-clamp-1">${item.name || 'Luxury Unstitched Fabric'}</span>
                 <button onclick="app.removeCartItem(${item.id})" class="text-outline hover:text-red-700 ml-2">×</button>
               </div>
-              <span class="text-on-surface-variant font-mono text-[11px]">${item.sku}</span>
+              <span class="text-on-surface-variant font-mono text-[11px]">${item.sku || 'EBA-EDITION'}</span>
               ${item.add_tailoring ? `<span class="text-secondary font-semibold font-label-sm block mt-0.5">+ Master Tailoring</span>` : ''}
             </div>
 
@@ -2808,7 +2924,7 @@
                 <span class="px-2 font-semibold">${item.quantity}</span>
                 <button onclick="app.updateCartQty(${item.id}, ${item.quantity + 1})" class="px-2 py-0.5 text-xs">+</button>
               </div>
-              <span class="font-semibold text-primary">PKR ${(item.unit_price * item.quantity).toLocaleString()}</span>
+              <span class="font-semibold text-primary">PKR ${((Number(item.unit_price || item.price || 0) * (Number(item.quantity) || 1))).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -2896,12 +3012,68 @@
       }
     },
 
-    showWishlist() {
+    async renderWishlistPage(container) {
       if (!this.state.user) {
-        this.toggleAuthModal(true);
+        container.innerHTML = `
+          <section class="max-w-4xl mx-auto px-margin-mobile md:px-margin py-20 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-surface-container-high mx-auto flex items-center justify-center mb-2">
+              <span class="material-symbols-outlined text-3xl text-secondary">favorite</span>
+            </div>
+            <span class="font-label-sm uppercase tracking-[0.2em] text-secondary font-semibold">Client Salon • Wishlist</span>
+            <h1 class="font-headline-lg uppercase text-primary">Your Private Wishlist</h1>
+            <p class="font-body-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
+              Sign in to your private client salon to curate, inspect, and save your preferred unstitched fabrics across your devices.
+            </p>
+            <div class="pt-6 flex flex-wrap justify-center gap-4">
+              <button onclick="app.toggleAuthModal(true)" class="btn-primary px-8 py-3.5 text-xs">Sign In to Client Salon</button>
+              <a href="#catalog" class="btn-secondary px-8 py-3.5 text-xs">Explore Collections</a>
+            </div>
+          </section>
+        `;
         return;
       }
-      window.location.hash = '#account';
+
+      await this.refreshWishlist();
+      const wishlist = this.state.wishlist || [];
+
+      if (wishlist.length === 0) {
+        container.innerHTML = `
+          <section class="max-w-4xl mx-auto px-margin-mobile md:px-margin py-20 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-surface-container-high mx-auto flex items-center justify-center mb-2">
+              <span class="material-symbols-outlined text-3xl text-secondary">favorite_border</span>
+            </div>
+            <span class="font-label-sm uppercase tracking-[0.2em] text-secondary font-semibold">Client Salon • Wishlist</span>
+            <h1 class="font-headline-lg uppercase text-primary">Your Wishlist is Empty</h1>
+            <p class="font-body-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
+              Explore our master unstitched lawn, raw silk, and Egyptian cotton edits to save your desired pieces.
+            </p>
+            <div class="pt-6 flex justify-center">
+              <a href="#catalog" class="btn-primary px-8 py-3.5 text-xs">Explore Collections</a>
+            </div>
+          </section>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-12">
+          <header class="pb-8 border-b border-surface-container-high mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span class="font-label-sm uppercase tracking-[0.2em] text-secondary font-semibold block mb-1">Client Salon Private Vault</span>
+              <h1 class="font-headline-lg uppercase text-primary">Saved Curations (${wishlist.length})</h1>
+            </div>
+            <a href="#catalog" class="font-label-sm text-secondary uppercase hover:underline">&larr; Continue Curating</a>
+          </header>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            ${wishlist.map(item => this.renderProductCardHTML(item)).join('')}
+          </div>
+        </section>
+      `;
+    },
+
+    showWishlist() {
+      window.location.hash = '#wishlist';
     },
 
     // ----------------------------------------------------

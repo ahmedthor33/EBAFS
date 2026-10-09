@@ -67,22 +67,44 @@
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkeWN3emNmcHRsYmZ2emJ5emxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMzU5MTUsImV4cCI6MjEwNjYxMTkxNX0.ut6c3mQb629R744VWAEFBTYzCXShFoFyPpmta8_8rWA'
   };
 
+  function saveLocalCart(cart) {
+    cart = cart || {};
+    cart.items = Array.isArray(cart.items) ? cart.items : [];
+    cart.items.forEach(item => {
+      item.unit_price = Number(item.unit_price || item.price || 0);
+      item.price = item.unit_price;
+      item.quantity = Math.max(1, parseInt(item.quantity) || 1);
+      item.add_tailoring = item.add_tailoring ? 1 : 0;
+      item.image_url = item.image_url || '/assets/gul_e_noor_details.png';
+      item.sku = item.sku || `EBA-${item.product_id || item.id}`;
+      item.fabric = item.fabric || 'Luxury Unstitched Fabric';
+      item.name = item.name || 'Bespoke Unstitched Piece';
+      item.slug = item.slug || 'catalog';
+    });
+    cart.subtotal = cart.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    cart.tailoringTotal = cart.items.reduce((sum, item) => sum + (item.add_tailoring ? 4500 * item.quantity : 0), 0);
+    const freeShippingThreshold = 5000;
+    cart.freeShippingThreshold = freeShippingThreshold;
+    const totalBeforeShipping = cart.subtotal + cart.tailoringTotal;
+    cart.amountToFreeShipping = Math.max(0, freeShippingThreshold - totalBeforeShipping);
+    cart.shippingFee = (totalBeforeShipping >= freeShippingThreshold || cart.items.length === 0) ? 0 : 250;
+    cart.total = totalBeforeShipping + cart.shippingFee;
+    cart.itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    try {
+      localStorage.setItem('ebafs_local_cart', JSON.stringify(cart));
+    } catch (e) {}
+    return cart;
+  }
+
   function getLocalCart() {
     try {
       const c = localStorage.getItem('ebafs_local_cart');
-      if (c) return JSON.parse(c);
+      if (c) {
+        const parsed = JSON.parse(c);
+        return saveLocalCart(parsed);
+      }
     } catch (e) {}
-    return { items: [], subtotal: 0, tailoringTotal: 0, shippingFee: 0, total: 0, itemCount: 0 };
-  }
-
-  function saveLocalCart(cart) {
-    cart.subtotal = cart.items.reduce((sum, item) => sum + (Number(item.price || item.unit_price || 0) * item.quantity), 0);
-    cart.tailoringTotal = cart.items.reduce((sum, item) => sum + (item.add_tailoring ? 2500 * item.quantity : 0), 0);
-    cart.shippingFee = cart.subtotal >= 5000 || cart.items.length === 0 ? 0 : 250;
-    cart.total = cart.subtotal + cart.tailoringTotal + cart.shippingFee;
-    cart.itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    localStorage.setItem('ebafs_local_cart', JSON.stringify(cart));
-    return cart;
+    return saveLocalCart({ items: [] });
   }
 
   function getLocalWishlist() {
@@ -112,9 +134,22 @@
     return res.json().catch(() => ({}));
   }
 
+  const apiMemoryCache = new Map();
+  function getCached(key, maxAge = 180000) {
+    const item = apiMemoryCache.get(key);
+    if (item && (Date.now() - item.ts < maxAge)) return item.data;
+    return null;
+  }
+  function setCached(key, data) {
+    apiMemoryCache.set(key, { data, ts: Date.now() });
+    return data;
+  }
+
   async function fallbackSupabaseRequest(endpoint, options = {}) {
     // 1. CMS & Store Settings
     if (endpoint.startsWith('/api/cms')) {
+      const cached = getCached('cms_and_settings');
+      if (cached) return cached;
       const [cmsRows, settingRows] = await Promise.all([
         supabaseRest('cms_content?select=*').catch(() => []),
         supabaseRest('store_settings?select=*').catch(() => [])
@@ -127,7 +162,7 @@
       (settingRows || []).forEach(r => {
         try { settings[r.key] = JSON.parse(r.value); } catch(e) { settings[r.key] = r.value; }
       });
-      return { cms, settings };
+      return setCached('cms_and_settings', { cms, settings });
     }
 
     if (endpoint.startsWith('/api/store/payment-methods')) {
@@ -274,10 +309,16 @@
       const q = p.get('q');
       const isFeatured = p.get('is_featured');
       const isSale = p.get('is_sale');
+      const cat = p.get('category');
+      const fabric = p.get('fabric');
       
       let qry = 'products?select=*,product_images(*)';
       if (isFeatured === '1') qry += '&is_featured=eq.1';
       if (isSale === '1') qry += '&is_sale=eq.1';
+      if (cat === 'men') qry += '&category_id=eq.1';
+      else if (cat === 'women') qry += '&category_id=eq.2';
+      else if (cat && !isNaN(cat)) qry += `&category_id=eq.${cat}`;
+      if (fabric) qry += `&fabric=ilike.*${encodeURIComponent(fabric)}*`;
       if (q) qry += `&or=(name.ilike.*${encodeURIComponent(q)}*,description.ilike.*${encodeURIComponent(q)}*)`;
       qry += '&order=id.desc';
 
@@ -320,22 +361,31 @@
       const cart = getLocalCart();
       const existing = cart.items.find(i => i.product_id === body.product_id && i.tailoring_size === body.tailoring_size);
       if (existing) {
-        existing.quantity += (body.quantity || 1);
+        existing.quantity += (parseInt(body.quantity) || 1);
+        if (body.add_tailoring !== undefined) {
+          existing.add_tailoring = body.add_tailoring ? 1 : 0;
+        }
       } else {
         let prod = null;
         try {
           const pRows = await supabaseRest(`products?id=eq.${body.product_id}&select=*,product_images(*)`);
           prod = pRows?.[0];
         } catch(e) {}
+        const price = prod ? Number(prod.sale_price || prod.price) : 18500;
+        const imgs = Array.isArray(prod?.product_images) ? prod.product_images : [];
+        const primaryImg = imgs.find(i => i.is_primary) || imgs[0];
         cart.items.push({
           id: Date.now(),
           product_id: body.product_id,
           name: prod?.name || 'Luxury Unstitched Fabric',
           slug: prod?.slug || 'luxury-unstitched',
-          price: prod ? Number(prod.sale_price || prod.price) : 18500,
-          image_url: prod?.product_images?.[0]?.image_url || '/assets/gul_e_noor_details.png',
-          quantity: body.quantity || 1,
-          add_tailoring: body.add_tailoring || 0,
+          sku: prod?.sku || `EBA-${body.product_id}`,
+          price: price,
+          unit_price: price,
+          fabric: prod?.fabric || 'Luxury Unstitched Fabric',
+          image_url: primaryImg?.image_url || '/assets/gul_e_noor_details.png',
+          quantity: Math.max(1, parseInt(body.quantity) || 1),
+          add_tailoring: body.add_tailoring ? 1 : 0,
           tailoring_size: body.tailoring_size || null
         });
       }
@@ -347,13 +397,16 @@
       const cart = getLocalCart();
       const item = cart.items.find(i => i.id === itemId);
       if (item) {
-        if (body.quantity <= 0) {
-          cart.items = cart.items.filter(i => i.id !== itemId);
-        } else {
-          item.quantity = body.quantity;
-          if (body.add_tailoring !== null && body.add_tailoring !== undefined) {
-            item.add_tailoring = body.add_tailoring;
+        if (body.quantity !== undefined && body.quantity !== null) {
+          const q = parseInt(body.quantity);
+          if (q <= 0) {
+            cart.items = cart.items.filter(i => i.id !== itemId);
+          } else {
+            item.quantity = q;
           }
+        }
+        if (body.add_tailoring !== null && body.add_tailoring !== undefined) {
+          item.add_tailoring = body.add_tailoring ? 1 : 0;
         }
       }
       return saveLocalCart(cart);
@@ -370,7 +423,17 @@
       const subtotal = Number(body.subtotal || 0);
       if (code === 'EBA10' || code === 'WELCOME10') {
         const discount = Math.round(subtotal * 0.10);
-        return { valid: true, discount, message: '10% atelier inaugural discount applied' };
+        return {
+          valid: true,
+          coupon: {
+            code,
+            type: 'percentage',
+            value: 10,
+            discount_amount: discount
+          },
+          discount,
+          message: '10% atelier inaugural discount applied'
+        };
       }
       return { valid: false, discount: 0, message: 'Invalid or expired promotional code' };
     }
@@ -396,23 +459,36 @@
     if (endpoint === '/api/orders/checkout') {
       const body = JSON.parse(options.body || '{}');
       const orderNumber = 'EBA-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(Math.random() * 899 + 100);
+      const cart = getLocalCart();
+      const customerName = body.customer_name || body.shipping?.full_name || 'Valued Client';
+      const customerEmail = body.customer_email || body.shipping?.email || 'client@ebafashion.pk';
+      const customerPhone = body.customer_phone || body.shipping?.phone || '+92 300 0000000';
+      const shippingAddress = body.shipping_address || body.shipping?.street_address || 'Address on file';
+      const city = body.city || body.shipping?.city || 'Lahore';
+      const province = body.province || body.shipping?.province || 'Punjab';
+      const postalCode = body.postal_code || body.shipping?.postal_code || '';
+      const subtotal = Number(body.subtotal) || cart.subtotal || 0;
+      const discount = Number(body.discount) || 0;
+      const shippingFee = Number(body.shipping_fee) || cart.shippingFee || 0;
+      const total = Number(body.total) || Math.max(0, subtotal + (cart.tailoringTotal || 0) + shippingFee - discount);
+
       const orderPayload = {
         order_number: orderNumber,
-        customer_name: body.shipping?.full_name || 'Valued Client',
-        customer_email: body.shipping?.email || 'client@ebafashion.pk',
-        customer_phone: body.shipping?.phone || '+92 300 0000000',
-        shipping_address: body.shipping?.street_address || 'Address on file',
-        city: body.shipping?.city || 'Lahore',
-        province: body.shipping?.province || 'Punjab',
-        postal_code: body.shipping?.postal_code || '',
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        shipping_address: shippingAddress,
+        city: city,
+        province: province,
+        postal_code: postalCode,
         country: 'Pakistan',
-        subtotal: body.subtotal || 0,
-        discount: body.discount || 0,
-        shipping_fee: body.shipping_fee || 0,
-        total: body.total || 0,
+        subtotal: subtotal,
+        discount: discount,
+        shipping_fee: shippingFee,
+        total: total,
         payment_method: body.payment_method || 'cod',
         payment_status: 'pending',
-        order_status: 'pending'
+        order_status: 'confirmed'
       };
 
       try {
@@ -424,12 +500,48 @@
         console.warn('Supabase direct order sync notice:', err.message);
       }
 
+      try {
+        const recent = JSON.parse(localStorage.getItem('ebafs_recent_orders') || '[]');
+        recent.unshift(orderPayload);
+        localStorage.setItem('ebafs_recent_orders', JSON.stringify(recent.slice(0, 10)));
+      } catch (e) {}
+
       localStorage.removeItem('ebafs_local_cart');
       return {
         success: true,
         orderNumber,
         order: orderPayload,
         message: 'Your couture order has been placed with EBA Atelier.'
+      };
+    }
+
+    if (endpoint.startsWith('/api/orders/lookup/')) {
+      const orderNumber = endpoint.split('/api/orders/lookup/')[1]?.split('?')[0];
+      let order = null;
+      let items = [];
+      try {
+        const rows = await supabaseRest(`orders?order_number=eq.${encodeURIComponent(orderNumber)}&select=*`);
+        order = rows?.[0];
+        if (order) {
+          items = await supabaseRest(`order_items?order_id=eq.${order.id}&select=*`).catch(() => []);
+        }
+      } catch (e) {}
+      if (!order) {
+        try {
+          const recent = JSON.parse(localStorage.getItem('ebafs_recent_orders') || '[]');
+          order = recent.find(o => o.order_number === orderNumber);
+        } catch (e) {}
+      }
+      return {
+        order: order || {
+          order_number: orderNumber,
+          customer_name: 'Valued Client',
+          customer_phone: '+92 321 0000000',
+          shipping_fee: 0,
+          total: 0,
+          order_status: 'confirmed'
+        },
+        items: items || []
       };
     }
 
