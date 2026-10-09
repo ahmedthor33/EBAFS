@@ -853,8 +853,8 @@
     }
   }
 
-  // Converts an Image file to a fast, compressed Base64 Data URL using HTML5 Canvas
-  function fileToOptimizedDataUrl(file, maxWidth = 1600, maxHeight = 900, quality = 0.82) {
+  // Converts an Image file to a high-definition, crisp Base64 Data URL using HTML5 Canvas
+  function fileToOptimizedDataUrl(file, maxWidth = 2560, maxHeight = 1440, quality = 0.92) {
     return new Promise((resolve) => {
       if (!file || !(file instanceof Blob)) {
         return resolve('/assets/hero_campaign_editorial.png');

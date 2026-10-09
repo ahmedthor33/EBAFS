@@ -338,8 +338,9 @@
           <!-- HERO CAMPAIGN BANNER -->
           <section class="relative w-full overflow-hidden bg-surface">
             <div class="relative w-full h-[90vh] min-h-[600px] max-h-[920px] flex items-end overflow-hidden">
-              <img src="${heroImg}" alt="${heroTitleClean}" class="absolute inset-0 w-full h-full object-cover object-center filter brightness-95"/>
-              <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/35 to-primary/30 pointer-events-none"></div>
+              <img src="${heroImg}" alt="${heroTitleClean}" class="absolute inset-0 w-full h-full object-cover object-center contrast-[1.03] brightness-100" style="image-rendering: -webkit-optimize-contrast;"/>
+              <!-- Bottom gradient scrim: Leaves top 55% completely crystal clear and vibrant, smooth legibility scrim at bottom -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 via-45% to-transparent pointer-events-none"></div>
               
               <div class="relative z-10 w-full px-margin-mobile md:px-margin pb-16 max-w-7xl mx-auto flex flex-col justify-end">
                 <div class="flex flex-wrap items-center gap-3 mb-6">
@@ -562,6 +563,7 @@
             title: "Men's Unstitched Atelier",
             subtitle: "Timeless Pakistani craft meets modern sartorial precision. Discover 4.5-meter cuts of premium Egyptian Giza 120s cotton, royal pure Boski silk, crisp summer Latha, and seasonal Wash & Wear crafted for distinguished silhouette drapes.",
             image: "/assets/men_luxury_unstitched.png",
+            objectPosition: "object-[center_15%] md:object-[75%_18%]",
             badge1: "100% Authentic Thread Counts",
             badge2: "Mother-of-Pearl Buttons Included",
             badge3: "Complimentary Nationwide Shipping",
@@ -581,6 +583,7 @@
             title: "Women's Luxury Festive Lawn '25",
             subtitle: "Sumptuous 3-piece unstitched masterpieces featuring intricate zari marori embroidery, organza cutwork borders, and pure silk & printed chiffon dupattas crafted for celebratory splendor.",
             image: "/assets/woman_opulent_lawn.png",
+            objectPosition: "object-[center_12%] md:object-[75%_15%]",
             badge1: "3-Piece Luxury Festive Suites",
             badge2: "Pure Silk Chiffon Dupattas",
             badge3: "Bespoke Master Tailoring Available",
@@ -599,6 +602,7 @@
             title: "New Unstitched Arrivals",
             subtitle: "Fresh off the master looms. Hand-curated seasonal releases in ultra-fine Egyptian cotton, embroidered festive lawn, and heritage textured weaves.",
             image: "/assets/hero_campaign_editorial.png",
+            objectPosition: "object-center md:object-[65%_center]",
             badge1: "Fresh Loom Dispatches",
             badge2: "Limited Edition Yardage",
             badge3: "48-Hour Priority Dispatch",
@@ -616,6 +620,7 @@
             title: "Seasonal Archive & Sale",
             subtitle: "Exceptional values on select end-of-edition unstitched luxury fabrics. Complete with authentic selvedge verification and complimentary signature packaging.",
             image: "/assets/hero_campaign_split.png",
+            objectPosition: "object-center",
             badge1: "Privilege Reductions Up to 30%",
             badge2: "Authentic Yardage Certification",
             badge3: "Limited Vault Stocks",
@@ -632,6 +637,7 @@
             title: filterOptions.q ? `Search: "${filterOptions.q}"` : "Curated Atelier Catalog",
             subtitle: "Explore the complete archives of EBA Fashion Studio — from regal winter Karandi and Egyptian cottons to decadent celebratory lawn ensembles.",
             image: "/assets/hero_campaign_editorial.png",
+            objectPosition: "object-center md:object-[65%_center]",
             badge1: "Certified Thread Counts",
             badge2: "Nationwide Express Shipping",
             badge3: "Master Bespoke Tailoring",
@@ -655,6 +661,7 @@
           title: filterOptions.q ? `Search: "${filterOptions.q}"` : (cmsBanner.title || activeDefault.title),
           subtitle: cmsBanner.subtitle || activeDefault.subtitle,
           image: cmsBanner.image || activeDefault.image,
+          objectPosition: cmsBanner.objectPosition || activeDefault.objectPosition || 'object-center md:object-[75%_20%]',
           badge1: cmsBanner.badge1 || activeDefault.badge1,
           badge2: cmsBanner.badge2 || activeDefault.badge2,
           badge3: cmsBanner.badge3 || activeDefault.badge3,
@@ -668,15 +675,15 @@
 
         container.innerHTML = `
           <!-- EDITORIAL COLLECTION HERO BANNER -->
-          <section class="relative w-full min-h-[360px] md:min-h-[440px] bg-primary overflow-hidden flex items-center">
-            <!-- Background Visual with Luxury Overlay -->
-            <img src="${banner.image}" alt="${banner.title}" class="absolute inset-0 w-full h-full object-cover object-top opacity-40 transition-transform duration-1000 scale-100 hover:scale-105" onerror="this.src='/assets/hero_campaign_editorial.png'"/>
-            <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/85 to-primary/40 pointer-events-none"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-black/30 pointer-events-none"></div>
+          <section class="relative w-full min-h-[380px] md:min-h-[460px] lg:min-h-[500px] bg-neutral-950 overflow-hidden flex items-center">
+            <!-- Background Visual with Luxury Overlay (Crystal Clear & Vibrant) -->
+            <img src="${banner.image}" alt="${banner.title}" class="absolute inset-0 w-full h-full object-cover ${banner.objectPosition || 'object-center md:object-[75%_20%]'} contrast-[1.02] brightness-100 transition-transform duration-1000 scale-100 hover:scale-105" onerror="this.src='/assets/hero_campaign_editorial.png'" style="image-rendering: -webkit-optimize-contrast;"/>
+            <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 md:via-black/20 via-45% to-transparent pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
 
             <div class="relative z-10 w-full max-w-7xl mx-auto px-margin-mobile md:px-margin py-12 flex flex-col justify-center">
               <!-- Breadcrumb Rail -->
-              <nav class="flex items-center gap-2 font-label-sm uppercase tracking-widest text-surface-dim/80 text-[11px] mb-4">
+              <nav class="flex items-center gap-2 font-label-sm uppercase tracking-widest text-surface-dim/90 text-[11px] mb-4">
                 <a href="#home" class="hover:text-white transition-colors">Home</a>
                 <span class="text-white/40">/</span>
                 <span class="text-secondary-fixed font-semibold">${banner.title}</span>
@@ -685,35 +692,35 @@
               <!-- Editorial Tagline -->
               <div class="flex items-center gap-2 mb-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
-                <span class="font-label-sm uppercase tracking-[0.25em] text-secondary-fixed font-semibold text-xs">${banner.tagline}</span>
+                <span class="font-label-sm uppercase tracking-[0.25em] text-secondary-fixed font-semibold text-xs drop-shadow-sm">${banner.tagline}</span>
               </div>
 
               <!-- Main Title -->
-              <h1 class="font-display-lg text-3xl sm:text-5xl lg:text-6xl text-white uppercase leading-tight font-normal tracking-tight max-w-3xl">
+              <h1 class="font-display-lg text-3xl sm:text-5xl lg:text-6xl text-white uppercase leading-tight font-normal tracking-tight max-w-3xl drop-shadow-md">
                 ${banner.title}
               </h1>
 
               <!-- Subtitle Description -->
-              <p class="font-body-md text-surface-dim max-w-2xl leading-relaxed mt-3 text-xs sm:text-sm font-light">
+              <p class="font-body-md text-surface-dim max-w-2xl leading-relaxed mt-3 text-xs sm:text-sm font-light drop-shadow-sm">
                 ${banner.subtitle}
               </p>
 
               <!-- Trust Badges Pill Row -->
               <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-6">
                 ${banner.badge1 ? `
-                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                  <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider shadow-sm">
                     <span class="material-symbols-outlined text-[15px] text-secondary-fixed">verified</span>
                     <span>${banner.badge1}</span>
                   </div>
                 ` : ''}
                 ${banner.badge2 ? `
-                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                  <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider shadow-sm">
                     <span class="material-symbols-outlined text-[15px] text-secondary-fixed">local_shipping</span>
                     <span>${banner.badge2}</span>
                   </div>
                 ` : ''}
                 ${banner.badge3 ? `
-                  <div class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider">
+                  <div class="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-3 py-1.5 text-white font-label-sm text-[11px] uppercase tracking-wider shadow-sm">
                     <span class="material-symbols-outlined text-[15px] text-secondary-fixed">straighten</span>
                     <span>${banner.badge3}</span>
                   </div>
@@ -1302,9 +1309,10 @@
         </section>
 
         <!-- LUXURY ATELIER CART BANNER -->
-        <section class="relative w-full bg-primary text-on-primary py-10 md:py-14 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
-          <div class="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity" style="background-image: url('${cartBanner.image || '/assets/hero_campaign_split.png'}')"></div>
-          <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/60 pointer-events-none"></div>
+        <section class="relative w-full bg-neutral-950 text-on-primary py-12 md:py-16 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
+          <div class="absolute inset-0 bg-cover bg-center contrast-[1.02] brightness-100" style="background-image: url('${cartBanner.image || '/assets/hero_campaign_split.png'}'); image-rendering: -webkit-optimize-contrast;"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-50% to-transparent pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
           
           <div class="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -1592,9 +1600,10 @@
 
       container.innerHTML = `
         <!-- CHECKOUT LUXURY ATELIER BANNER -->
-        <section class="relative w-full bg-primary text-on-primary py-8 md:py-10 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
-          <div class="absolute inset-0 bg-cover bg-center opacity-25" style="background-image: url('${checkoutBanner.image || '/assets/hero_campaign_editorial.png'}')"></div>
-          <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/70 pointer-events-none"></div>
+        <section class="relative w-full bg-neutral-950 text-on-primary py-10 md:py-12 px-margin-mobile md:px-margin overflow-hidden border-b border-surface-container-high">
+          <div class="absolute inset-0 bg-cover bg-center contrast-[1.02] brightness-100" style="background-image: url('${checkoutBanner.image || '/assets/hero_campaign_editorial.png'}'); image-rendering: -webkit-optimize-contrast;"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-50% to-transparent pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
 
           <div class="relative z-10 max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -2215,8 +2224,8 @@
           <div class="w-full min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row bg-surface">
             <!-- Left Column: Editorial Salon Showcase (45% on lg) -->
             <div class="lg:w-[45%] w-full relative min-h-[580px] lg:min-h-full flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-primary text-on-primary">
-              <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105" style="background-image: url('/assets/woman_opulent_lawn.png')"></div>
-              <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/75 to-primary/40 mix-blend-multiply pointer-events-none"></div>
+              <div class="absolute inset-0 bg-cover bg-center contrast-[1.02] brightness-100 transition-transform duration-1000 scale-105" style="background-image: url('/assets/woman_opulent_lawn.png'); image-rendering: -webkit-optimize-contrast;"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 via-45% to-transparent pointer-events-none"></div>
               
               <div class="relative z-10 flex items-center justify-between w-full border-b border-white/20 pb-4">
                 <div class="flex items-center gap-2">
@@ -2396,8 +2405,9 @@
 
             <!-- VIP Member Salon Banner -->
             <div class="relative w-full bg-primary text-on-primary p-8 md:p-10 border border-surface-container-high overflow-hidden shadow-lg">
-              <div class="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity" style="background-image: url('/assets/men_luxury_unstitched.png')"></div>
-              <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/70 pointer-events-none"></div>
+              <div class="absolute inset-0 bg-cover bg-center md:bg-[position:75%_20%] contrast-[1.02] brightness-100" style="background-image: url('/assets/men_luxury_unstitched.png'); image-rendering: -webkit-optimize-contrast;"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 md:via-black/20 via-45% to-transparent pointer-events-none"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
               <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                   <div class="flex items-center gap-2 mb-2">
