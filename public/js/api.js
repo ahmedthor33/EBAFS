@@ -419,10 +419,53 @@
       cart.items = cart.items.filter(i => i.id !== itemId);
       return saveLocalCart(cart);
     }
-    if (endpoint === '/api/cart/validate-coupon') {
+    if (endpoint === '/api/cart/validate-coupon' || endpoint === '/api/cart/coupon') {
       const body = JSON.parse(options.body || '{}');
       const code = (body.code || '').trim().toUpperCase();
       const subtotal = Number(body.subtotal || 0);
+
+      // Check Supabase Cloud dynamically
+      let dbCoupon = null;
+      try {
+        const cRows = await supabaseRest(`coupons?code=eq.${encodeURIComponent(code)}&select=*`);
+        if (cRows && cRows.length > 0) {
+          dbCoupon = cRows[0];
+        }
+      } catch (e) {}
+
+      if (dbCoupon) {
+        if (!dbCoupon.is_active) {
+          throw new Error('This promotional code has been disabled');
+        }
+        if (dbCoupon.expiry_date && new Date(dbCoupon.expiry_date) < new Date()) {
+          throw new Error('This promotional code has expired');
+        }
+        if (dbCoupon.min_order && subtotal < Number(dbCoupon.min_order)) {
+          throw new Error(`Minimum order of PKR ${Number(dbCoupon.min_order).toLocaleString()} required for this code`);
+        }
+        let discount = 0;
+        if (dbCoupon.type === 'percentage') {
+          discount = Math.round(subtotal * (Number(dbCoupon.value) / 100));
+          if (dbCoupon.max_discount && discount > Number(dbCoupon.max_discount)) {
+            discount = Number(dbCoupon.max_discount);
+          }
+        } else {
+          discount = Math.min(subtotal, Number(dbCoupon.value));
+        }
+        return {
+          valid: true,
+          coupon: {
+            id: dbCoupon.id,
+            code: dbCoupon.code,
+            type: dbCoupon.type,
+            value: dbCoupon.value,
+            discount_amount: discount
+          },
+          discount,
+          message: `${dbCoupon.type === 'percentage' ? dbCoupon.value + '%' : 'PKR ' + dbCoupon.value} discount applied`
+        };
+      }
+
       if (code === 'EBA10' || code === 'WELCOME10') {
         const discount = Math.round(subtotal * 0.10);
         return {
@@ -437,7 +480,7 @@
           message: '10% atelier inaugural discount applied'
         };
       }
-      return { valid: false, discount: 0, message: 'Invalid or expired promotional code' };
+      throw new Error('Invalid promotional code');
     }
 
     // 7. Wishlist
@@ -972,6 +1015,7 @@
     if (endpoint.startsWith('/api/admin/coupons')) {
       if (options.method === 'POST') {
         const body = JSON.parse(options.body || '{}');
+        const activeFlag = (body.is_active === 1 || body.is_active === true || body.is_active === '1') ? 1 : 0;
         const couponData = {
           code: (body.code || '').trim().toUpperCase(),
           type: body.type || 'percentage',
@@ -981,15 +1025,52 @@
           usage_limit: Number(body.usage_limit) || 100,
           used_count: 0,
           customer_usage_limit: Number(body.customer_usage_limit) || 1,
-          is_active: 1
+          start_date: body.start_date || null,
+          expiry_date: body.expiry_date || null,
+          is_active: activeFlag
         };
         const ins = await supabaseRest('coupons', { method: 'POST', body: JSON.stringify(couponData) }).catch(() => []);
         return { success: true, message: 'Coupon created', coupon: Array.isArray(ins) ? ins[0] : couponData };
+      }
+      if (options.method === 'PATCH' && endpoint.includes('/toggle')) {
+        const id = endpoint.split('/api/admin/coupons/')[1].split('/toggle')[0];
+        const body = JSON.parse(options.body || '{}');
+        let newActive;
+        if (body.is_active !== undefined) {
+          newActive = (body.is_active === 1 || body.is_active === true || body.is_active === '1') ? 1 : 0;
+        } else {
+          const curr = await supabaseRest(`coupons?id=eq.${id}&select=is_active`).catch(() => []);
+          const currentActive = curr?.[0]?.is_active;
+          newActive = currentActive ? 0 : 1;
+        }
+        await supabaseRest(`coupons?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: newActive }) }).catch(() => {});
+        return { success: true, is_active: newActive, message: `Coupon status updated` };
+      }
+      if (options.method === 'PUT') {
+        const id = endpoint.split('/api/admin/coupons/')[1];
+        const body = JSON.parse(options.body || '{}');
+        const updateData = {};
+        if (body.code) updateData.code = body.code.trim().toUpperCase();
+        if (body.type) updateData.type = body.type;
+        if (body.value !== undefined) updateData.value = Number(body.value);
+        if (body.min_order !== undefined) updateData.min_order = Number(body.min_order);
+        if (body.max_discount !== undefined) updateData.max_discount = body.max_discount ? Number(body.max_discount) : null;
+        if (body.usage_limit !== undefined) updateData.usage_limit = Number(body.usage_limit);
+        if (body.start_date !== undefined) updateData.start_date = body.start_date || null;
+        if (body.expiry_date !== undefined) updateData.expiry_date = body.expiry_date || null;
+        if (body.is_active !== undefined) updateData.is_active = (body.is_active === 1 || body.is_active === true || body.is_active === '1') ? 1 : 0;
+        await supabaseRest(`coupons?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(updateData) }).catch(() => {});
+        return { success: true, message: 'Coupon updated' };
       }
       if (options.method === 'DELETE') {
         const id = endpoint.split('/api/admin/coupons/')[1];
         await supabaseRest(`coupons?id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
         return { success: true, message: 'Coupon deleted' };
+      }
+      const singleMatch = endpoint.match(/\/api\/admin\/coupons\/(\d+)$/);
+      if (singleMatch) {
+        const rows = await supabaseRest(`coupons?id=eq.${singleMatch[1]}&select=*`).catch(() => []);
+        return { coupon: rows?.[0] || null };
       }
       const coupons = await supabaseRest('coupons?select=*&order=id.desc').catch(() => []);
       return { coupons: coupons || [] };
@@ -1536,6 +1617,9 @@
       async getCoupons() {
         return request('/api/admin/coupons', {}, true);
       },
+      async getCoupon(id) {
+        return request(`/api/admin/coupons/${id}`, {}, true);
+      },
       async createCoupon(data) {
         return request('/api/admin/coupons', {
           method: 'POST',
@@ -1546,6 +1630,12 @@
         return request(`/api/admin/coupons/${id}`, {
           method: 'PUT',
           body: JSON.stringify(data)
+        }, true);
+      },
+      async toggleCouponStatus(id, isActive) {
+        return request(`/api/admin/coupons/${id}/toggle`, {
+          method: 'PATCH',
+          body: JSON.stringify(isActive !== undefined ? { is_active: isActive ? 1 : 0 } : {})
         }, true);
       },
       async deleteCoupon(id) {

@@ -1427,50 +1427,148 @@
       try {
         const res = await EBA_API.admin.getCoupons();
         const coupons = res.coupons || [];
+        this.state.couponsCache = coupons;
+        this.state.couponFilter = 'all';
+
+        const totalCount = coupons.length;
+        const activeCount = coupons.filter(c => c.is_active).length;
+        const disabledCount = totalCount - activeCount;
+        const totalRedemptions = coupons.reduce((sum, c) => sum + (Number(c.used_count) || 0), 0);
 
         area.innerHTML = `
           <div class="space-y-6">
-            <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex items-center justify-between">
+            <!-- Header Banner & Stats -->
+            <div class="bg-surface-container-lowest p-6 border border-surface-container-high flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 class="font-headline-sm uppercase text-primary text-lg">Promotional Vouchers</h3>
-                <p class="font-body-sm text-on-surface-variant text-xs">Vouchers verified strictly on server-side checkout.</p>
+                <span class="font-label-sm uppercase tracking-widest text-secondary block mb-1">Marketing & Campaigns</span>
+                <h3 class="font-headline-sm uppercase text-primary text-xl">Promotional Vouchers & Codes</h3>
+                <p class="font-body-sm text-on-surface-variant text-xs mt-0.5">Manage customer discount codes, redemptions, and activation statuses.</p>
               </div>
-              <button onclick="adminApp.openAddCouponModal()" class="btn-primary py-2.5 px-4 text-xs">
-                <span class="material-symbols-outlined text-[16px]">add</span>
-                <span>Create Voucher</span>
-              </button>
+              <div class="flex items-center gap-3">
+                <button onclick="adminApp.openAddCouponModal()" class="btn-primary py-2.5 px-4 text-xs flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[16px]">add</span>
+                  <span>Create Voucher</span>
+                </button>
+              </div>
             </div>
 
-            <div class="bg-surface-container-lowest border border-surface-container-high overflow-x-auto">
-              <table class="w-full text-left text-xs">
+            <!-- Quick Stats Metrics -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="bg-surface-container-lowest p-4 border border-surface-container-high">
+                <span class="font-label-sm uppercase tracking-wider text-on-surface-variant text-[11px] block">Total Vouchers</span>
+                <p class="font-headline-sm text-primary text-2xl font-bold mt-1">${totalCount}</p>
+              </div>
+              <div class="bg-surface-container-lowest p-4 border border-surface-container-high">
+                <span class="font-label-sm uppercase tracking-wider text-emerald-700 text-[11px] block">Active Vouchers</span>
+                <p class="font-headline-sm text-emerald-700 text-2xl font-bold mt-1">${activeCount}</p>
+              </div>
+              <div class="bg-surface-container-lowest p-4 border border-surface-container-high">
+                <span class="font-label-sm uppercase tracking-wider text-neutral-600 text-[11px] block">Disabled</span>
+                <p class="font-headline-sm text-neutral-600 text-2xl font-bold mt-1">${disabledCount}</p>
+              </div>
+              <div class="bg-surface-container-lowest p-4 border border-surface-container-high">
+                <span class="font-label-sm uppercase tracking-wider text-secondary text-[11px] block">Total Uses</span>
+                <p class="font-headline-sm text-secondary text-2xl font-bold mt-1">${totalRedemptions}</p>
+              </div>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="bg-surface-container-lowest p-4 border border-surface-container-high flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+              <!-- Filter Tabs -->
+              <div class="flex items-center gap-2" id="coupon-filter-tabs">
+                <button onclick="adminApp.filterCoupons('all')" class="px-3 py-1.5 rounded font-semibold transition-colors bg-primary text-white" id="tab-coupon-all">
+                  All (${totalCount})
+                </button>
+                <button onclick="adminApp.filterCoupons('active')" class="px-3 py-1.5 rounded font-semibold transition-colors bg-surface-container hover:bg-surface-container-high text-on-surface" id="tab-coupon-active">
+                  Active (${activeCount})
+                </button>
+                <button onclick="adminApp.filterCoupons('disabled')" class="px-3 py-1.5 rounded font-semibold transition-colors bg-surface-container hover:bg-surface-container-high text-on-surface" id="tab-coupon-disabled">
+                  Disabled (${disabledCount})
+                </button>
+              </div>
+
+              <!-- Search Input -->
+              <div class="relative w-full sm:w-64">
+                <input type="text" id="coupon-search-input" oninput="adminApp.searchCoupons(this.value)" placeholder="Search coupon code..." class="form-input text-xs w-full pl-8 py-1.5 bg-white border border-surface-container-high"/>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant absolute left-2.5 top-2 pointer-events-none">search</span>
+              </div>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="bg-surface-container-lowest border border-surface-container-high overflow-x-auto shadow-sm">
+              <table class="w-full text-left text-xs" id="admin-coupons-table">
                 <thead>
                   <tr class="bg-surface-container-low border-b border-surface-container-high font-label-sm text-on-surface-variant uppercase tracking-wider">
-                    <th class="p-4">Code</th>
+                    <th class="p-4">Coupon Code</th>
                     <th class="p-4">Type</th>
                     <th class="p-4">Discount</th>
                     <th class="p-4">Min. Order</th>
                     <th class="p-4">Redemptions</th>
-                    <th class="p-4">Status</th>
-                    <th class="p-4 text-right">Action</th>
+                    <th class="p-4">Status & Quick Toggle</th>
+                    <th class="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-container-high">
-                  ${coupons.map(c => `
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                      <td class="p-4 font-mono font-bold text-sm text-primary">${c.code}</td>
-                      <td class="p-4 uppercase">${c.type}</td>
-                      <td class="p-4 font-semibold text-secondary">${c.type === 'percentage' ? `${c.value}% OFF` : `PKR ${c.value.toLocaleString()} OFF`}</td>
-                      <td class="p-4">PKR ${c.min_order.toLocaleString()}</td>
-                      <td class="p-4">${c.used_count} / ${c.usage_limit || 'Unlimited'}</td>
+                  ${coupons.length === 0 ? `
+                    <tr>
+                      <td colspan="7" class="p-8 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2 block">confirmation_number</span>
+                        <p>No promotional vouchers found.</p>
+                      </td>
+                    </tr>
+                  ` : coupons.map(c => `
+                    <tr class="hover:bg-surface-container-low transition-colors coupon-row" data-code="${c.code.toLowerCase()}" data-status="${c.is_active ? 'active' : 'disabled'}">
                       <td class="p-4">
-                        <span class="badge-status ${c.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-200 text-neutral-800'}">
-                          ${c.is_active ? 'Active' : 'Disabled'}
-                        </span>
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono font-bold text-sm text-primary tracking-wider bg-surface-container px-2 py-1 border border-surface-container-high rounded">${c.code}</span>
+                          <button onclick="navigator.clipboard.writeText('${c.code}'); EBA_API.showToast('Copied ${c.code}');" class="text-outline hover:text-primary" title="Copy Code">
+                            <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                          </button>
+                        </div>
+                      </td>
+                      <td class="p-4 font-medium uppercase text-on-surface-variant">${c.type}</td>
+                      <td class="p-4 font-semibold text-secondary">
+                        ${c.type === 'percentage' ? `${c.value}% OFF` : `PKR ${c.value.toLocaleString()} OFF`}
+                        ${c.max_discount ? `<span class="text-[10px] text-on-surface-variant block">(Cap: PKR ${c.max_discount.toLocaleString()})</span>` : ''}
+                      </td>
+                      <td class="p-4">
+                        ${c.min_order > 0 ? `PKR ${Number(c.min_order).toLocaleString()}` : '<span class="text-on-surface-variant italic">No Minimum</span>'}
+                      </td>
+                      <td class="p-4">
+                        <div class="space-y-1">
+                          <span class="font-medium">${c.used_count || 0} / ${c.usage_limit || '∞'}</span>
+                          ${c.usage_limit ? `
+                            <div class="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                              <div class="h-full bg-secondary" style="width: ${Math.min(100, Math.round(((c.used_count || 0) / c.usage_limit) * 100))}%"></div>
+                            </div>
+                          ` : ''}
+                        </div>
+                      </td>
+                      <td class="p-4">
+                        <button onclick="adminApp.toggleCouponStatus(${c.id}, ${c.is_active ? 0 : 1})" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${c.is_active ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'} transition-all cursor-pointer shadow-sm" title="Click to ${c.is_active ? 'Disable' : 'Enable'} Coupon">
+                          <span class="w-2 h-2 rounded-full ${c.is_active ? 'bg-emerald-600' : 'bg-neutral-500'}"></span>
+                          <span>${c.is_active ? 'Active' : 'Disabled'}</span>
+                          <span class="material-symbols-outlined text-[15px]">${c.is_active ? 'toggle_on' : 'toggle_off'}</span>
+                        </button>
                       </td>
                       <td class="p-4 text-right">
-                        <button onclick="adminApp.deleteCoupon(${c.id})" class="text-outline hover:text-red-700 p-1">
-                          <span class="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
+                        <div class="inline-flex items-center justify-end gap-1.5">
+                          <!-- Edit / Manage Button -->
+                          <button onclick="adminApp.openEditCouponModal(${c.id})" class="btn-secondary py-1 px-2.5 text-xs bg-white flex items-center gap-1 hover:text-primary shadow-sm" title="Manage / Edit Voucher">
+                            <span class="material-symbols-outlined text-[15px]">edit</span>
+                            <span>Edit</span>
+                          </button>
+
+                          <!-- Quick Disable / Enable Toggle Button -->
+                          <button onclick="adminApp.toggleCouponStatus(${c.id}, ${c.is_active ? 0 : 1})" class="py-1 px-2.5 text-xs font-semibold rounded border ${c.is_active ? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100' : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'} transition-colors" title="${c.is_active ? 'Disable this coupon' : 'Enable this coupon'}">
+                            ${c.is_active ? 'Disable' : 'Enable'}
+                          </button>
+
+                          <!-- Delete Button -->
+                          <button onclick="adminApp.deleteCoupon(${c.id}, '${c.code}')" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors" title="Delete Voucher">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   `).join('')}
@@ -1481,6 +1579,66 @@
         `;
       } catch (err) {
         console.error('Render coupons error:', err);
+        area.innerHTML = `
+          <div class="p-8 bg-surface-container-lowest border border-surface-container-high text-center space-y-4 max-w-lg mx-auto mt-12">
+            <span class="material-symbols-outlined text-4xl text-amber-600">error_outline</span>
+            <div>
+              <h3 class="font-headline-sm uppercase text-primary text-base">Unable to load vouchers ledger</h3>
+              <p class="font-body-sm text-on-surface-variant text-xs mt-1">${err?.message || 'Database ledger communication error.'}</p>
+            </div>
+            <button onclick="adminApp.navigate('coupons')" class="btn-primary py-2 px-5 text-xs inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Retry Coupons</span>
+            </button>
+          </div>
+        `;
+      }
+    },
+
+    filterCoupons(status) {
+      this.state.couponFilter = status;
+      ['all', 'active', 'disabled'].forEach(t => {
+        const btn = document.getElementById(`tab-coupon-${t}`);
+        if (btn) {
+          if (t === status) {
+            btn.className = 'px-3 py-1.5 rounded font-semibold transition-colors bg-primary text-white';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded font-semibold transition-colors bg-surface-container hover:bg-surface-container-high text-on-surface';
+          }
+        }
+      });
+
+      const term = (document.getElementById('coupon-search-input')?.value || '').toLowerCase().trim();
+      document.querySelectorAll('#admin-coupons-table .coupon-row').forEach(row => {
+        const rowStatus = row.getAttribute('data-status');
+        const rowCode = row.getAttribute('data-code');
+        const matchesStatus = (status === 'all' || rowStatus === status);
+        const matchesSearch = (!term || rowCode.includes(term));
+        row.style.display = (matchesStatus && matchesSearch) ? '' : 'none';
+      });
+    },
+
+    searchCoupons(term) {
+      term = (term || '').toLowerCase().trim();
+      const status = this.state.couponFilter || 'all';
+      document.querySelectorAll('#admin-coupons-table .coupon-row').forEach(row => {
+        const rowStatus = row.getAttribute('data-status');
+        const rowCode = row.getAttribute('data-code');
+        const matchesStatus = (status === 'all' || rowStatus === status);
+        const matchesSearch = (!term || rowCode.includes(term));
+        row.style.display = (matchesStatus && matchesSearch) ? '' : 'none';
+      });
+    },
+
+    async toggleCouponStatus(id, newStatus) {
+      try {
+        const coupon = (this.state.couponsCache || []).find(c => c.id === id);
+        const code = coupon ? coupon.code : `#${id}`;
+        await EBA_API.admin.toggleCouponStatus(id, newStatus);
+        EBA_API.showToast(`Coupon '${code}' ${newStatus ? 'activated' : 'disabled'} successfully`);
+        await this.renderCoupons(document.getElementById('admin-content-area'));
+      } catch (err) {
+        EBA_API.showToast(err.message, 'error');
       }
     },
 
@@ -1488,40 +1646,54 @@
       const modalContent = document.getElementById('admin-modal-content');
       modalContent.innerHTML = `
         <div class="flex items-center justify-between pb-3 border-b border-surface-container-high mb-4">
-          <h2 class="font-headline-sm uppercase text-primary">Create Voucher</h2>
+          <div>
+            <span class="font-label-sm uppercase tracking-widest text-secondary block">Campaign Management</span>
+            <h2 class="font-headline-sm uppercase text-primary text-lg">Create Promotional Voucher</h2>
+          </div>
           <button onclick="adminApp.closeModal()"><span class="material-symbols-outlined">close</span></button>
         </div>
         <form onsubmit="adminApp.saveNewCoupon(event)" class="space-y-4 text-xs">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="font-label-sm uppercase block mb-1">Code *</label>
-              <input type="text" id="cp-code" required placeholder="e.g. LUXURY20" class="form-input text-xs uppercase font-mono"/>
+              <label class="font-label-sm uppercase block mb-1">Coupon Code *</label>
+              <input type="text" id="cp-code" required placeholder="e.g. LUXURY20" class="form-input text-xs uppercase font-mono font-bold"/>
             </div>
             <div>
-              <label class="font-label-sm uppercase block mb-1">Type *</label>
-              <select id="cp-type" class="form-input text-xs">
+              <label class="font-label-sm uppercase block mb-1">Discount Type *</label>
+              <select id="cp-type" class="form-input text-xs" onchange="document.getElementById('cp-val-label').textContent = this.value === 'percentage' ? 'Percentage Discount (%) *' : 'Fixed PKR Discount *'">
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed PKR Amount</option>
               </select>
             </div>
             <div>
-              <label class="font-label-sm uppercase block mb-1">Discount Value *</label>
-              <input type="number" id="cp-value" required placeholder="e.g. 15 for 15% or 2500" class="form-input text-xs"/>
+              <label class="font-label-sm uppercase block mb-1" id="cp-val-label">Percentage Discount (%) *</label>
+              <input type="number" id="cp-value" required min="1" placeholder="e.g. 15 for 15% or 2500" class="form-input text-xs"/>
             </div>
             <div>
-              <label class="font-label-sm uppercase block mb-1">Minimum Order (PKR)</label>
-              <input type="number" id="cp-min" value="10000" class="form-input text-xs"/>
+              <label class="font-label-sm uppercase block mb-1">Minimum Order Requirement (PKR)</label>
+              <input type="number" id="cp-min" value="10000" min="0" class="form-input text-xs"/>
             </div>
             <div>
-              <label class="font-label-sm uppercase block mb-1">Max Cap (PKR, for %)</label>
-              <input type="number" id="cp-max" placeholder="3000" class="form-input text-xs"/>
+              <label class="font-label-sm uppercase block mb-1">Max Discount Cap (PKR, optional)</label>
+              <input type="number" id="cp-max" placeholder="e.g. 3000" min="0" class="form-input text-xs"/>
             </div>
             <div>
-              <label class="font-label-sm uppercase block mb-1">Usage Limit</label>
-              <input type="number" id="cp-limit" value="100" class="form-input text-xs"/>
+              <label class="font-label-sm uppercase block mb-1">Total Usage Limit</label>
+              <input type="number" id="cp-limit" value="100" min="1" class="form-input text-xs"/>
+            </div>
+            <div>
+              <label class="font-label-sm uppercase block mb-1">Expiry Date (optional)</label>
+              <input type="date" id="cp-expiry" class="form-input text-xs"/>
+            </div>
+            <div>
+              <label class="font-label-sm uppercase block mb-1">Initial Status</label>
+              <select id="cp-active" class="form-input text-xs">
+                <option value="1">Active (Immediately Redeemable)</option>
+                <option value="0">Disabled (Draft / Inactive)</option>
+              </select>
             </div>
           </div>
-          <div class="pt-3 flex justify-end gap-3">
+          <div class="pt-4 border-t border-surface-container-high flex justify-end gap-3">
             <button type="button" onclick="adminApp.closeModal()" class="btn-secondary px-4 py-2">Cancel</button>
             <button type="submit" class="btn-primary px-6 py-2">Save Voucher</button>
           </div>
@@ -1539,22 +1711,132 @@
           value: document.getElementById('cp-value').value,
           min_order: document.getElementById('cp-min').value,
           max_discount: document.getElementById('cp-max').value || null,
-          usage_limit: document.getElementById('cp-limit').value
+          usage_limit: document.getElementById('cp-limit').value,
+          expiry_date: document.getElementById('cp-expiry').value || null,
+          is_active: document.getElementById('cp-active').value
         });
-        EBA_API.showToast('Voucher created');
+        EBA_API.showToast('Voucher created successfully');
         this.closeModal();
-        this.renderCoupons(document.getElementById('admin-content-area'));
+        await this.renderCoupons(document.getElementById('admin-content-area'));
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
       }
     },
 
-    async deleteCoupon(id) {
-      if (!confirm('Remove this coupon code?')) return;
+    async openEditCouponModal(id) {
+      try {
+        let coupon = (this.state.couponsCache || []).find(c => c.id === id);
+        if (!coupon) {
+          const res = await EBA_API.admin.getCoupon(id);
+          coupon = res?.coupon || res;
+        }
+        if (!coupon) throw new Error('Coupon details not found');
+
+        const expiryVal = coupon.expiry_date ? coupon.expiry_date.split('T')[0] : '';
+        const modalContent = document.getElementById('admin-modal-content');
+        modalContent.innerHTML = `
+          <div class="flex items-center justify-between pb-3 border-b border-surface-container-high mb-4">
+            <div>
+              <span class="font-label-sm uppercase tracking-widest text-secondary block">Campaign Management</span>
+              <h2 class="font-headline-sm uppercase text-primary text-lg">Manage & Edit Voucher</h2>
+            </div>
+            <button onclick="adminApp.closeModal()"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <form onsubmit="adminApp.saveCouponUpdates(event, ${coupon.id})" class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Coupon Code *</label>
+                <input type="text" id="edit-cp-code" required value="${coupon.code}" class="form-input text-xs uppercase font-mono font-bold"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Discount Type *</label>
+                <select id="edit-cp-type" class="form-input text-xs" onchange="document.getElementById('edit-cp-val-label').textContent = this.value === 'percentage' ? 'Percentage Discount (%) *' : 'Fixed PKR Discount *'">
+                  <option value="percentage" ${coupon.type === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
+                  <option value="fixed" ${coupon.type === 'fixed' ? 'selected' : ''}>Fixed PKR Amount</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1" id="edit-cp-val-label">
+                  ${coupon.type === 'percentage' ? 'Percentage Discount (%) *' : 'Fixed PKR Discount *'}
+                </label>
+                <input type="number" id="edit-cp-value" required min="1" value="${coupon.value}" class="form-input text-xs"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Minimum Order Requirement (PKR)</label>
+                <input type="number" id="edit-cp-min" value="${coupon.min_order || 0}" min="0" class="form-input text-xs"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Max Discount Cap (PKR, optional)</label>
+                <input type="number" id="edit-cp-max" value="${coupon.max_discount || ''}" placeholder="None" min="0" class="form-input text-xs"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Total Usage Limit</label>
+                <input type="number" id="edit-cp-limit" value="${coupon.usage_limit || 100}" min="1" class="form-input text-xs"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Expiry Date (optional)</label>
+                <input type="date" id="edit-cp-expiry" value="${expiryVal}" class="form-input text-xs"/>
+              </div>
+              <div>
+                <label class="font-label-sm uppercase block mb-1">Voucher Status *</label>
+                <select id="edit-cp-active" class="form-input text-xs">
+                  <option value="1" ${coupon.is_active ? 'selected' : ''}>Active (Immediately Redeemable)</option>
+                  <option value="0" ${!coupon.is_active ? 'selected' : ''}>Disabled (Temporarily Suspended)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="p-3 bg-surface-container rounded border border-surface-container-high flex items-center justify-between">
+              <div>
+                <span class="font-label-sm uppercase tracking-wider text-on-surface-variant block text-[10px]">Current Usage</span>
+                <p class="font-mono text-primary font-bold">${coupon.used_count || 0} customer redemptions logged</p>
+              </div>
+              <button type="button" onclick="adminApp.deleteCoupon(${coupon.id}, '${coupon.code}')" class="text-xs text-red-700 hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+                <span>Delete Voucher</span>
+              </button>
+            </div>
+
+            <div class="pt-4 border-t border-surface-container-high flex justify-end gap-3">
+              <button type="button" onclick="adminApp.closeModal()" class="btn-secondary px-4 py-2">Cancel</button>
+              <button type="submit" class="btn-primary px-6 py-2">Update Voucher</button>
+            </div>
+          </form>
+        `;
+        this.openModal();
+      } catch (err) {
+        EBA_API.showToast(err.message, 'error');
+      }
+    },
+
+    async saveCouponUpdates(e, id) {
+      e.preventDefault();
+      try {
+        await EBA_API.admin.updateCoupon(id, {
+          code: document.getElementById('edit-cp-code').value,
+          type: document.getElementById('edit-cp-type').value,
+          value: document.getElementById('edit-cp-value').value,
+          min_order: document.getElementById('edit-cp-min').value,
+          max_discount: document.getElementById('edit-cp-max').value || null,
+          usage_limit: document.getElementById('edit-cp-limit').value,
+          expiry_date: document.getElementById('edit-cp-expiry').value || null,
+          is_active: document.getElementById('edit-cp-active').value
+        });
+        EBA_API.showToast('Voucher updated successfully');
+        this.closeModal();
+        await this.renderCoupons(document.getElementById('admin-content-area'));
+      } catch (err) {
+        EBA_API.showToast(err.message, 'error');
+      }
+    },
+
+    async deleteCoupon(id, code) {
+      code = code || `#${id}`;
+      if (!confirm(`Are you sure you want to permanently remove coupon '${code}'?`)) return;
       try {
         await EBA_API.admin.deleteCoupon(id);
-        EBA_API.showToast('Coupon removed');
-        this.renderCoupons(document.getElementById('admin-content-area'));
+        EBA_API.showToast(`Coupon '${code}' permanently deleted`);
+        await this.renderCoupons(document.getElementById('admin-content-area'));
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
       }

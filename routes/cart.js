@@ -212,10 +212,14 @@ router.post('/validate-coupon', optionalToken, (req, res) => {
     }
 
     const cleanCode = code.trim().toUpperCase();
-    const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? AND is_active = 1').get(cleanCode);
+    const coupon = db.prepare('SELECT * FROM coupons WHERE code = ?').get(cleanCode);
 
     if (!coupon) {
-      return res.status(404).json({ error: 'Invalid or inactive promotional code' });
+      return res.status(404).json({ error: 'Invalid promotional code' });
+    }
+
+    if (!coupon.is_active) {
+      return res.status(400).json({ error: 'This promotional code has been disabled' });
     }
 
     // Check expiry
