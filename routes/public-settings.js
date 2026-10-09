@@ -38,10 +38,11 @@ router.get('/payment-methods', (req, res) => {
       active.push({
         id: 'jazzcash',
         name: payments.jazzcash.title || 'JazzCash Mobile Account',
-        merchant_id: payments.jazzcash.merchant_id,
-        merchant_name: payments.jazzcash.merchant_name,
-        account_number: payments.jazzcash.account_number,
-        instructions: payments.jazzcash.instructions
+        account_title: payments.jazzcash.account_title || payments.jazzcash.merchant_name || 'NISAR AHMED',
+        merchant_name: payments.jazzcash.merchant_name || payments.jazzcash.account_title || 'NISAR AHMED',
+        account_number: payments.jazzcash.account_number || payments.jazzcash.merchant_id || '0325-4473333',
+        bank_name: payments.jazzcash.bank_name || 'Mobilink Microfinance Bank',
+        instructions: payments.jazzcash.instructions || 'Transfer the amount via JazzCash App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'
       });
     }
 
@@ -49,10 +50,11 @@ router.get('/payment-methods', (req, res) => {
       active.push({
         id: 'easypaisa',
         name: payments.easypaisa.title || 'Easypaisa Mobile Account',
+        account_title: payments.easypaisa.account_title || 'NISAR AHMED',
+        account_number: payments.easypaisa.account_number || '0325-4473333',
+        bank_name: payments.easypaisa.bank_name || 'Telenor Microfinance Bank',
         till_id: payments.easypaisa.till_id,
-        account_title: payments.easypaisa.account_title,
-        account_number: payments.easypaisa.account_number,
-        instructions: payments.easypaisa.instructions
+        instructions: payments.easypaisa.instructions || 'Transfer the amount via Easypaisa App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'
       });
     }
 

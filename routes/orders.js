@@ -21,8 +21,9 @@ router.post('/checkout', optionalToken, (req, res) => {
       province,
       postal_code,
       country = 'Pakistan',
-      payment_method, // 'cod' or 'bank_transfer'
+      payment_method, // 'cod', 'bank_transfer', 'jazzcash', 'easypaisa'
       coupon_code,
+      payment_reference,
       notes,
       items // array of { product_id, quantity, add_tailoring, tailoring_size }
     } = req.body;
@@ -176,11 +177,15 @@ router.post('/checkout', optionalToken, (req, res) => {
       )
     `);
 
+    const finalNotes = payment_reference 
+      ? (notes ? `${notes} | TID/Ref: ${payment_reference}` : `TID/Ref: ${payment_reference}`)
+      : (notes || null);
+
     const orderResult = createOrderStmt.run(
       orderNumber, userId, customer_name.trim(), customer_email.trim(), customer_phone.trim(),
       shipping_address.trim(), area ? area.trim() : '', city.trim(), province.trim(), postal_code || '', country,
       subtotal + tailoringTotal, Math.round(discountAmount), shippingFee, Math.round(finalTotal),
-      payment_method, trackingNumber, assignedCourier, notes || null
+      payment_method, trackingNumber, assignedCourier, finalNotes
     );
 
     const orderId = Number(orderResult.lastInsertRowid);
@@ -257,6 +262,8 @@ router.post('/checkout', optionalToken, (req, res) => {
         tracking_number: trackingNumber,
         courier_name: assignedCourier,
         payment_method,
+        payment_reference: payment_reference || null,
+        notes: finalNotes,
         total: Math.round(finalTotal),
         customer_name,
         customer_phone,

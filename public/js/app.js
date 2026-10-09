@@ -1877,11 +1877,11 @@
                     }
 
                     return `
-                      <div class="border ${isFirst ? 'border-primary bg-surface-container-low' : 'border-surface-container-high bg-white'} p-4 transition-colors payment-method-card" id="pay-card-${pm.id}">
-                        <label class="flex items-start gap-4 cursor-pointer">
-                          <input type="radio" name="payment_method" value="${pm.id}" ${isFirst ? 'checked' : ''} onchange="app.selectPaymentMethod('${pm.id}')" class="custom-checkbox mt-1"/>
-                          <div class="flex-1">
-                            <div class="flex items-center justify-between">
+                      <div class="border ${isFirst ? 'border-primary bg-surface-container-low' : 'border-surface-container-high bg-white'} p-4 sm:p-5 transition-colors payment-method-card" id="pay-card-${pm.id}">
+                        <label class="flex items-start gap-3 sm:gap-4 cursor-pointer">
+                          <input type="radio" name="payment_method" value="${pm.id}" ${isFirst ? 'checked' : ''} onchange="app.selectPaymentMethod('${pm.id}')" class="custom-checkbox mt-1 shrink-0"/>
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
                               <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-[18px] text-primary">${icon}</span>
                                 <span class="font-label-lg uppercase tracking-wider text-primary font-bold text-xs sm:text-sm">${pm.name}</span>
@@ -1890,44 +1890,125 @@
                             </div>
                             <p class="font-body-sm text-on-surface-variant mt-1 leading-relaxed text-xs">${pm.description || ''}</p>
                             
-                            <!-- Expandable Payment Channel Details -->
-                            <div id="pay-details-${pm.id}" class="${isFirst ? '' : 'hidden'} mt-3 p-3.5 bg-surface-container text-xs space-y-1.5 font-sans border-l-2 border-secondary">
-                              ${pm.id === 'bank_transfer' ? `
-                                <div class="font-mono text-primary space-y-1">
-                                  <p><strong>Bank:</strong> ${pm.bank_name || 'Meezan Bank Ltd'}</p>
-                                  <p><strong>Account Title:</strong> ${pm.account_title || 'EBA Fashion Studio Pvt Ltd'}</p>
-                                  <p><strong>Account Number:</strong> ${pm.account_number || '01000948210001'}</p>
-                                  <p><strong>IBAN:</strong> <span class="font-bold text-secondary">${pm.iban || 'PK64MEZN0001000948210001'}</span></p>
-                                  <p><strong>Branch:</strong> ${pm.branch || 'Gulberg III Main Boulevard Flagship, Lahore'}</p>
+                            <!-- Detailed Payment Channel Box (Matches Reference Image) -->
+                            ${pm.id === 'jazzcash' ? `
+                              <div id="pay-details-jazzcash" class="${isFirst ? '' : 'hidden'} mt-4 p-4 sm:p-5 bg-[#faf8f5] border border-surface-container-high rounded-xl space-y-3.5">
+                                <div class="flex items-center justify-between pb-2 border-b border-surface-container-high">
+                                  <span class="font-label-sm font-bold uppercase tracking-wider text-secondary text-xs sm:text-sm">JAZZCASH DETAILS</span>
+                                  <span class="bg-[#dcfce7] text-[#15803d] text-[10px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">VERIFIED CHANNEL</span>
                                 </div>
-                                <p class="text-[11px] text-on-surface-variant mt-2">${pm.instructions || 'Transfer funds to our verified account and WhatsApp receipt to 0325-4473333.'}</p>
-                              ` : ''}
-
-                              ${pm.id === 'jazzcash' ? `
-                                <div class="space-y-1 font-mono text-primary">
-                                  <p><strong>Merchant Title:</strong> ${pm.merchant_name || 'EBA FASHION STUDIO'}</p>
-                                  <p><strong>JazzCash Till / Mobile:</strong> <span class="font-bold text-red-600">${pm.account_number || pm.merchant_id || '0300 1234567'}</span></p>
+                                <div class="space-y-1.5 text-xs text-on-surface font-sans">
+                                  <p><span class="text-on-surface-variant">Account Title:</span> <strong class="text-primary font-semibold">${pm.account_title || pm.merchant_name || 'NISAR AHMED'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Account / Phone:</span> <strong class="text-primary font-mono font-semibold">${pm.account_number || pm.merchant_id || '0325-4473333'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Bank / Channel:</span> <strong class="text-primary font-semibold">${pm.bank_name || 'Mobilink Microfinance Bank'}</strong></p>
                                 </div>
-                                <p class="text-[11px] text-on-surface-variant mt-2">${pm.instructions || 'Send total via JazzCash App or dial *786# to Till 0300 1234567.'}</p>
-                              ` : ''}
-
-                              ${pm.id === 'easypaisa' ? `
-                                <div class="space-y-1 font-mono text-primary">
-                                  <p><strong>Account Title:</strong> ${pm.account_title || 'EBA FASHION STUDIO'}</p>
-                                  <p><strong>Easypaisa Till / Mobile:</strong> <span class="font-bold text-emerald-700">${pm.account_number || '0321 8456789'} (Till: ${pm.till_id || '78491'})</span></p>
+                                <p class="text-xs text-on-surface-variant leading-relaxed pt-2 border-t border-surface-container-high">
+                                  ${pm.instructions || 'Transfer the amount via JazzCash App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'}
+                                </p>
+                                <div class="pt-1.5">
+                                  <label for="chk-payment-reference-jazzcash" class="font-label-sm uppercase tracking-wider text-on-surface-variant block font-bold text-[11px] mb-1.5">
+                                    SENDER NAME / MOBILE NUMBER / TRANSACTION TID
+                                  </label>
+                                  <input 
+                                    type="text" 
+                                    id="chk-payment-reference-jazzcash" 
+                                    oninput="app.setPaymentReference(this.value)" 
+                                    placeholder="e.g. 0300-1234567 or Meezan TID / Transfer Ref" 
+                                    class="w-full form-input text-xs py-2.5 px-3.5 bg-white border border-surface-container-high focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 rounded"
+                                  />
                                 </div>
-                                <p class="text-[11px] text-on-surface-variant mt-2">${pm.instructions || 'Send payment via Easypaisa App or scan QR code. Save 3737 confirmation SMS.'}</p>
-                              ` : ''}
+                              </div>
+                            ` : ''}
 
-                              ${pm.id === 'cod' ? `
+                            ${pm.id === 'bank_transfer' ? `
+                              <div id="pay-details-bank_transfer" class="${isFirst ? '' : 'hidden'} mt-4 p-4 sm:p-5 bg-[#faf8f5] border border-surface-container-high rounded-xl space-y-3.5">
+                                <div class="flex items-center justify-between pb-2 border-b border-surface-container-high">
+                                  <span class="font-label-sm font-bold uppercase tracking-wider text-secondary text-xs sm:text-sm">BANK TRANSFER DETAILS</span>
+                                  <span class="bg-[#dcfce7] text-[#15803d] text-[10px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">VERIFIED CHANNEL</span>
+                                </div>
+                                <div class="space-y-1.5 text-xs text-on-surface font-sans">
+                                  <p><span class="text-on-surface-variant">Account Title:</span> <strong class="text-primary font-semibold">${pm.account_title || 'NISAR AHMED'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Account Number:</span> <strong class="text-primary font-mono font-semibold">${pm.account_number || '01000948210001'}</strong></p>
+                                  <p><span class="text-on-surface-variant">IBAN:</span> <strong class="text-secondary font-mono font-bold">${pm.iban || 'PK64MEZN0001000948210001'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Bank / Channel:</span> <strong class="text-primary font-semibold">${pm.bank_name || 'Meezan Bank Ltd'}</strong></p>
+                                  ${pm.branch ? `<p><span class="text-on-surface-variant">Branch:</span> <strong class="text-primary font-semibold">${pm.branch}</strong></p>` : ''}
+                                </div>
+                                <p class="text-xs text-on-surface-variant leading-relaxed pt-2 border-t border-surface-container-high">
+                                  ${pm.instructions || 'Transfer the amount to our verified Meezan account. Enter your sender account / mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number (0325-4473333).'}
+                                </p>
+                                <div class="pt-1.5">
+                                  <label for="chk-payment-reference-bank" class="font-label-sm uppercase tracking-wider text-on-surface-variant block font-bold text-[11px] mb-1.5">
+                                    SENDER NAME / MOBILE NUMBER / TRANSACTION TID
+                                  </label>
+                                  <input 
+                                    type="text" 
+                                    id="chk-payment-reference-bank" 
+                                    oninput="app.setPaymentReference(this.value)" 
+                                    placeholder="e.g. 0300-1234567 or Meezan TID / Transfer Ref" 
+                                    class="w-full form-input text-xs py-2.5 px-3.5 bg-white border border-surface-container-high focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 rounded"
+                                  />
+                                </div>
+                              </div>
+                            ` : ''}
+
+                            ${pm.id === 'easypaisa' ? `
+                              <div id="pay-details-easypaisa" class="${isFirst ? '' : 'hidden'} mt-4 p-4 sm:p-5 bg-[#faf8f5] border border-surface-container-high rounded-xl space-y-3.5">
+                                <div class="flex items-center justify-between pb-2 border-b border-surface-container-high">
+                                  <span class="font-label-sm font-bold uppercase tracking-wider text-secondary text-xs sm:text-sm">EASYPAISA DETAILS</span>
+                                  <span class="bg-[#dcfce7] text-[#15803d] text-[10px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">VERIFIED CHANNEL</span>
+                                </div>
+                                <div class="space-y-1.5 text-xs text-on-surface font-sans">
+                                  <p><span class="text-on-surface-variant">Account Title:</span> <strong class="text-primary font-semibold">${pm.account_title || 'NISAR AHMED'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Account / Phone:</span> <strong class="text-primary font-mono font-semibold">${pm.account_number || '0325-4473333'}</strong></p>
+                                  <p><span class="text-on-surface-variant">Bank / Channel:</span> <strong class="text-primary font-semibold">${pm.bank_name || 'Telenor Microfinance Bank'}</strong></p>
+                                </div>
+                                <p class="text-xs text-on-surface-variant leading-relaxed pt-2 border-t border-surface-container-high">
+                                  ${pm.instructions || 'Transfer the amount via Easypaisa App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'}
+                                </p>
+                                <div class="pt-1.5">
+                                  <label for="chk-payment-reference-easypaisa" class="font-label-sm uppercase tracking-wider text-on-surface-variant block font-bold text-[11px] mb-1.5">
+                                    SENDER NAME / MOBILE NUMBER / TRANSACTION TID
+                                  </label>
+                                  <input 
+                                    type="text" 
+                                    id="chk-payment-reference-easypaisa" 
+                                    oninput="app.setPaymentReference(this.value)" 
+                                    placeholder="e.g. 0325-4473333 or Easypaisa TID" 
+                                    class="w-full form-input text-xs py-2.5 px-3.5 bg-white border border-surface-container-high focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 rounded"
+                                  />
+                                </div>
+                              </div>
+                            ` : ''}
+
+                            ${pm.id === 'cod' ? `
+                              <div id="pay-details-cod" class="${isFirst ? '' : 'hidden'} mt-3 p-3.5 bg-surface-container text-xs space-y-1 font-sans border-l-2 border-secondary">
                                 <p class="text-[11px] text-on-surface-variant">Standard TCS parcel verification enabled. Exact cash payment in PKR required upon door delivery.</p>
-                              ` : ''}
-                            </div>
+                              </div>
+                            ` : ''}
                           </div>
                         </label>
                       </div>
                     `;
                   }).join('')}
+                </div>
+
+                <!-- Inline Proceed Button & Trust Badges (Matching Reference Image) -->
+                <div class="pt-6 border-t border-surface-container-high space-y-4">
+                  <button type="submit" id="chk-inline-proceed-btn" class="w-full bg-black text-white py-4 px-6 font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-md">
+                    <span id="chk-inline-proceed-text">PROCEED WITH CASH ON DELIVERY</span>
+                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                  </button>
+
+                  <div class="space-y-2 pt-2 text-xs text-on-surface-variant">
+                    <div class="flex items-center gap-2.5">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
+                      <span>256-Bit Encrypted Concierge Checkout</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                      <span class="material-symbols-outlined text-secondary text-[18px]">published_with_changes</span>
+                      <span>7-Day Unstitched Inspection Guarantee & Free Exchange</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1995,22 +2076,44 @@
         </section>
       `;
 
+      this.state.paymentReference = '';
       // Trigger initial shipping calculation based on default city
       this.updateCheckoutShipping();
+      if (paymentMethods && paymentMethods[0]) {
+        this.selectPaymentMethod(paymentMethods[0].id);
+      }
     },
 
     selectPaymentMethod(methodId) {
       document.querySelectorAll('.payment-method-card').forEach(c => {
-        c.className = 'border border-surface-container-high bg-white p-4 transition-colors payment-method-card';
+        c.className = 'border border-surface-container-high bg-white p-4 sm:p-5 transition-colors payment-method-card';
       });
       const activeCard = document.getElementById(`pay-card-${methodId}`);
       if (activeCard) {
-        activeCard.className = 'border border-primary bg-surface-container-low p-4 transition-colors payment-method-card';
+        activeCard.className = 'border border-primary bg-surface-container-low p-4 sm:p-5 transition-colors payment-method-card';
       }
 
       document.querySelectorAll('[id^="pay-details-"]').forEach(d => d.classList.add('hidden'));
       const activeDetails = document.getElementById(`pay-details-${methodId}`);
       if (activeDetails) activeDetails.classList.remove('hidden');
+
+      this.syncPaymentReferenceInputs();
+
+      const actionLabels = {
+        cod: 'PROCEED WITH CASH ON DELIVERY',
+        bank_transfer: 'PROCEED WITH BANK TRANSFER',
+        jazzcash: 'PROCEED WITH JAZZCASH',
+        easypaisa: 'PROCEED WITH EASYPAISA'
+      };
+      const btnText = actionLabels[methodId] || `PROCEED WITH ${methodId.toUpperCase()}`;
+
+      const inlineBtnText = document.getElementById('chk-inline-proceed-text');
+      if (inlineBtnText) inlineBtnText.textContent = btnText;
+
+      const sidebarBtn = document.getElementById('place-order-btn');
+      if (sidebarBtn) {
+        sidebarBtn.innerHTML = `<span>${btnText}</span><span class="material-symbols-outlined text-[18px]">lock</span>`;
+      }
 
       const step3Display = document.getElementById('step3-payment-display');
       if (step3Display) {
@@ -2022,6 +2125,22 @@
         };
         step3Display.textContent = titles[methodId] || methodId;
       }
+    },
+
+    setPaymentReference(val) {
+      this.state.paymentReference = val;
+      ['chk-payment-reference-jazzcash', 'chk-payment-reference-bank', 'chk-payment-reference-easypaisa'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value !== val) el.value = val;
+      });
+    },
+
+    syncPaymentReferenceInputs() {
+      const val = this.state.paymentReference || '';
+      ['chk-payment-reference-jazzcash', 'chk-payment-reference-bank', 'chk-payment-reference-easypaisa'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = val;
+      });
     },
 
     updateCheckoutShipping() {
@@ -2079,10 +2198,18 @@
     async handlePlaceOrder(e) {
       e.preventDefault();
       const btn = document.getElementById('place-order-btn');
+      const inlineBtn = document.getElementById('chk-inline-proceed-btn');
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<span>Processing Order...</span>`;
       }
+      if (inlineBtn) {
+        inlineBtn.disabled = true;
+        inlineBtn.innerHTML = `<span>Processing Order...</span>`;
+      }
+
+      const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'cod';
+      const paymentRef = (this.state.paymentReference || '').trim();
 
       const orderData = {
         customer_name: document.getElementById('chk-name').value,
@@ -2093,7 +2220,8 @@
         city: document.getElementById('chk-city').value,
         province: document.getElementById('chk-province').value,
         postal_code: document.getElementById('chk-postal').value,
-        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+        payment_method: paymentMethod,
+        payment_reference: paymentRef,
         coupon_code: this.state.appliedCoupon ? this.state.appliedCoupon.code : null,
         items: this.state.cart.items.map(i => ({
           product_id: i.product_id,
@@ -2119,12 +2247,24 @@
 
         await this.refreshCart();
         this.state.appliedCoupon = null;
+        this.state.paymentReference = '';
         window.location.hash = `#order-confirmation/${res.order.order_number}`;
       } catch (err) {
         EBA_API.showToast(err.message, 'error');
+        const actionLabels = {
+          cod: 'PROCEED WITH CASH ON DELIVERY',
+          bank_transfer: 'PROCEED WITH BANK TRANSFER',
+          jazzcash: 'PROCEED WITH JAZZCASH',
+          easypaisa: 'PROCEED WITH EASYPAISA'
+        };
+        const resetLabel = actionLabels[paymentMethod] || 'CONFIRM & PLACE ORDER';
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = `<span>Confirm & Place Order</span><span class="material-symbols-outlined text-[18px]">verified</span>`;
+          btn.innerHTML = `<span>${resetLabel}</span><span class="material-symbols-outlined text-[18px]">lock</span>`;
+        }
+        if (inlineBtn) {
+          inlineBtn.disabled = false;
+          inlineBtn.innerHTML = `<span>${resetLabel}</span><span class="material-symbols-outlined text-[18px]">lock</span>`;
         }
       }
     },
@@ -2220,13 +2360,34 @@
                   </div>
                 </div>
 
-                <!-- Shipping Address Card -->
-                <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-2 text-xs">
-                  <span class="font-label-sm uppercase tracking-widest text-secondary block mb-2">Delivery Address</span>
+                <!-- Shipping Address & Payment Verification Card -->
+                <div class="bg-surface-container-lowest p-6 border border-surface-container-high space-y-3 text-xs">
+                  <span class="font-label-sm uppercase tracking-widest text-secondary block mb-2">Delivery Address & Payment Verification</span>
                   <p class="font-semibold text-primary text-sm">${order.customer_name}</p>
                   <p class="text-on-surface-variant">${order.shipping_address}, ${order.area || ''}</p>
                   <p class="text-on-surface-variant">${order.city}, ${order.province} ${order.postal_code || ''}</p>
-                  <p class="text-on-surface-variant mt-2 font-medium">Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery (Pending)' : 'Bank Transfer'}</p>
+                  
+                  <div class="pt-3 border-t border-surface-container-high space-y-1.5 font-sans">
+                    <div class="flex items-center justify-between">
+                      <span class="text-on-surface-variant font-medium">Payment Channel:</span>
+                      <strong class="text-primary font-semibold uppercase">${order.payment_method || 'cod'}</strong>
+                    </div>
+                    ${(order.notes || order.payment_reference) ? `
+                      <div class="p-2.5 bg-surface-container rounded border border-surface-container-high">
+                        <span class="font-label-sm uppercase tracking-wider text-secondary block text-[10px] font-bold">Recorded Payment Reference / TID</span>
+                        <p class="font-mono text-primary font-semibold mt-0.5">${order.notes || order.payment_reference}</p>
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  ${(order.payment_method === 'jazzcash' || order.payment_method === 'bank_transfer' || order.payment_method === 'easypaisa') ? `
+                    <div class="pt-3">
+                      <a href="https://wa.me/923254473333?text=${encodeURIComponent(`Salam EBA Fashion Studio, I have placed Order #${order.order_number} (${order.customer_name}). Attached is my transfer confirmation receipt.`)}" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-3 rounded font-bold text-xs hover:bg-[#20bd5a] transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">chat</span>
+                        <span>Send Transfer Screenshot via WhatsApp (0325-4473333)</span>
+                      </a>
+                    </div>
+                  ` : ''}
                 </div>
               </div>
 

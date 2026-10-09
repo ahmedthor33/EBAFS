@@ -1310,6 +1310,18 @@
                 <span class="font-label-sm uppercase tracking-wider text-secondary block mb-1">Shipping Address</span>
                 <p class="text-on-surface-variant">${order.shipping_address || 'Standard Delivery'}, ${order.area || ''}</p>
                 <p class="text-on-surface-variant">${order.city || 'Pakistan'}, ${order.province || ''} ${order.postal_code || ''}</p>
+            <!-- Payment Channel & TID Reference -->
+            <div class="p-3.5 bg-surface-container rounded border border-surface-container-high flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div class="space-y-1">
+                <span class="font-label-sm uppercase tracking-wider text-secondary font-bold block text-[10px]">Payment Verification</span>
+                <p class="font-semibold text-primary uppercase text-sm">${order.payment_method || 'cod'} • <span class="badge-status ${order.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'badge-gold'}">${order.payment_status || 'pending'}</span></p>
+                ${(order.notes || order.payment_reference) ? `<p class="font-mono text-primary font-semibold text-xs mt-1 bg-white p-2 rounded border border-surface-container-high"><strong>Transaction TID / Notes:</strong> ${order.notes || order.payment_reference}</p>` : `<p class="text-on-surface-variant text-[11px]">No custom transaction TID entered (Standard Cash on Delivery / Pending)</p>`}
+              </div>
+              <div class="shrink-0">
+                <a href="https://wa.me/${(order.customer_phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Salam ${order.customer_name || 'Client'}, regarding your EBA Fashion Studio Order #${order.order_number}`)}" target="_blank" class="btn-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 bg-white">
+                  <span class="material-symbols-outlined text-[15px] text-[#25D366]">chat</span>
+                  <span>WhatsApp Customer</span>
+                </a>
               </div>
             </div>
 

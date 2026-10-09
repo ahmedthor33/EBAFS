@@ -189,33 +189,35 @@
           id: 'bank_transfer',
           name: payments.bank_transfer?.title || 'Direct Bank Wire / Online IBAN Transfer',
           bank_name: payments.bank_transfer?.bank_name || 'Meezan Bank Ltd',
-          account_title: payments.bank_transfer?.account_title || 'EBA Fashion Studio Pvt Ltd',
+          account_title: payments.bank_transfer?.account_title || 'NISAR AHMED',
           account_number: payments.bank_transfer?.account_number || '01000948210001',
           iban: payments.bank_transfer?.iban || 'PK64MEZN0001000948210001',
           branch: payments.bank_transfer?.branch || 'Gulberg III Main Boulevard Flagship, Lahore',
-          instructions: payments.bank_transfer?.instructions || 'Please transfer invoice total to verified Meezan Bank and send receipt to WhatsApp 0325-4473333.'
+          instructions: payments.bank_transfer?.instructions || 'Transfer the amount to our verified Meezan account. Enter your sender account / mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number (0325-4473333).'
         });
       }
 
       if (payments.jazzcash?.enabled !== false) {
         active.push({
           id: 'jazzcash',
-          name: payments.jazzcash?.title || 'JazzCash Mobile Wallet & Direct Pay',
-          merchant_id: payments.jazzcash?.merchant_id || payments.jazzcash?.account_number || '0300 1234567',
-          merchant_name: payments.jazzcash?.merchant_name || 'EBA FASHION STUDIO',
-          account_number: payments.jazzcash?.account_number || '0300 1234567',
-          instructions: payments.jazzcash?.instructions || 'Send total via JazzCash App or dial *786# to Till 0300 1234567.'
+          name: payments.jazzcash?.title || 'JazzCash Mobile Account',
+          merchant_name: payments.jazzcash?.merchant_name || 'NISAR AHMED',
+          account_title: payments.jazzcash?.account_title || 'NISAR AHMED',
+          account_number: payments.jazzcash?.account_number || payments.jazzcash?.merchant_id || '0325-4473333',
+          bank_name: payments.jazzcash?.bank_name || 'Mobilink Microfinance Bank',
+          instructions: payments.jazzcash?.instructions || 'Transfer the amount via JazzCash App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'
         });
       }
 
       if (payments.easypaisa?.enabled !== false) {
         active.push({
           id: 'easypaisa',
-          name: payments.easypaisa?.title || 'Easypaisa Mobile Wallet & QR Pay',
+          name: payments.easypaisa?.title || 'Easypaisa Mobile Account',
           till_id: payments.easypaisa?.till_id || '78491',
-          account_title: payments.easypaisa?.account_title || 'EBA FASHION STUDIO',
-          account_number: payments.easypaisa?.account_number || '0321 8456789',
-          instructions: payments.easypaisa?.instructions || 'Send payment via Easypaisa App to Mobile Account: 0321 8456789.'
+          account_title: payments.easypaisa?.account_title || 'NISAR AHMED',
+          account_number: payments.easypaisa?.account_number || '0325-4473333',
+          bank_name: payments.easypaisa?.bank_name || 'Telenor Microfinance Bank',
+          instructions: payments.easypaisa?.instructions || 'Transfer the amount via Easypaisa App or Mobile Account to 0325-4473333. Enter your mobile number and TID below. and can sent transection Screen Shoot to Our Official WhatsApp Number.'
         });
       }
 
@@ -487,6 +489,7 @@
         shipping_fee: shippingFee,
         total: total,
         payment_method: body.payment_method || 'cod',
+        notes: body.payment_reference ? (body.notes ? `${body.notes} | TID/Ref: ${body.payment_reference}` : `TID/Ref: ${body.payment_reference}`) : (body.notes || null),
         payment_status: 'pending',
         order_status: 'confirmed'
       };
@@ -510,7 +513,10 @@
       return {
         success: true,
         orderNumber,
-        order: orderPayload,
+        order: {
+          ...orderPayload,
+          payment_reference: body.payment_reference || null
+        },
         message: 'Your couture order has been placed with EBA Atelier.'
       };
     }
