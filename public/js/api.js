@@ -583,13 +583,15 @@
 
     if (endpoint.startsWith('/api/admin/products')) {
       // Single product for admin edit modal
-      if ((!options.method || options.method === 'GET') && endpoint.match(/^\/api\/admin\/products\/\d+$/)) {
-        const id = endpoint.split('/api/admin/products/')[1];
+      const singleMatch = endpoint.match(/\/api\/admin\/products\/(\d+)/);
+      if ((!options.method || options.method === 'GET' || options.method === 'get') && singleMatch) {
+        const id = singleMatch[1];
         const rows = await supabaseRest(`products?id=eq.${id}&select=*,product_images(*)`).catch(() => []);
         if (rows && rows.length > 0) {
           const prod = rows[0];
           return {
             product: prod,
+            ...prod,
             images: prod.product_images || []
           };
         }

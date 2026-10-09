@@ -622,15 +622,20 @@
     async openEditProductModal(id) {
       try {
         const res = await EBA_API.admin.getProduct(id);
-        const p = res.product;
-        const images = res.images || [];
-        const catsRes = await EBA_API.admin.getCategories();
-        const brandsRes = await EBA_API.admin.getBrands();
+        const p = res?.product || (res?.id ? res : null) || (Array.isArray(res?.products) ? res.products.find(x => String(x.id) === String(id)) : null);
+
+        if (!p) {
+          throw new Error('Product not found for ID: ' + id);
+        }
+
+        const images = res?.images || p?.images || p?.product_images || [];
+        const catsRes = await EBA_API.admin.getCategories().catch(() => ({ categories: [] }));
+        const brandsRes = await EBA_API.admin.getBrands().catch(() => ({ brands: [] }));
 
         const modalContent = document.getElementById('admin-modal-content');
         modalContent.innerHTML = `
           <div class="flex items-center justify-between pb-4 border-b border-surface-container-high mb-6">
-            <h2 class="font-headline-sm uppercase text-primary text-xl">Edit Product: ${p.name}</h2>
+            <h2 class="font-headline-sm uppercase text-primary text-xl">Edit Product: ${p.name || 'Couture Fabric'}</h2>
             <button onclick="adminApp.closeModal()" class="text-on-surface-variant hover:text-primary">
               <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -640,29 +645,31 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="sm:col-span-2">
                 <label class="font-label-sm uppercase tracking-wider block mb-1">Product Title *</label>
-                <input type="text" id="ep-name" required value="${p.name}" class="form-input text-xs"/>
+                <input type="text" id="ep-name" required value="${(p.name || '').replace(/"/g, '&quot;')}" class="form-input text-xs"/>
               </div>
               <div>
                 <label class="font-label-sm uppercase tracking-wider block mb-1">SKU Code *</label>
-                <input type="text" id="ep-sku" required value="${p.sku}" class="form-input text-xs font-mono"/>
+                <input type="text" id="ep-sku" required value="${(p.sku || '').replace(/"/g, '&quot;')}" class="form-input text-xs font-mono"/>
               </div>
               <div>
                 <label class="font-label-sm uppercase tracking-wider block mb-1">Brand Atelier</label>
                 <select id="ep-brand" class="form-input text-xs">
-                  ${(brandsRes.brands || []).map(b => `<option value="${b.id}" ${b.id === p.brand_id ? 'selected' : ''}>${b.name}</option>`).join('')}
+                  <option value="">None / Custom Brand</option>
+                  ${(brandsRes?.brands || []).map(b => `<option value="${b.id}" ${b.id === p.brand_id ? 'selected' : ''}>${b.name}</option>`).join('')}
                 </select>
               </div>
               <div>
                 <label class="font-label-sm uppercase tracking-wider block mb-1">Parent Domain</label>
                 <select id="ep-cat" class="form-input text-xs">
-                  ${(catsRes.categories || []).filter(c => !c.parent_id).map(c => `<option value="${c.id}" ${c.id === p.category_id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                  <option value="">None / Direct</option>
+                  ${(catsRes?.categories || []).filter(c => !c.parent_id).map(c => `<option value="${c.id}" ${c.id === p.category_id ? 'selected' : ''}>${c.name}</option>`).join('')}
                 </select>
               </div>
               <div>
                 <label class="font-label-sm uppercase tracking-wider block mb-1">Subcategory</label>
                 <select id="ep-subcat" class="form-input text-xs">
                   <option value="">None / Direct</option>
-                  ${(catsRes.categories || []).filter(c => c.parent_id).map(c => `<option value="${c.id}" ${c.id === p.subcategory_id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                  ${(catsRes?.categories || []).filter(c => c.parent_id).map(c => `<option value="${c.id}" ${c.id === p.subcategory_id ? 'selected' : ''}>${c.name}</option>`).join('')}
                 </select>
               </div>
               <div>
@@ -720,10 +727,10 @@
           </form>
         `;
 
-        this.state.currentModalImages = images.map(img => ({
-          image_url: img.image_url,
-          is_primary: img.is_primary ? 1 : 0,
-          image_type: img.image_type || 'gallery'
+        this.state.currentModalImages = images.map((img, idx) => ({
+          image_url: typeof img === 'string' ? img : (img.image_url || '/assets/gul_e_noor_details.png'),
+          is_primary: typeof img === 'object' ? (img.is_primary ? 1 : (idx === 0 ? 1 : 0)) : (idx === 0 ? 1 : 0),
+          image_type: typeof img === 'object' ? (img.image_type || 'gallery') : 'gallery'
         }));
 
         this.openModal();
