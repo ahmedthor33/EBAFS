@@ -968,9 +968,10 @@
     // ----------------------------------------------------
     async renderProductDetails(container, slug) {
       try {
-        const res = await EBA_API.products.get(slug);
-        const product = res.product;
-        const related = res.related || [];
+        const cleanSlug = decodeURIComponent(slug || '').trim();
+        const res = await EBA_API.products.get(cleanSlug);
+        const product = res?.product || (res?.id ? res : null);
+        const related = res?.related || [];
 
         if (!product) {
           container.innerHTML = `<div class="p-20 text-center font-headline-sm">Product not found.</div>`;
@@ -2661,23 +2662,25 @@
       return `
         <article class="product-card group" id="product-card-${p.id}">
           <div class="product-image-container">
-            <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name}" class="product-image-main"/>
-            ${p.hover_image ? `<img src="${p.hover_image}" alt="${p.name}" class="product-image-hover"/>` : ''}
+            <a href="#product/${p.slug}" class="block w-full h-full relative" aria-label="View ${p.name}">
+              <img src="${p.primary_image || '/assets/gul_e_noor_details.png'}" alt="${p.name}" class="product-image-main"/>
+              ${p.hover_image ? `<img src="${p.hover_image}" alt="${p.name} - Alternate View" class="product-image-hover"/>` : ''}
+            </a>
 
             <!-- Floating Badges -->
-            <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+            <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
               ${isSale ? `<span class="badge-status badge-gold">Seasonal Sale</span>` : ''}
               ${p.is_featured ? `<span class="badge-status badge-dark">Atelier Drop</span>` : ''}
             </div>
 
             <!-- Wishlist Heart Trigger -->
-            <button onclick="app.toggleWishlist(${p.id})" class="wishlist-btn ${isWish ? 'active' : ''}" title="Save to Wishlist">
+            <button onclick="event.stopPropagation(); app.toggleWishlist(${p.id})" class="wishlist-btn ${isWish ? 'active' : ''}" title="Save to Wishlist">
               <span class="material-symbols-outlined text-[18px]">favorite</span>
             </button>
 
             <!-- Quick Add Bar on Hover -->
             <div class="quick-action-bar">
-              <button onclick="app.quickAdd(${p.id})" class="btn-primary flex-1 py-2 text-xs bg-white text-primary hover:bg-secondary hover:text-white">
+              <button onclick="event.stopPropagation(); app.quickAdd(${p.id})" class="btn-primary flex-1 py-2 text-xs bg-white text-primary hover:bg-secondary hover:text-white">
                 Quick Add to Bag
               </button>
               <a href="#product/${p.slug}" class="btn-secondary py-2 px-3 text-xs bg-black/60 text-white border-white/40 hover:bg-white hover:text-black">

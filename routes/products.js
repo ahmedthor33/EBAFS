@@ -38,8 +38,8 @@ router.get('/', (req, res) => {
         ) as primary_image,
         (
           SELECT image_url FROM product_images 
-          WHERE product_id = p.id AND is_primary = 0 
-          ORDER BY sort_order ASC LIMIT 1
+          WHERE product_id = p.id AND (is_primary = 0 OR is_primary IS NULL)
+          ORDER BY sort_order ASC, id ASC LIMIT 1
         ) as hover_image
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
@@ -157,11 +157,16 @@ router.get('/', (req, res) => {
     const products = db.prepare(query).all(...params);
 
     // Provide fallback image if primary_image is null
-    const enriched = products.map(p => ({
-      ...p,
-      primary_image: p.primary_image || p.hover_image || '/assets/gul_e_noor_details.png',
-      effective_price: p.sale_price || p.price
-    }));
+    const enriched = products.map(p => {
+      const primary = p.primary_image || p.hover_image || '/assets/gul_e_noor_details.png';
+      const hover = (p.hover_image && p.hover_image !== primary) ? p.hover_image : null;
+      return {
+        ...p,
+        primary_image: primary,
+        hover_image: hover,
+        effective_price: p.sale_price || p.price
+      };
+    });
 
     res.json({
       products: enriched,
@@ -217,6 +222,7 @@ router.get('/:slugOrId', (req, res) => {
     let product;
 
     if (isNaN(slugOrId)) {
+      const cleanSlug = String(slugOrId).replace(/^-+|-+$/g, '');
       product = db.prepare(`
         SELECT p.*, c.name as category_name, c.slug as category_slug, 
                sub.name as subcategory_name, sub.slug as subcategory_slug,
@@ -225,8 +231,8 @@ router.get('/:slugOrId', (req, res) => {
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN categories sub ON p.subcategory_id = sub.id
         LEFT JOIN brands b ON p.brand_id = b.id
-        WHERE p.slug = ? AND p.status = 'published'
-      `).get(slugOrId);
+        WHERE (p.slug = ? OR p.slug = ? OR p.sku = ?) AND p.status = 'published'
+      `).get(slugOrId, cleanSlug, slugOrId);
     } else {
       product = db.prepare(`
         SELECT p.*, c.name as category_name, c.slug as category_slug, 

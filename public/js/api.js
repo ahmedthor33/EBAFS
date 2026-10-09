@@ -228,14 +228,40 @@
 
     // 3. Single Product Detail
     if (endpoint.match(/^\/api\/products\/[^\/\?]+/)) {
-      const slugOrId = endpoint.split('/api/products/')[1]?.split('?')[0];
-      const rows = await supabaseRest(`products?or=(slug.eq.${encodeURIComponent(slugOrId)},sku.eq.${encodeURIComponent(slugOrId)})&select=*,product_images(*)`).catch(() => []);
+      const rawSlugOrId = endpoint.split('/api/products/')[1]?.split('?')[0];
+      const slugOrId = decodeURIComponent(rawSlugOrId || '').trim();
+      const cleanSlug = slugOrId.replace(/^-+|-+$/g, '');
+      const isNum = !isNaN(slugOrId) && slugOrId !== '';
+
+      let filterStr = `or=(slug.eq.${encodeURIComponent(slugOrId)},slug.eq.${encodeURIComponent(cleanSlug)},sku.eq.${encodeURIComponent(slugOrId)}`;
+      if (isNum) filterStr += `,id.eq.${Number(slugOrId)}`;
+      filterStr += `)&select=*,product_images(*)`;
+
+      let rows = await supabaseRest(`products?${filterStr}`).catch(() => []);
+      if (!rows || rows.length === 0) {
+        // Fallback search with prefix match if slug had minor formatting difference
+        const partial = cleanSlug.split('-').slice(0, 4).join('-');
+        if (partial && partial.length >= 3) {
+          rows = await supabaseRest(`products?or=(slug.ilike.*${encodeURIComponent(partial)}*,name.ilike.*${encodeURIComponent(partial)}*)&select=*,product_images(*)`).catch(() => []);
+        }
+      }
+
       if (rows && rows.length > 0) {
         const p = rows[0];
-        return {
+        const imgs = Array.isArray(p.product_images) ? p.product_images : [];
+        const primaryImg = imgs.find(i => i.is_primary) || imgs[0];
+        const hoverImg = imgs.find(i => !i.is_primary && i.image_url !== primaryImg?.image_url) || (imgs.length > 1 ? imgs[1] : null);
+        const enriched = {
           ...p,
-          primary_image: p.product_images?.find(i => i.is_primary)?.image_url || p.product_images?.[0]?.image_url || '/assets/gul_e_noor_details.png',
-          images: p.product_images || []
+          primary_image: primaryImg?.image_url || '/assets/gul_e_noor_details.png',
+          hover_image: hoverImg?.image_url || null,
+          images: imgs.length > 0 ? imgs : [{ image_url: primaryImg?.image_url || '/assets/gul_e_noor_details.png', is_primary: 1 }],
+          effective_price: p.sale_price || p.price
+        };
+        return {
+          product: enriched,
+          ...enriched,
+          related: []
         };
       }
       throw new Error('Product not found');
@@ -256,11 +282,17 @@
       qry += '&order=id.desc';
 
       const rows = await supabaseRest(qry).catch(() => []);
-      const mapped = (rows || []).map(prod => ({
-        ...prod,
-        primary_image: prod.product_images?.find(i => i.is_primary)?.image_url || prod.product_images?.[0]?.image_url || '/assets/gul_e_noor_details.png',
-        images: prod.product_images || []
-      }));
+      const mapped = (rows || []).map(prod => {
+        const imgs = Array.isArray(prod.product_images) ? prod.product_images : [];
+        const primaryImg = imgs.find(i => i.is_primary) || imgs[0];
+        const hoverImg = imgs.find(i => !i.is_primary && i.image_url !== primaryImg?.image_url) || (imgs.length > 1 ? imgs[1] : null);
+        return {
+          ...prod,
+          primary_image: primaryImg?.image_url || prod.primary_image || '/assets/gul_e_noor_details.png',
+          hover_image: hoverImg?.image_url || prod.hover_image || null,
+          images: imgs.length > 0 ? imgs : [{ image_url: primaryImg?.image_url || '/assets/gul_e_noor_details.png', is_primary: 1 }]
+        };
+      });
       return {
         products: mapped,
         total: mapped.length,
@@ -550,12 +582,35 @@
     }
 
     if (endpoint.startsWith('/api/admin/products')) {
+      // Single product for admin edit modal
+      if ((!options.method || options.method === 'GET') && endpoint.match(/^\/api\/admin\/products\/\d+$/)) {
+        const id = endpoint.split('/api/admin/products/')[1];
+        const rows = await supabaseRest(`products?id=eq.${id}&select=*,product_images(*)`).catch(() => []);
+        if (rows && rows.length > 0) {
+          const prod = rows[0];
+          return {
+            product: prod,
+            images: prod.product_images || []
+          };
+        }
+        throw new Error('Product not found');
+      }
+
       if (options.method === 'POST') {
         const body = JSON.parse(options.body || '{}');
+        const cleanSlug = (body.slug || body.name || 'suit')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
         const prodData = {
           name: body.name || 'New Unstitched Suit',
-          slug: (body.slug || body.name || 'suit').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          sku: body.sku || 'EBA-' + Date.now().toString(36).toUpperCase(),
+          slug: cleanSlug || ('unstitched-suit-' + Date.now().toString().slice(-4)),
+          sku: (body.sku || 'EBA-' + Date.now().toString(36).toUpperCase()).trim(),
+          brand_id: body.brand_id ? Number(body.brand_id) : null,
+          category_id: body.category_id ? Number(body.category_id) : null,
+          subcategory_id: body.subcategory_id ? Number(body.subcategory_id) : null,
           price: Number(body.price) || 12000,
           sale_price: body.sale_price ? Number(body.sale_price) : null,
           cost_price: body.cost_price ? Number(body.cost_price) : null,
@@ -564,21 +619,69 @@
           fabric: body.fabric || 'Pure Egyptian Cotton',
           season: body.season || 'All Season',
           color: body.color || 'White',
+          color_hex: body.color_hex || '#c5a880',
           product_type: body.product_type || 'unstitched',
           status: body.status || 'published',
           is_featured: body.is_featured ? 1 : 0,
           is_sale: body.is_sale ? 1 : 0,
+          short_description: body.short_description || '',
           description: body.description || ''
         };
+
         const ins = await supabaseRest('products', { method: 'POST', body: JSON.stringify(prodData) }).catch(() => []);
-        return { success: true, product: Array.isArray(ins) ? ins[0] : prodData, message: 'Product created' };
+        const createdProd = Array.isArray(ins) ? ins[0] : prodData;
+        const newProdId = createdProd?.id;
+
+        // Persist gallery & hover images into Supabase product_images table
+        if (newProdId && Array.isArray(body.images) && body.images.length > 0) {
+          const imgPayloads = body.images.map((img, idx) => ({
+            product_id: newProdId,
+            image_url: typeof img === 'string' ? img : (img.image_url || '/assets/gul_e_noor_details.png'),
+            image_type: typeof img === 'object' ? (img.image_type || (idx === 0 ? 'primary' : 'gallery')) : (idx === 0 ? 'primary' : 'gallery'),
+            sort_order: idx,
+            is_primary: typeof img === 'object' ? (img.is_primary ? 1 : (idx === 0 ? 1 : 0)) : (idx === 0 ? 1 : 0)
+          }));
+          await supabaseRest('product_images', { method: 'POST', body: JSON.stringify(imgPayloads) }).catch(err => {
+            console.warn('Failed to insert product_images:', err);
+          });
+        }
+
+        return { success: true, product: createdProd, id: newProdId, message: 'Product created successfully' };
       }
+
       if (options.method === 'PUT') {
-        const id = endpoint.split('/api/admin/products/')[1];
+        const id = endpoint.split('/api/admin/products/')[1]?.split('?')[0];
         const body = JSON.parse(options.body || '{}');
-        await supabaseRest(`products?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(body) }).catch(() => {});
-        return { success: true, message: 'Product updated' };
+        const updateData = { ...body };
+        const imagesToSave = updateData.images;
+        delete updateData.images;
+
+        if (updateData.slug) {
+          updateData.slug = updateData.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+
+        await supabaseRest(`products?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(updateData) }).catch(() => {});
+
+        // Refresh images in product_images table if images array provided
+        if (Array.isArray(imagesToSave)) {
+          await supabaseRest(`product_images?product_id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
+          if (imagesToSave.length > 0) {
+            const imgPayloads = imagesToSave.map((img, idx) => ({
+              product_id: Number(id),
+              image_url: typeof img === 'string' ? img : (img.image_url || '/assets/gul_e_noor_details.png'),
+              image_type: typeof img === 'object' ? (img.image_type || (idx === 0 ? 'primary' : 'gallery')) : (idx === 0 ? 'primary' : 'gallery'),
+              sort_order: idx,
+              is_primary: typeof img === 'object' ? (img.is_primary ? 1 : (idx === 0 ? 1 : 0)) : (idx === 0 ? 1 : 0)
+            }));
+            await supabaseRest('product_images', { method: 'POST', body: JSON.stringify(imgPayloads) }).catch(err => {
+              console.warn('Failed to refresh product_images:', err);
+            });
+          }
+        }
+
+        return { success: true, message: 'Product updated successfully' };
       }
+
       if (options.method === 'PATCH' && endpoint.includes('/toggle')) {
         const id = endpoint.split('/api/admin/products/')[1].split('/toggle')[0];
         const body = JSON.parse(options.body || '{}');
@@ -587,17 +690,25 @@
         await supabaseRest(`products?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(updateObj) }).catch(() => {});
         return { success: true, message: 'Product updated' };
       }
+
       if (options.method === 'DELETE') {
         const id = endpoint.split('/api/admin/products/')[1];
         await supabaseRest(`products?id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
         return { success: true, message: 'Product archived' };
       }
+
       const rows = await supabaseRest('products?select=*,product_images(*)&order=id.desc').catch(() => []);
-      const mapped = (rows || []).map(p => ({
-        ...p,
-        primary_image: p.product_images?.find(i => i.is_primary)?.image_url || p.product_images?.[0]?.image_url || '/assets/gul_e_noor_details.png',
-        images: p.product_images || []
-      }));
+      const mapped = (rows || []).map(p => {
+        const imgs = Array.isArray(p.product_images) ? p.product_images : [];
+        const primaryImg = imgs.find(i => i.is_primary) || imgs[0];
+        const hoverImg = imgs.find(i => !i.is_primary && i.image_url !== primaryImg?.image_url) || (imgs.length > 1 ? imgs[1] : null);
+        return {
+          ...p,
+          primary_image: primaryImg?.image_url || p.primary_image || '/assets/gul_e_noor_details.png',
+          hover_image: hoverImg?.image_url || p.hover_image || null,
+          images: imgs.length > 0 ? imgs : [{ image_url: primaryImg?.image_url || '/assets/gul_e_noor_details.png', is_primary: 1 }]
+        };
+      });
       return { products: mapped, total: mapped.length };
     }
 
